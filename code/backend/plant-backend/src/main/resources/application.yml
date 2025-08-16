@@ -1,0 +1,35 @@
+server:
+  port: 9999
+
+spring:
+  datasource:
+    username: testDocker
+    password: 123456
+    url: jdbc:mysql://192.168.124.16:3306/wjdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+#  data:
+#    redis:
+#      host: 8.137.85.150
+#      port: 6379
+  servlet:
+    multipart:
+      max-file-size: 10MB
+
+
+wj:
+  jwt:
+    expire: 600  # 单位分钟
+    secret: 12345678901234567890123456789012
+
+
+
+
+logging:
+  level:
+    org.unimelb: debug
+    com.baomidou.mybatisplus: debug  # MyBatis-Plus 的日志
+    org.apache.ibatis: debug       # MyBatis 的日志
+  pattern:
+    dateformat: ss.SSS

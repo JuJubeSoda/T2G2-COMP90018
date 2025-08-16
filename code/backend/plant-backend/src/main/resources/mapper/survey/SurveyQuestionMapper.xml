@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.unimelb.survey.mapper.SurveyQuestionMapper">
+    <update id="questionOrderBatchIncr">
+        update wj_survey_question
+        set order_num=order_num+#{increment}
+        where survey_id=#{serveyId}
+        <![CDATA[
+            and order_num>=#{orderNumStart} and order_num<=#{orderNumEnd}
+        ]]>
+        <if test="questionType == 0">
+            <![CDATA[ and question_type = 0  ]]>
+        </if>
+        <if test="questionType != 0">
+            <![CDATA[ and question_type > 0  ]]>
+        </if>
+    </update>
+    <select id="getExamineeListForResult" resultType="org.unimelb.survey.entity.SurveyQuestion">
+        SELECT
+        a.*,b.user_answer
+        FROM
+        wj_survey_question a, wj_survey_user_answer b
+        WHERE a.survey_id = #{surveyId}
+        AND a.question_type=0
+        AND a.`id` = b.`question_id`
+        AND b.`score_id` = #{scoreId}
+        ORDER BY order_num
+    </select>
+
+    <select id="getQuestionListForResult" resultType="org.unimelb.survey.entity.SurveyQuestion">
+        SELECT
+        a.*,b.user_answer, b.answer_valid
+        FROM
+        wj_survey_question a, wj_survey_user_answer b
+        WHERE a.survey_id = #{surveyId}
+        AND a.question_type>0
+        AND a.`id` = b.`question_id`
+        AND b.`score_id` = #{scoreId}
+        ORDER BY order_num
+    </select>
+</mapper>
