@@ -1,17 +1,19 @@
 # T2G2---COMP90018
 
 
-Run Bcakend
+## Run Bcakend
 
-navigate to main project path
+1.navigate to main project path
 
-`cd {your path} /plant-backend`
+  `cd {your path} /plant-backend`
 
-build docker image
+2.build docker image
 
-`docker build -t plant-world-backend:latest .`
+  `docker build -t plant-world-backend:latest .`
 
-run docker image
+3.run docker image
 
-`docker run -p 9999:9999 plant-world`
+  `docker run -p 9999:9999 plant-world`
+
+## Database
 
