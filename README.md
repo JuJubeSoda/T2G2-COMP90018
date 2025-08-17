@@ -19,7 +19,9 @@
 Excute sql file in main project path: plant_db.sql
 
 
-## Test Register api
+## Test api
+
+### Register
 POST url: 
   `http://{your address}:9999/user/reg`
 
@@ -40,3 +42,34 @@ POST body:
 Replace with your own account.
 
 <img width="968" height="491" alt="image" src="https://github.com/user-attachments/assets/f976a471-1883-4adc-a31f-6a341da33891" />
+
+### Login
+**POST url: **
+  `http://{your address}:9999/user/login`
+
+**POST body:**
+```json
+{
+    "username": "pengyu3333",
+    "password": "123456"
+}
+```
+
+Replace with your own username and password.
+
+**Response**: 
+
+jwt token in field data: 
+
+"eyJhbGciOiJIUzI1NiJ9.eyJ..."
+
+**How to use token:** When making a new request, add the token to request header for authentication.
+### Get UserInfo
+**GET url: **
+  `http://{your path}:9999/user/info`
+
+Add jwt token to request headers:
+
+Authorization: eyJhbGciOiJIUzI1NiJ9.ey...
+
+<img width="2110" height="273" alt="image" src="https://github.com/user-attachments/assets/36c438eb-e680-40d8-9020-8007ce619d29" />
