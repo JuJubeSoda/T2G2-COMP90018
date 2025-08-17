@@ -35,5 +35,8 @@ POST body:
   "userType": "normal",
   "avatar": "default.png"
 }
+```
 
 Replace with your own account.
+
+<img width="968" height="491" alt="image" src="https://github.com/user-attachments/assets/f976a471-1883-4adc-a31f-6a341da33891" />
