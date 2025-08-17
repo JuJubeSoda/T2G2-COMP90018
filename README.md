@@ -16,7 +16,7 @@
   `docker run -p 9999:9999 plant-world`
 
 ## Database
-
+Excute sql file in main project path: plant_db.sql
 
 
 ## Test Register api
