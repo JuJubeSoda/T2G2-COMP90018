@@ -22,7 +22,7 @@ Excute sql file in main project path: plant_db.sql
 ## Test Backend api (RESTFUL API)
 
 ### Register
-**POST url: **
+POST url: 
   `http://{your address}:9999/user/reg`
 
 POST body:
@@ -61,13 +61,11 @@ Replace with your own username and password.
 
 **Response**: 
 
-jwt token in field data: 
-
-"eyJhbGciOiJIUzI1NiJ9.eyJ..."
+jwt token in field data: "eyJhbGciOiJIUzI1NiJ9.eyJ..."
 
 **How to use token:** When making a new request, add the token to request header for authentication.
 ### Get UserInfo
-**GET url: **
+GET url: 
   `http://{your path}:9999/user/info`
 
 Add jwt token to request headers:
