@@ -19,10 +19,10 @@
 Excute sql file in main project path: plant_db.sql
 
 
-## Test api
+## Test Backend api (RESTFUL API)
 
 ### Register
-POST url: 
+**POST url: **
   `http://{your address}:9999/user/reg`
 
 POST body:
@@ -44,7 +44,9 @@ Replace with your own account.
 <img width="968" height="491" alt="image" src="https://github.com/user-attachments/assets/f976a471-1883-4adc-a31f-6a341da33891" />
 
 ### Login
-**POST url: **
+
+POST url: 
+
   `http://{your address}:9999/user/login`
 
 **POST body:**
