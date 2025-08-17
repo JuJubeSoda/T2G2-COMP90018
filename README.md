@@ -17,3 +17,23 @@
 
 ## Database
 
+
+
+## Test Register api
+POST url: 
+  `http://{your address}:9999/user/reg`
+
+POST body:
+```json
+{
+  "username": "pengyu3333",
+  "nickname": "dasdsa",
+  "phone": "13812345678",
+  "password": "123456",
+  "email": "pengyu3@example.com",
+  "wechat": "pengyu3_wechat",
+  "userType": "normal",
+  "avatar": "default.png"
+}
+
+Replace with your own account.
