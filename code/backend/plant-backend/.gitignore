@@ -1,0 +1,75 @@
+# ------------------------------
+# IntelliJ IDEA
+# ------------------------------
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# IDEA default ignored files
+/shelf/
+/workspace.xml
+/httpRequests/
+/dataSources/
+/dataSources.local.xml
+
+# ------------------------------
+# Maven / Gradle
+# ------------------------------
+# Maven build directory
+**/target/
+# Gradle build directory
+**/build/
+
+# Ignore wrapper logs
+.mvn/wrapper/maven-wrapper.jar
+.gradle/
+
+# ------------------------------
+# Java
+# ------------------------------
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+*.rar
+
+# ------------------------------
+# Logs & Temp
+# ------------------------------
+*.log
+*.out
+*.tmp
+*.swp
+*.swo
+
+# ------------------------------
+# Spring Boot specific
+# ------------------------------
+# Local environment config
+application-local.yml
+application-local.properties
+
+# Embedded server logs
+hs_err_pid*
+replay_pid*
+
+# ------------------------------
+# OS files
+# ------------------------------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~

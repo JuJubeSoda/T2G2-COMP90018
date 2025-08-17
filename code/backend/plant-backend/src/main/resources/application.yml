@@ -3,6 +3,7 @@ server:
 
 spring:
   datasource:
+    # 替换成远程数据库username, password
     username: testDocker
     password: 123456
     # 替换成远程数据库

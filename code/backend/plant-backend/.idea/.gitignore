@@ -1,8 +1,54 @@
-# Default ignored files
+# ------------------------------
+# IntelliJ IDEA
+# ------------------------------
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# IDEA default ignored files
 /shelf/
 /workspace.xml
-# Editor-based HTTP Client requests
 /httpRequests/
-# Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+
+# ------------------------------
+# Java / Maven
+# ------------------------------
+# Maven build directory
+**/target/
+
+# Eclipse (万一有人用过 Eclipse 导入项目)
+.classpath
+.project
+.settings/
+
+# Build outputs
+out/
+build/
+
+# ------------------------------
+# OS files
+# ------------------------------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ------------------------------
+# Logs & Temp
+# ------------------------------
+*.log
+*.tmp
+*.swp
+*.swo
