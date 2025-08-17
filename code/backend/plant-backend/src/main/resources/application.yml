@@ -5,7 +5,8 @@ spring:
   datasource:
     username: testDocker
     password: 123456
-    url: jdbc:mysql://192.168.124.16:3306/wjdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    # 替换成远程数据库
+    url: jdbc:mysql://192.168.124.16:3306/plant_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
@@ -18,7 +19,7 @@ spring:
       max-file-size: 10MB
 
 
-wj:
+plant:
   jwt:
     expire: 600  # 单位分钟
     secret: 12345678901234567890123456789012

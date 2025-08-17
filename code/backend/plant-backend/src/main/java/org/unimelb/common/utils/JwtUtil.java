@@ -18,10 +18,10 @@ import java.util.UUID;
 @Slf4j
 public class JwtUtil {
     
-    @Value("${wj.jwt.expire}")  // 有效期
+    @Value("${plant.jwt.expire}")  // 有效期
     private long jwtExpire;
     
-    @Value("${wj.jwt.secret}")  // 令牌秘钥
+    @Value("${plant.jwt.secret}")  // 令牌秘钥
     private String jwtSecret;
 
     public String createJwt(Object data) {

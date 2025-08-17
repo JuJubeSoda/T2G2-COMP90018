@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import java.io.Serializable;
 
 @Data
-@TableName("wj_base_param")
+@TableName("base_param")
 public class BaseParam implements Serializable {
     @TableId(type = IdType.AUTO)
     private Integer id;

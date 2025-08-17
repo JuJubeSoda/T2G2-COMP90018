@@ -5,10 +5,10 @@ import java.sql.*;
 public class EntityGenerator {
 
     public static void main(String[] args) throws SQLException {
-        String url = "jdbc:mysql://localhost:3306/wjdb";
+        String url = "jdbc:mysql://localhost:3306/plant_db";
         String user = "root";
         String password = "123456";
-        String tableName = "wj_base_param";
+        String tableName = "base_param";
         String prefixToRemove = "wj";
 
         EntityGenerator generator = new EntityGenerator(url, user, password,  prefixToRemove);
