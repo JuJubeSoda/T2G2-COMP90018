@@ -33,7 +33,7 @@ public class MyAuthenticationSuccessHandler implements AuthenticationSuccessHand
         String token = jwtUtil.createJwt(user);
 
         // 返回result
-        Result<Object> result = Result.success(token,"登录成功");
+        Result<Object> result = Result.success(token,"Login success");
 
         response.setContentType("application/json;charset=utf-8");
         response.getWriter().write(JSON.toJSONString(result));

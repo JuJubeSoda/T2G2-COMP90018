@@ -2,12 +2,8 @@ server:
   port: 9999
 
 spring:
-  datasource:
-    # 替换成远程数据库username, password
-    username: testDocker
-    password: 123456
-    # 替换成远程数据库
-    url: jdbc:mysql://192.168.124.16:3306/plant_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+  profiles:
+    active: dev   # 本地和远程配置切换 dev:本地  prod:远程
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8

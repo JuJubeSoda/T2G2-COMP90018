@@ -30,7 +30,7 @@ public class UserController {
     @PostMapping("/reg")
     public Result<?> registerUser(@RequestBody User user){
         userService.registerUser(user);
-        return Result.success("用户注册成功");
+        return Result.success("Register success");
     }
 
     @Secured({"ROLE_admin"})
