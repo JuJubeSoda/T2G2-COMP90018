@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
-
 }
 
 android {
@@ -16,6 +15,20 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // Map existing MAPS_API_KEY (from secrets/local.defaults) to BuildConfig.PLACES_API_KEY
+        def mapsApiKey = ""
+        def props = new Properties()
+        def secretsFile = rootProject.file("secret.properties")
+        def defaultsFile = rootProject.file("local.defaults.properties")
+        if (secretsFile.exists()) {
+            secretsFile.withInputStream { props.load(it) }
+        }
+        if (!props.containsKey("MAPS_API_KEY") && defaultsFile.exists()) {
+            defaultsFile.withInputStream { props.load(it) }
+        }
+        mapsApiKey = props.getProperty("MAPS_API_KEY", "")
+        buildConfigField "String", "PLACES_API_KEY", '"' + mapsApiKey + '"'
     }
 
     buildTypes {
@@ -30,6 +43,7 @@ android {
     }
     buildFeatures {
         viewBinding true
+        buildConfig true
     }
 }
 
@@ -42,6 +56,8 @@ dependencies {
     implementation libs.navigation.fragment
     implementation libs.navigation.ui
     implementation libs.play.services.maps
+    implementation libs.play.services.location
+    implementation libs.places
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
