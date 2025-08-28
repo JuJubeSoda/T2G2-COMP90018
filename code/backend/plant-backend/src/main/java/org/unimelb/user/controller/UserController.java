@@ -19,14 +19,14 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-@Tag(name = "用户模块",description = "用户模块接口")
+@Tag(name = "user",description = "user interface")
 @RestController
 @RequestMapping("/user")
 public class UserController {
     @Autowired
     private UserService userService;
 
-    @Operation(summary = "用户注册")
+    @Operation(summary = "user registration")
     @PostMapping("/reg")
     public Result<?> registerUser(@RequestBody User user){
         userService.registerUser(user);
@@ -34,50 +34,36 @@ public class UserController {
     }
 
     @Secured({"ROLE_admin"})
-    @Operation(summary = "查询所有用户")
+    @Operation(summary = "query all users")
     @GetMapping
     public Result<List<User>> getAllUser(){
         List<User> list = userService.list();
         return Result.success(list);
     }
 
-    @Operation(summary ="获取用户信息")
+    @Operation(summary ="get user info")
     @GetMapping("/info")
     public Result<User> getUserInfo(@RequestHeader("Authorization") String token){
         return userService.getUserInfo(token);
     }
 
 
-//    @Autowired
-//    private SmsService smsService;
-//
-//    @Operation(summary = "短信验证码登录")
-//    @PostMapping("/sms/login")
-//    public Result<?> smsLogin(@RequestBody Map map){
-//        Boolean check = smsService.checkCapthcha(map.get("phone") + "", map.get("captcha") + "");
-//        if(!check){
-//            return Result.fail(ResultConstant.FAIL.getCode(),"验证码错误");
-//        }
-//        String token = userService.getTokenByPhone(map.get("phone") + "");
-//        return Result.success(token,"登录成功");
-//    }
 
-
-    @Operation(summary = "获取新token")
+    @Operation(summary = "get new access token")
     @GetMapping("/token")
     public Result<Map<String,Object>> getNewToken(@RequestHeader("Authorization") String token){
         Map<String,Object> result = userService.getNewToken(token);
         return Result.success(result);
     }
 
-    @Operation(summary = "修改昵称")
+    @Operation(summary = "modify nickname")
     @PutMapping("/nickname")
     public Result<?> updateNickname(@RequestParam("userId") String userId,@RequestParam("nickname") String nickname){
         userService.updateNickname(userId,nickname);
         return Result.success();
     }
 
-    @Operation(summary = "修改密码")
+    @Operation(summary = "modify password")
     @PutMapping("/password")
     public Result<?> updatePassword(@RequestBody Map param){
 
@@ -87,17 +73,17 @@ public class UserController {
     }
 
 
-    @Operation(summary = "修改头像")
+    @Operation(summary = "modify avatar")
     @PostMapping("/avatar")
     public Result<?> updateAvatar(MultipartFile file, @RequestParam("userId") Integer userId) throws IOException, SQLException {
 
-        // 读取上传的原始图片
+        // load image
         BufferedImage originalImage = ImageIO.read(file.getInputStream());
 
-        // 创建缩略图
+        // create small size image
         int thumbnailSize = 200;
 
-        // 计算缩略图的宽度和高度，保持原宽高比例
+        // keep origin ratio
         int newWidth, newHeight;
         if (originalImage.getWidth() > originalImage.getHeight()) {
             newWidth = thumbnailSize;
@@ -107,13 +93,13 @@ public class UserController {
             newHeight = thumbnailSize;
         }
 
-        // 创建缩略图
+        // create small size image
         BufferedImage thumbnail = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
         Graphics2D graphics2D = thumbnail.createGraphics();
         graphics2D.drawImage(originalImage, 0, 0, newWidth, newHeight, null);
         graphics2D.dispose();
 
-        // 裁剪成以图片中心为中心的正方形，因为前端是以正方形显示
+        // corp to
         int x = 0;
         int y = 0;
         int cropSize = Math.min(newWidth, newHeight);
@@ -136,7 +122,7 @@ public class UserController {
 
 
 
-    @Operation(summary = "查询头像")
+    @Operation(summary = "search avatar")
     @GetMapping("/avatar")
     public Result<?> getAvatar(@RequestParam("userId") Integer userId){
         byte[] arvatarData =  userService.getAvatar(userId);

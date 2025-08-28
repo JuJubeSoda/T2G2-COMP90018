@@ -10,8 +10,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @OpenAPIDefinition(
         info = @Info(
-                title = "问卷君",
-                description = "基于springboot3+vue3+ElementPlus，年轻人应该学习的第一个问卷系统!",
+                title = "Plant World API Doc",
+                description = "When requesting an interface that requires identity authentication, please log in first and put the JWT returned after \nlogin into the request headers, with the key set to Authorization and the value to JWT string.",
                 version = "1.0"
         ),
         security = @SecurityRequirement(name = "token")

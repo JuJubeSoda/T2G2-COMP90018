@@ -22,5 +22,4 @@ public class User implements Serializable {
     private String userType;
     private String avatar;
     private byte[] avatarData;
-
 }
