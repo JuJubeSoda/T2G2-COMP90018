@@ -5,73 +5,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/button3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Upload and add to my collection"
-        tools:layout_editor_absoluteX="46dp"
-        tools:layout_editor_absoluteY="552dp" />
-
-    <EditText
-        android:id="@+id/editTextText2"
-        android:layout_width="315dp"
-        android:layout_height="46dp"
-        android:ems="10"
-        android:inputType="text"
-        android:text="Search Tag"
-        tools:layout_editor_absoluteX="46dp"
-        tools:layout_editor_absoluteY="490dp" />
-
-    <EditText
-        android:id="@+id/editTextText3"
-        android:layout_width="314dp"
-        android:layout_height="44dp"
-        android:ems="10"
-        android:inputType="text"
-        android:singleLine="false"
-        android:text="Scientific Name"
-        tools:layout_editor_absoluteX="46dp"
-        tools:layout_editor_absoluteY="315dp" />
-
-    <EditText
-        android:id="@+id/editTextText4"
-        android:layout_width="314dp"
-        android:layout_height="47dp"
-        android:ems="10"
-        android:inputType="text"
-        android:singleLine="false"
-        android:text="Introduction"
-        tools:layout_editor_absoluteX="46dp"
-        tools:layout_editor_absoluteY="428dp" />
-
-    <EditText
-        android:id="@+id/editTextText5"
-        android:layout_width="315dp"
-        android:layout_height="46dp"
-        android:ems="10"
-        android:inputType="text"
-        android:singleLine="false"
-        android:text="Location"
-        tools:layout_editor_absoluteX="46dp"
-        tools:layout_editor_absoluteY="368dp" />
-
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="214dp"
-        android:layout_height="203dp"
-        tools:layout_editor_absoluteX="89dp"
-        tools:layout_editor_absoluteY="87dp"
-        tools:srcCompat="@tools:sample/avatars" />
-
+    <!-- Top Bar: Back Button and Title -->
     <ImageButton
         android:id="@+id/imageButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:backgroundTint="#00FFFFFF"
+        android:contentDescription="Back"
+        android:padding="16dp"
         app:srcCompat="@drawable/quantum_ic_arrow_back_grey600_24"
-        tools:layout_editor_absoluteX="27dp"
-        tools:layout_editor_absoluteY="30dp" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/textView"
@@ -79,51 +23,174 @@
         android:layout_height="wrap_content"
         android:text="Upload the Discovery"
         android:textSize="18sp"
-        tools:layout_editor_absoluteX="89dp"
-        tools:layout_editor_absoluteY="43dp" />
+        android:layout_marginStart="8dp"
+        app:layout_constraintStart_toEndOf="@+id/imageButton"
+        app:layout_constraintTop_toTopOf="@+id/imageButton"
+        app:layout_constraintBottom_toBottomOf="@+id/imageButton" />
 
+    <!-- Image Preview -->
+
+    <!-- Input Fields -->
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="218dp"
+        android:layout_height="94dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="72dp"
+        android:layout_marginEnd="16dp"
+        android:contentDescription="Plant image preview"
+        android:scaleType="centerCrop"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.496"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageButton"
+        tools:srcCompat="@tools:sample/avatars" />
+
+    <!-- Use hint instead of text for placeholders -->
+
+    <!-- Upload Button -->
+    <EditText
+        android:id="@+id/editTextText2"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="16dp"
+        android:ems="10"
+        android:hint="Search Tag"
+        android:inputType="text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextText4"
+        tools:text="Search Tag" />
+
+    <EditText
+        android:id="@+id/editTextText3"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="72dp"
+        android:layout_marginEnd="16dp"
+        android:ems="10"
+        android:hint="Scientific Name"
+        android:inputType="text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView"
+        tools:text="Scientific Name" />
+
+    <EditText
+        android:id="@+id/editTextText5"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="16dp"
+        android:ems="10"
+        android:hint="Location"
+        android:inputType="text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextText3"
+        tools:text="Location" />
+
+    <EditText
+        android:id="@+id/editTextText4"
+        android:layout_width="376dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="16dp"
+        android:ems="10"
+        android:gravity="top"
+        android:hint="Introduction"
+        android:inputType="textMultiLine"
+        android:minLines="3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextText5"
+        tools:text="Introduction" />
+
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:text="Upload and add to my collection"
+        app:layout_constraintBottom_toTopOf="@+id/bottomAppBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextText2"
+        app:layout_constraintVertical_bias="0.062" /> <!-- Bias towards top if space -->
+
+    <!-- Bottom Navigation Area -->
     <com.google.android.material.bottomappbar.BottomAppBar
         android:id="@+id/bottomAppBar"
-        android:layout_width="411dp"
-        android:layout_height="69dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        tools:layout_editor_absoluteX="0dp"
-        tools:layout_editor_absoluteY="663dp" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:ignore="BottomAppBar" />
+
+    <!-- Icons on BottomAppBar - Using a Chain for distribution -->
+    <ImageButton
+        android:id="@+id/imageButton6"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:backgroundTint="#00FFFFFF"
+        android:contentDescription="Home"
+        app:srcCompat="@drawable/home_icon_foreground"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintStart_toStartOf="@+id/bottomAppBar"
+        app:layout_constraintEnd_toStartOf="@+id/imageButton5"
+        app:layout_constraintTop_toTopOf="@+id/bottomAppBar"
+        app:layout_constraintBottom_toBottomOf="@+id/bottomAppBar"/>
 
     <ImageButton
         android:id="@+id/imageButton5"
-        android:layout_width="83dp"
-        android:layout_height="76dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:backgroundTint="#00FFFFFF"
+        android:contentDescription="Explore"
         app:srcCompat="@drawable/explore_icon_foreground"
-        tools:layout_editor_absoluteX="116dp"
-        tools:layout_editor_absoluteY="657dp" />
-
-    <ImageButton
-        android:id="@+id/imageButton6"
-        android:layout_width="84dp"
-        android:layout_height="75dp"
-        android:backgroundTint="#00FFFFFF"
-        app:srcCompat="@drawable/home_icon_foreground"
-        tools:layout_editor_absoluteX="16dp"
-        tools:layout_editor_absoluteY="657dp" />
+        app:layout_constraintStart_toEndOf="@+id/imageButton6"
+        app:layout_constraintEnd_toStartOf="@+id/imageButton8"
+        app:layout_constraintTop_toTopOf="@+id/bottomAppBar"
+        app:layout_constraintBottom_toBottomOf="@+id/bottomAppBar"/>
 
     <ImageButton
         android:id="@+id/imageButton8"
-        android:layout_width="83dp"
-        android:layout_height="75dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:backgroundTint="#00FFFFFF"
+        android:contentDescription="Map"
         app:srcCompat="@drawable/map_icon_foreground"
-        tools:layout_editor_absoluteX="214dp"
-        tools:layout_editor_absoluteY="657dp" />
+        app:layout_constraintStart_toEndOf="@+id/imageButton5"
+        app:layout_constraintEnd_toStartOf="@+id/imageButton9"
+        app:layout_constraintTop_toTopOf="@+id/bottomAppBar"
+        app:layout_constraintBottom_toBottomOf="@+id/bottomAppBar"/>
 
     <ImageButton
         android:id="@+id/imageButton9"
-        android:layout_width="73dp"
-        android:layout_height="76dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:backgroundTint="#00FFFFFF"
+        android:contentDescription="Profile"
         app:srcCompat="@drawable/profile_icon_foreground"
-        tools:layout_editor_absoluteX="322dp"
-        tools:layout_editor_absoluteY="657dp" />
+        app:layout_constraintStart_toEndOf="@+id/imageButton8"
+        app:layout_constraintEnd_toEndOf="@+id/bottomAppBar"
+        app:layout_constraintTop_toTopOf="@+id/bottomAppBar"
+        app:layout_constraintBottom_toBottomOf="@+id/bottomAppBar"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
