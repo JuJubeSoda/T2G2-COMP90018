@@ -13,6 +13,6 @@ public class GlobalExceptionHandler {
     public Result<?> handleException(Exception e){
         e.printStackTrace();
         log.error(e.getMessage());
-        return Result.fail(299,"系统异常，请联系管理员");
+        return Result.fail(299,"System Error");
     }
 }

@@ -1,7 +1,9 @@
 package org.unimelb.common.constant;
 
 public enum ResultConstant {
+
     SUCCESS(200, "Operation success"),
+
     FAIL(201, "Operation fail"),
 
     FAIL_LOGIN_ERROR(202,"Incorrect username or password"),

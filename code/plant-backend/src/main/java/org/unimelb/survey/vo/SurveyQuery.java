@@ -1,9 +1,11 @@
 package org.unimelb.survey.vo;
 
+import lombok.EqualsAndHashCode;
 import org.unimelb.common.vo.MyPage;
 import lombok.Data;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class SurveyQuery extends MyPage {
     private String title;
     private Integer status;

@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Tag(name = "问卷模块", description = "问卷模块接口")
+@Tag(name = "survey", description = "survey api")
 @RestController
 @RequestMapping("/survey")
 @Slf4j
@@ -29,14 +29,14 @@ public class SurveyController {
     @Autowired
     private SurveyQuestionService surveyQuestionService;
 
-    @Operation(summary = "新增问卷")
+    @Operation(summary = "create survey")
     @PostMapping
     public Result<?> addSurvey(@RequestBody Survey survey) {
         surveyService.save(survey);
         return Result.success(survey);
     }
 
-    @Operation(summary = "更新问卷")
+    @Operation(summary = "update survey")
     @PutMapping
     public Result<?> updateSurvey(@RequestBody Survey survey) {
         survey.setLud(new Date());
@@ -45,7 +45,7 @@ public class SurveyController {
         return Result.success(survey);
     }
 
-    @Operation(summary = "完成问卷")
+    @Operation(summary = "complete survey")
     @PutMapping("/finish")
     public Result<?> finishEditSurvey(@RequestBody Survey survey) {
         survey.setLud(new Date());
@@ -59,7 +59,7 @@ public class SurveyController {
         return Result.success(survey);
     }
 
-    @Operation(summary = "根据id查询问卷")
+    @Operation(summary = "query survey by id")
     @GetMapping("/{id}")
     public Result<?> getSurveyById(@PathVariable("id") Integer id) {
         Survey survey = surveyService.getById(id);
@@ -69,28 +69,28 @@ public class SurveyController {
     }
 
 
-    @Operation(summary = "根据问卷id查询问题列表")
+    @Operation(summary = "query questions list by survey id")
     @GetMapping("/question/list/{surveyId}")
     public Result<?> getSurveyQuestionList(@PathVariable("surveyId") Integer surveyId) {
         List<SurveyQuestion> list = surveyQuestionService.getQuestionList(surveyId);
         return Result.success(list);
     }
 
-    @Operation(summary = "根据问卷id查询考生信息问题列表")
+    @Operation(summary = "get survey by examinee list")
     @GetMapping("/examinee/list/{surveyId}")
     public Result<?> getSurveyExamineeList(@PathVariable("surveyId") Integer surveyId) {
         List<SurveyQuestion> list = surveyQuestionService.getExamineeList(surveyId);
         return Result.success(list);
     }
 
-    @Operation(summary = "删除问题")
+    @Operation(summary = "delete question")
     @DeleteMapping("/question/{questionId}")
     public Result<?> deleteSurveyQuestion(@PathVariable("questionId") Integer questionId) {
         surveyQuestionService.deleteSurveyQuestion(questionId);
         return Result.success();
     }
 
-    @Operation(summary = "调整问题排序")
+    @Operation(summary = "update question order")
     @PutMapping("/question/order")
     public Result<?> updateQuestionOrder(@RequestParam("surveyId") Integer surveyId,
                                          @RequestParam("questionId") Integer questionId,
@@ -101,7 +101,7 @@ public class SurveyController {
     }
 
 
-    @Operation(summary = "新增试题")
+    @Operation(summary = "create survey question")
     @PostMapping("/question")
     public Result<?> addSurveyQuestion(@RequestBody SurveyQuestion surveyQuestion) {
         surveyQuestionService.addSurveyQuestion(surveyQuestion);
@@ -109,7 +109,7 @@ public class SurveyController {
         return Result.success(surveyQuestion);
     }
 
-    @Operation(summary = "根据id查询试题")
+    @Operation(summary = "query question by question id")
     @GetMapping("/question/{questionId}")
     public Result<?> getSurveyQuestionById(@PathVariable("questionId") Integer questionId) {
         SurveyQuestion surveyQuestion = surveyQuestionService.getById(questionId);
@@ -120,7 +120,7 @@ public class SurveyController {
     @Autowired
     private org.unimelb.survey.service.SurveyQuestionOptionService SurveyQuestionOptionService;
 
-    @Operation(summary = "更新选项")
+    @Operation(summary = "update options")
     @PutMapping("/question/option")
     public Result<?> updateSurveyQuestionOption(@RequestBody SurveyQuestionOption surveyQuestionOption) {
         surveyQuestionOption.setLud(new Date());
@@ -128,7 +128,7 @@ public class SurveyController {
         return Result.success();
     }
 
-    @Operation(summary = "新增选项")
+    @Operation(summary = "create options")
     @PostMapping("/question/option")
     public Result<?> addSurveyQuestionOption(@RequestBody SurveyQuestionOption surveyQuestionOption) {
         SurveyQuestionOptionService.addSurveyQuestionOption(surveyQuestionOption);
@@ -136,7 +136,7 @@ public class SurveyController {
     }
 
 
-    @Operation(summary = "根据id查询试题选项")
+    @Operation(summary = "query question option by question id")
     @GetMapping("/question/option/{questionId}")
     public Result<?> getSurveyQuestionOptionById(@PathVariable("questionId") Integer questionId) {
         List<SurveyQuestionOption> options = SurveyQuestionOptionService.getOptionsByQuestionId(questionId);
