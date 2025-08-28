@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Upload and add to my collection"
+        tools:layout_editor_absoluteX="46dp"
+        tools:layout_editor_absoluteY="552dp" />
+
+    <EditText
+        android:id="@+id/editTextText2"
+        android:layout_width="315dp"
+        android:layout_height="46dp"
+        android:ems="10"
+        android:inputType="text"
+        android:text="Search Tag"
+        tools:layout_editor_absoluteX="46dp"
+        tools:layout_editor_absoluteY="490dp" />
+
+    <EditText
+        android:id="@+id/editTextText3"
+        android:layout_width="314dp"
+        android:layout_height="44dp"
+        android:ems="10"
+        android:inputType="text"
+        android:singleLine="false"
+        android:text="Scientific Name"
+        tools:layout_editor_absoluteX="46dp"
+        tools:layout_editor_absoluteY="315dp" />
+
+    <EditText
+        android:id="@+id/editTextText4"
+        android:layout_width="314dp"
+        android:layout_height="47dp"
+        android:ems="10"
+        android:inputType="text"
+        android:singleLine="false"
+        android:text="Introduction"
+        tools:layout_editor_absoluteX="46dp"
+        tools:layout_editor_absoluteY="428dp" />
+
+    <EditText
+        android:id="@+id/editTextText5"
+        android:layout_width="315dp"
+        android:layout_height="46dp"
+        android:ems="10"
+        android:inputType="text"
+        android:singleLine="false"
+        android:text="Location"
+        tools:layout_editor_absoluteX="46dp"
+        tools:layout_editor_absoluteY="368dp" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="214dp"
+        android:layout_height="203dp"
+        tools:layout_editor_absoluteX="89dp"
+        tools:layout_editor_absoluteY="87dp"
+        tools:srcCompat="@tools:sample/avatars" />
+
+    <ImageButton
+        android:id="@+id/imageButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#00FFFFFF"
+        app:srcCompat="@drawable/quantum_ic_arrow_back_grey600_24"
+        tools:layout_editor_absoluteX="27dp"
+        tools:layout_editor_absoluteY="30dp" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Upload the Discovery"
+        android:textSize="18sp"
+        tools:layout_editor_absoluteX="89dp"
+        tools:layout_editor_absoluteY="43dp" />
+
+    <com.google.android.material.bottomappbar.BottomAppBar
+        android:id="@+id/bottomAppBar"
+        android:layout_width="411dp"
+        android:layout_height="69dp"
+        android:layout_gravity="bottom"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="663dp" />
+
+    <ImageButton
+        android:id="@+id/imageButton5"
+        android:layout_width="83dp"
+        android:layout_height="76dp"
+        android:backgroundTint="#00FFFFFF"
+        app:srcCompat="@drawable/explore_icon_foreground"
+        tools:layout_editor_absoluteX="116dp"
+        tools:layout_editor_absoluteY="657dp" />
+
+    <ImageButton
+        android:id="@+id/imageButton6"
+        android:layout_width="84dp"
+        android:layout_height="75dp"
+        android:backgroundTint="#00FFFFFF"
+        app:srcCompat="@drawable/home_icon_foreground"
+        tools:layout_editor_absoluteX="16dp"
+        tools:layout_editor_absoluteY="657dp" />
+
+    <ImageButton
+        android:id="@+id/imageButton8"
+        android:layout_width="83dp"
+        android:layout_height="75dp"
+        android:backgroundTint="#00FFFFFF"
+        app:srcCompat="@drawable/map_icon_foreground"
+        tools:layout_editor_absoluteX="214dp"
+        tools:layout_editor_absoluteY="657dp" />
+
+    <ImageButton
+        android:id="@+id/imageButton9"
+        android:layout_width="73dp"
+        android:layout_height="76dp"
+        android:backgroundTint="#00FFFFFF"
+        app:srcCompat="@drawable/profile_icon_foreground"
+        tools:layout_editor_absoluteX="322dp"
+        tools:layout_editor_absoluteY="657dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
