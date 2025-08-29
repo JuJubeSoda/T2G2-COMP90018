@@ -25,11 +25,11 @@ public class JwtUtil {
     private String jwtSecret;
 
     public String createJwt(Object data) {
-        // 当前时间
+
         long currentTime = System.currentTimeMillis();
-        // 过期时间
+
         long expTime = currentTime + (jwtExpire * 60 * 1000);
-        // 构建jwt
+
         JwtBuilder builder = Jwts.builder()
                 .setId(UUID.randomUUID() + "")
                 .setSubject(JSON.toJSONString(data))

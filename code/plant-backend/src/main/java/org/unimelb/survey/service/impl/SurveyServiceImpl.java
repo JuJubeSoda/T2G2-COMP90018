@@ -27,7 +27,7 @@ public class SurveyServiceImpl extends ServiceImpl<SurveyMapper, Survey> impleme
         Page<Survey> page = new Page<>(param.getPageNo(),param.getPageSize());
 
         QueryWrapper<Survey> wrapper = new QueryWrapper<>();
-        wrapper.eq("deleted",0);
+//        wrapper.eq("deleted",0);
         wrapper.lambda().like(StringUtils.hasLength(param.getTitle()),Survey::getTitle,param.getTitle());
         wrapper.lambda().eq(param.getStatus() != null,Survey::getStatus,param.getStatus());
         wrapper.lambda().eq(param.getStar() != null,Survey::getStar,param.getStar());
