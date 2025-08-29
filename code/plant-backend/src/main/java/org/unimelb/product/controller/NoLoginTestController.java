@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.unimelb.common.vo.Result;
 import org.unimelb.product.service.NoLoginTestService;
 
-@Tag(name = "无登录测试", description = "测试无需登录场景的链路连通性")
+@Tag(name = "No login test", description = "test connectivity without login")
 @RestController
 @RequestMapping("/test")
 public class NoLoginTestController {
@@ -17,7 +17,7 @@ public class NoLoginTestController {
     @Autowired
     private NoLoginTestService noLoginTestService;
 
-    @Operation(summary ="无参获取信息")
+    @Operation(summary ="Test with no arguments")
     @GetMapping("/test/get/general")
     public Result<String> getTestNoDatabase() {
         return noLoginTestService.getTestNoDatabase();
