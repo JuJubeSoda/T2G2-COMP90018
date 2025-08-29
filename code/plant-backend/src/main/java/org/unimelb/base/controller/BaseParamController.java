@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@Tag(name = "基础参数模块", description = "基础参数模块接口")
+@Tag(name = "Basic Arguments", description = "Basic Arguments API")
 @RestController
 @RequestMapping("/base")
 @Slf4j
@@ -22,7 +22,7 @@ public class BaseParamController {
     @Autowired
     private BaseParamService baseParamService;
 
-    @Operation(summary = "查询参数列表")
+    @Operation(summary = "query arguments list")
     @GetMapping
     public Result<?> getParamList(@RequestParam("baseName") String baseName) {
         List<BaseParam> list = baseParamService.getParamList(baseName);
