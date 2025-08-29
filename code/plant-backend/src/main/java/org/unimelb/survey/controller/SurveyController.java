@@ -143,14 +143,14 @@ public class SurveyController {
         return Result.success(options);
     }
 
-    @Operation(summary = "根据id删除试题选项")
+    @Operation(summary = "delete options by question id")
     @DeleteMapping("/question/option/{optionId}")
     public Result<?> deleteSurveyQuestionOptionById(@PathVariable("optionId") Integer optionId) {
         SurveyQuestionOptionService.deleteSurveyQuestionOptionById(optionId);
         return Result.success();
     }
 
-    @Operation(summary = "设置正确答案")
+    @Operation(summary = "set right answer")
     @PutMapping("/question/correct")
     public Result<?> setCorrectAnswer(@RequestParam("questionId") Integer questionId,
                                       @RequestParam("correctAnswer") String correctAnswer) {
@@ -158,14 +158,14 @@ public class SurveyController {
         return Result.success();
     }
 
-    @Operation(summary = "更新试题")
+    @Operation(summary = "update question")
     @PutMapping("/question")
     public Result<?> updateSurveyQuestion(@RequestBody SurveyQuestion surveyQuestion) {
         surveyQuestionService.updateById(surveyQuestion);
         return Result.success(surveyQuestion);
     }
 
-    @Operation(summary = "分页查询查询问卷")
+    @Operation(summary = "Get survey list by page")
     @GetMapping("/list")
     public Result<Map<String, Object>> getSurveyList(SurveyQuery param) {
         Page<Survey> page = surveyService.getSurveyList(param);
@@ -178,63 +178,63 @@ public class SurveyController {
     }
 
 
-    @Operation(summary = "复制问卷")
+    @Operation(summary = "copy survey")
     @GetMapping("/copy")
     public Result<Integer> copySurvey(@RequestParam("sourceSurveyId") Integer sourceSurveyId) {
         Integer newSurveyId = surveyService.copySurvey(sourceSurveyId);
         return Result.success(newSurveyId);
     }
 
-    @Operation(summary = "逻辑删除问卷")
+    @Operation(summary = "delete survey logically")
     @DeleteMapping("/{id}")
     public Result<?> deleteSurveyToRecycle(@PathVariable("id") Integer id) {
         surveyService.deleteSurveyToRecycle(id);
         return Result.success();
     }
 
-    @Operation(summary = "物理删除问卷")
+    @Operation(summary = "delete survey physically")
     @DeleteMapping("/physical/{id}")
     public Result<?> deleteSurvey(@PathVariable("id") Integer id) {
         surveyService.deleteSurvey(id);
         return Result.success();
     }
 
-    @Operation(summary = "回收站恢复问卷")
+    @Operation(summary = "restore deleted survey")
     @PutMapping("/restore/{id}")
     public Result<?> restoreSurvey(@PathVariable("id") Integer id) {
         surveyService.restoreSurvey(id);
         return Result.success();
     }
 
-    @Operation(summary = "回收站问卷列表")
+    @Operation(summary = "get recycle list")
     @GetMapping("/recycle/list")
     public Result<?> getRecycleList(@RequestParam("userId") Integer userId) {
         List<Survey> recycleList = surveyService.getRecycleList(userId);
         return Result.success(recycleList);
     }
 
-    @Operation(summary = "设置星标")
+    @Operation(summary = "set star")
     @PutMapping("/star")
     public Result<?> setSurveyStar(@RequestParam("surveyId") Integer surveyId) {
         surveyService.setSurveyStar(surveyId);
         return Result.success();
     }
 
-    @Operation(summary = "发布问卷")
+    @Operation(summary = "publish survey")
     @PutMapping("/publish")
     public Result<?> publishSurvey(@RequestParam("surveyId") Integer surveyId) {
         Integer status = surveyService.publishSurvey(surveyId);
         return Result.success(status);
     }
 
-    @Operation(summary = "停止发布问卷")
+    @Operation(summary = "stop survey")
     @PutMapping("/stop")
     public Result<?> stopSurvey(@RequestParam("surveyId") Integer surveyId) {
         Integer status = surveyService.stopSurvey(surveyId);
         return Result.success(status);
     }
 
-    @Operation(summary = "根据id查询问卷")
+    @Operation(summary = "get survey by id")
     @GetMapping("/examination/{id}")
     public Result<?> getSurveyForExam(@PathVariable("id") Integer id) {
         Survey survey = surveyService.getById(id);
@@ -249,7 +249,7 @@ public class SurveyController {
     @Autowired
     private SurveyUserAnswerService surveyUserAnswerService;
 
-    @Operation(summary = "提交考试")
+    @Operation(summary = "submit exam")
     @PostMapping("/examination")
     public Result<?> submitExam(@RequestBody List<SurveyUserAnswer> answers,
                                 @RequestParam("examDuration") Integer examDuration) {
@@ -261,14 +261,14 @@ public class SurveyController {
     @Autowired
     private SurveyUserScoreService surveyUserScoreService;
 
-    @Operation(summary = "查询考试")
+    @Operation(summary = "get exam result")
     @GetMapping("/examination/score")
     public Result<?> getExamResult(@RequestParam("scoreId") Integer scoreId) {
         SurveyUserScore surveyUserScore = surveyUserScoreService.getById(scoreId);
         return Result.success(surveyUserScore);
     }
 
-    @Operation(summary = "查询问卷答题情况")
+    @Operation(summary = "get exam result info")
     @GetMapping("/examination/score/details")
     public Result<?> getExamResultInfo(@RequestParam("surveyId") Integer surveyId,
                                        @RequestParam("scoreId") Integer scoreId) {
@@ -283,7 +283,7 @@ public class SurveyController {
         return Result.success(data);
     }
 
-    @Operation(summary = "查询排行榜")
+    @Operation(summary = "get ranking")
     @GetMapping("/examination/ranking")
     public Result<Map<String, Object>> getExamRanking(@RequestParam("surveyId") Integer surveyId) {
         Survey survey = surveyService.getById(surveyId);
