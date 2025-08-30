@@ -18,7 +18,7 @@ public class NoLoginTestController {
     private NoLoginTestService noLoginTestService;
 
     @Operation(summary ="Test with no arguments")
-    @GetMapping("/test/get/general")
+    @GetMapping("/get/general")
     public Result<String> getTestNoDatabase() {
         return noLoginTestService.getTestNoDatabase();
     }
