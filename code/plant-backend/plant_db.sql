@@ -38,6 +38,18 @@ CREATE TABLE `userbase_param` (
 --
 -- Dumping data for table `userbase_param`
 --
+DROP TABLE IF EXISTS `plant`;
+CREATE TABLE IF NOT EXISTS plant (
+    plant_id         BIGINT        NOT NULL AUTO_INCREMENT COMMENT 'Primary key of the plant',
+    user_id          BIGINT        NOT NULL COMMENT 'User ID who owns the plant',
+    image_url        VARCHAR(512)  DEFAULT NULL COMMENT 'URL of the plant image',
+    description      TEXT          DEFAULT NULL COMMENT 'Description of the plant',
+    location         VARCHAR(255)  DEFAULT NULL COMMENT 'Plant location (e.g., balcony, garden)',
+    plant_category   VARCHAR(100)  DEFAULT NULL COMMENT 'Plant category (e.g., succulent, herb)',
+    create_at        DATE          DEFAULT NULL COMMENT 'Creation date',
+    PRIMARY KEY (plant_id),
+    KEY idx_plant_user (user_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 LOCK TABLES `userbase_param` WRITE;
 /*!40000 ALTER TABLE `userbase_param` DISABLE KEYS */;
