@@ -48,7 +48,6 @@ public class UserController {
     }
 
 
-
     @Operation(summary = "get new access token")
     @GetMapping("/token")
     public Result<Map<String,Object>> getNewToken(@RequestHeader("Authorization") String token){

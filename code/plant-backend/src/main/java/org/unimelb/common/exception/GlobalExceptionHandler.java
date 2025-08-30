@@ -13,6 +13,6 @@ public class GlobalExceptionHandler {
     public Result<?> handleException(Exception e){
         e.printStackTrace();
         log.error(e.getMessage());
-        return Result.fail(299,"System Error");
+        return Result.fail(500, e.getMessage());
     }
 }
