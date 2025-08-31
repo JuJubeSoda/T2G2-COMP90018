@@ -13,7 +13,8 @@ public class PlantQuery extends MyPage{
     private Long userId;
     private String imageURL;
     private String description;
-    private String location;
+    private Double latitude;
+    private Double longitude;
     private String plantCategory;
 
 }

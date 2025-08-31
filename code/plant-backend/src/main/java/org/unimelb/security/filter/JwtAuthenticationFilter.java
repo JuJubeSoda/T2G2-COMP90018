@@ -26,7 +26,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        // 1. 放行部分请求
+
         String uri = request.getRequestURI();
         if (!uri.endsWith("/user/login")
                 && !uri.endsWith("/user/sms/login")
@@ -37,33 +37,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 && !uri.endsWith("/user/reg")
                 && uri.indexOf("/sms") < 0
         ) {
-            log.debug("----------> jwt认证开始......" + uri);
-            // 2. 获取jwt, 解析
+
             String token = request.getHeader("Authorization");
             if (StringUtils.hasLength(token)) {
                 User user = null;
                 try {
                     user = jwtUtil.parseJwt(token, User.class);
                     if (user != null) {
-                        // 3. jwt有效，告诉security这是一个有效的已认证的请求
+
                         SecurityUser securityUser = new SecurityUser(user);
                         SecurityContextHolder.getContext().setAuthentication(
                                 new UsernamePasswordAuthenticationToken(securityUser, null, securityUser.getAuthorities())
                         );
-                        // 设置用户上下文
+
                         UserContext.setUser(user);
-                        log.debug("----------> jwt认证通过......" + uri + "   " + user);
                     }
                 } catch (Exception e) {
-                    log.error("----------> jwt认证失败......" + uri);
-                    //throw new RuntimeException(e);
+
+                    throw new RuntimeException(e);
                 }
             }
         }
 
         filterChain.doFilter(request, response);
         
-        // 请求结束后清理ThreadLocal
+
         UserContext.clear();
 
     }

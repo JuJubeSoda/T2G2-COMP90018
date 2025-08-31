@@ -1,6 +1,7 @@
 package org.unimelb.plant.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 
@@ -20,10 +21,13 @@ public class PlantController {
     @Resource
     private PlantService plantService;
 
-    // 新增
+    @Operation(summary = "Search plants by User Id")
     @GetMapping("/by-user")
-    public Result<List<Plant>> listByUser(@RequestHeader("Authorization") String token) {
-        return plantService.listPlantsByUser(token);
+    public Result<List<Plant>> listByUser() {
+
+        List<Plant> list= plantService.list();
+
+        return Result.success(list);
     }
 
     /**
@@ -31,12 +35,11 @@ public class PlantController {
      * POST /api/plants
      * Content-Type: application/json
      */
+    @Operation(summary = "Add New Plant")
     @PostMapping("/add")
-    public Result<Plant> addPlant(@RequestHeader("Authorization") String token, @RequestBody Plant plant) {
-        if (token == null || token.isBlank()) {
-            return Result.fail(400, "token is required");
-        }
-        return plantService.addPlant(token, plant);
+    public Result<Plant> addPlant(@RequestBody Plant plant) {
+        Plant plantSaved=plantService.addPlant(plant);
+        return plantSaved==null ? Result.fail(500, "save failed"):Result.success(plantSaved);
     }
 
 

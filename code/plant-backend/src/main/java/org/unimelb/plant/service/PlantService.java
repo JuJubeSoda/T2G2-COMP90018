@@ -12,8 +12,8 @@ import java.util.List;
 public interface PlantService extends IService<Plant> {
     public Page<Plant> pagePlants(PlantQuery query);
 
-    Result<List<Plant>> listPlantsByUser(String token);
+    List<Plant> listPlantsByUser();
 
-    Result<Plant> addPlant(String token, Plant plant);
+    Plant addPlant(Plant plant);
 
 }

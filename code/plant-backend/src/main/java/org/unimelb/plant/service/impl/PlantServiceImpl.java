@@ -1,4 +1,5 @@
 package org.unimelb.plant.service.impl;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.unimelb.common.constant.ResultConstant;
+import org.unimelb.common.context.UserContext;
 import org.unimelb.common.utils.JwtUtil;
 import org.unimelb.common.vo.Result;
 import org.unimelb.plant.entity.Plant;
@@ -33,11 +35,12 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
         QueryWrapper<Plant> qw = new QueryWrapper<>();
         qw.lambda()
                 .eq(query.getPlantId() != null, Plant::getPlantId, query.getPlantId())
-                .eq(query.getUserId()  != null, Plant::getUserId,  query.getUserId())
-                .like(StringUtils.hasText(query.getImageURL()),     Plant::getImageUrl,     query.getImageURL())
-                .like(StringUtils.hasText(query.getDescription()),  Plant::getDescription,  query.getDescription())
-                .like(StringUtils.hasText(query.getLocation()),     Plant::getLocation,     query.getLocation())
-                .eq(StringUtils.hasText(query.getPlantCategory()),  Plant::getPlantCategory, query.getPlantCategory())
+                .eq(query.getUserId() != null, Plant::getUserId, query.getUserId())
+                .like(StringUtils.hasText(query.getImageURL()), Plant::getImageUrl, query.getImageURL())
+                .like(StringUtils.hasText(query.getDescription()), Plant::getDescription, query.getDescription())
+                .eq(StringUtils.hasText(query.getPlantCategory()), Plant::getPlantCategory, query.getPlantCategory())
+                .eq(query.getLatitude() != null, Plant::getLatitude, query.getLatitude())
+                .eq(query.getLongitude() != null, Plant::getLongitude, query.getLongitude())
                 .orderByDesc(Plant::getCreatedAt);
 
 
@@ -45,58 +48,26 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
     }
 
 
-
     @Override
-    public Result<List<Plant>> listPlantsByUser(String token) {
-        try {
-            String raw = normalizeToken(token);
-            User user = jwtUtil.parseJwt(raw, User.class);
-            if (user == null || user.getId() == null) {
-                return Result.fail(ResultConstant.FAIL_UNLOGIN_ERROR.getCode(),
-                        ResultConstant.FAIL_UNLOGIN_ERROR.getMessage());
-            }
+    public List<Plant> listPlantsByUser() {
 
-            List<Plant> list = this.list(
-                    Wrappers.<Plant>lambdaQuery()
-                            .eq(Plant::getUserId, user.getId())
-                            .orderByDesc(Plant::getCreatedAt)
-            );
-            return Result.success(list);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Result.fail(ResultConstant.FAIL_UNLOGIN_ERROR.getCode(),
-                    ResultConstant.FAIL_UNLOGIN_ERROR.getMessage());
-        }
+        Long userId = UserContext.getCurrentUserId();
+        List<Plant> list = this.list(
+                Wrappers.<Plant>lambdaQuery()
+                        .eq(Plant::getUserId, userId)
+                        .orderByDesc(Plant::getCreatedAt)
+        );
+        return list;
     }
 
     @Override
-    public Result<Plant> addPlant(String token, Plant plant) {
-        try {
-            String raw = normalizeToken(token);
-            User user = jwtUtil.parseJwt(raw, User.class);
-            if (user == null || user.getId() == null) {
-                return Result.fail(ResultConstant.FAIL_UNLOGIN_ERROR.getCode(),
-                        ResultConstant.FAIL_UNLOGIN_ERROR.getMessage());
-            }
+    public Plant addPlant(Plant plant) {
+        Long userId = UserContext.getCurrentUserId();
+        plant.setUserId(userId);
+        plant.setPlantId(null);
 
-            plant.setUserId(Long.valueOf(user.getId()));
-            plant.setPlantId(null); // 自增
-
-            boolean ok = this.save(plant);
-            return ok ? Result.success(plant) : Result.fail(500, "save failed");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Result.fail(ResultConstant.FAIL_UNLOGIN_ERROR.getCode(),
-                    ResultConstant.FAIL_UNLOGIN_ERROR.getMessage());
-        }
+        boolean ok = this.save(plant);
+        return ok ? plant : null;
     }
-
-
-    private String normalizeToken(String token) {
-        if (!StringUtils.hasText(token)) return token;
-        String t = token.trim();
-        return (t.regionMatches(true, 0, "Bearer ", 0, 7)) ? t.substring(7).trim() : t;
-    }
-
 
 }
