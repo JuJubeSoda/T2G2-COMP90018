@@ -1,6 +1,7 @@
 package org.unimelb.security.filter;
 
 import org.unimelb.common.utils.JwtUtil;
+import org.unimelb.common.context.UserContext;
 import org.unimelb.security.vo.SecurityUser;
 import org.unimelb.user.entity.User;
 import jakarta.servlet.FilterChain;
@@ -49,6 +50,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(
                                 new UsernamePasswordAuthenticationToken(securityUser, null, securityUser.getAuthorities())
                         );
+                        // 设置用户上下文
+                        UserContext.setUser(user);
                         log.debug("----------> jwt认证通过......" + uri + "   " + user);
                     }
                 } catch (Exception e) {
@@ -59,6 +62,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+        
+        // 请求结束后清理ThreadLocal
+        UserContext.clear();
 
     }
 }

@@ -9,13 +9,22 @@ import java.time.LocalDate;
 
 @Data
 @TableName("plant")
-public class Plant implements Serializable{
+public class Plant implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long plantId;
+
     private Long userId;
+
     private String imageUrl;
+
     private String description;
+
     private String location;
+
     private String plantCategory;
+
     private LocalDate createdAt;
+
+    private Long gardenId;
+
 }

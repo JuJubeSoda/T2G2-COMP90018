@@ -7,7 +7,7 @@ import lombok.Data;
 import java.time.LocalDate;
 
 @Data
-
+@EqualsAndHashCode(callSuper = true)
 public class PlantQuery extends MyPage{
     private Long plantId;
     private Long userId;

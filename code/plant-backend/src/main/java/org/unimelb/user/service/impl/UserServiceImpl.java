@@ -29,7 +29,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
     @Override
     public void registerUser(User user) {
         user.setUsername(user.getUsername());
-        user.setNickname(user.getNickname());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userMapper.insert(user);
     }

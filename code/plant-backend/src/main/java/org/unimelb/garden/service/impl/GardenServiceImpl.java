@@ -1,7 +1,6 @@
 package org.unimelb.garden.service.impl;
 
 import org.springframework.stereotype.Service;
-import org.unimelb.common.vo.Result;
 import org.unimelb.garden.entity.Garden;
 import org.unimelb.garden.service.GardenService;
 import org.unimelb.plant.entity.Plant;

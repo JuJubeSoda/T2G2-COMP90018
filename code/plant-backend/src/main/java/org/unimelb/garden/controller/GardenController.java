@@ -25,4 +25,7 @@ public class GardenController {
     public Result<List<Garden>> getAllGardens() {
         return Result.success(gardenService.getAllGardens());
     }
+
+
+
 }
