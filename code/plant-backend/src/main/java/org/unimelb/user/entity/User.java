@@ -5,12 +5,13 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Data
-@TableName("user")
+@TableName("users")
 public class User implements Serializable {
     @TableId(type = IdType.AUTO)
-    private Long id;
+    private Long userId;
 
     private String username;
 
@@ -20,9 +21,9 @@ public class User implements Serializable {
 
     private String email;
 
-    private java.util.Date fcd;
+    private LocalDateTime createdAt;
 
-    private java.util.Date lud;
+    private LocalDateTime updatedAt;
 
     private String userType;
 

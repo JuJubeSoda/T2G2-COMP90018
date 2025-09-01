@@ -1,5 +1,6 @@
 package org.unimelb.user.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import org.unimelb.common.vo.Result;
 import org.unimelb.user.entity.User;
 import org.unimelb.user.service.UserService;
@@ -55,6 +56,7 @@ public class UserController {
         return Result.success(result);
     }
 
+    @Hidden
     @Operation(summary = "modify nickname")
     @PutMapping("/nickname")
     public Result<?> updateNickname(@RequestParam("userId") String userId,@RequestParam("nickname") String nickname){
@@ -72,6 +74,7 @@ public class UserController {
     }
 
 
+    @Hidden
     @Operation(summary = "modify avatar")
     @PostMapping("/avatar")
     public Result<?> updateAvatar(MultipartFile file, @RequestParam("userId") Integer userId) throws IOException, SQLException {
@@ -121,6 +124,7 @@ public class UserController {
 
 
 
+    @Hidden
     @Operation(summary = "search avatar")
     @GetMapping("/avatar")
     public Result<?> getAvatar(@RequestParam("userId") Integer userId){

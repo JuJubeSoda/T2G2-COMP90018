@@ -1,5 +1,6 @@
 package org.unimelb.garden.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import org.unimelb.common.vo.Result;
 import org.unimelb.garden.entity.Garden;
 import org.unimelb.plant.entity.Plant;

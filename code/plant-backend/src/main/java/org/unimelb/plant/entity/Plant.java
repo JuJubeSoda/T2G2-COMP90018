@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @TableName("plant")
@@ -15,7 +16,7 @@ public class Plant implements Serializable {
 
     private Long userId;
 
-    private String imageUrl;
+    private byte[] image;
 
     private String description;
 
@@ -25,8 +26,9 @@ public class Plant implements Serializable {
 
     private String plantCategory;
 
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
 
     private Long gardenId;
-
 }

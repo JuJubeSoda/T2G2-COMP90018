@@ -1,6 +1,7 @@
 package org.unimelb.survey.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.swagger.v3.oas.annotations.Hidden;
 import org.unimelb.common.vo.Result;
 import org.unimelb.survey.entity.*;
 import org.unimelb.survey.service.*;
@@ -20,6 +21,7 @@ import java.util.Map;
 
 @Tag(name = "survey", description = "survey api")
 @RestController
+@Hidden
 @RequestMapping("/survey")
 @Slf4j
 public class SurveyController {
@@ -36,7 +38,7 @@ public class SurveyController {
         return Result.success(survey);
     }
 
-    @Operation(summary = "update survey")
+//    @Operation(summary = "update survey")
     @PutMapping
     public Result<?> updateSurvey(@RequestBody Survey survey) {
         survey.setLud(new Date());
@@ -59,7 +61,7 @@ public class SurveyController {
 //        return Result.success(survey);
 //    }
 
-    @Operation(summary = "query survey by id")
+//    @Operation(summary = "query survey by id")
     @GetMapping("/{id}")
     public Result<?> getSurveyById(@PathVariable("id") Integer id) {
         Survey survey = surveyService.getById(id);
@@ -69,7 +71,7 @@ public class SurveyController {
     }
 
 
-    @Operation(summary = "query questions list by survey id")
+//    @Operation(summary = "query questions list by survey id")
     @GetMapping("/question/list/{surveyId}")
     public Result<?> getSurveyQuestionList(@PathVariable("surveyId") Integer surveyId) {
         List<SurveyQuestion> list = surveyQuestionService.getQuestionList(surveyId);
@@ -83,7 +85,7 @@ public class SurveyController {
 //        return Result.success(list);
 //    }
 
-    @Operation(summary = "delete question")
+//    @Operation(summary = "delete question")
     @DeleteMapping("/question/{questionId}")
     public Result<?> deleteSurveyQuestion(@PathVariable("questionId") Integer questionId) {
         surveyQuestionService.deleteSurveyQuestion(questionId);
@@ -165,7 +167,7 @@ public class SurveyController {
 //        return Result.success(surveyQuestion);
 //    }
 
-    @Operation(summary = "Get survey list by page")
+//    @Operation(summary = "Get survey list by page")
     @GetMapping("/list")
     public Result<Map<String, Object>> getSurveyList(SurveyQuery param) {
         Page<Survey> page = surveyService.getSurveyList(param);

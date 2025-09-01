@@ -36,7 +36,7 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
         qw.lambda()
                 .eq(query.getPlantId() != null, Plant::getPlantId, query.getPlantId())
                 .eq(query.getUserId() != null, Plant::getUserId, query.getUserId())
-                .like(StringUtils.hasText(query.getImageURL()), Plant::getImageUrl, query.getImageURL())
+                .like(query.getImage() != null, Plant::getImage, query.getImage())
                 .like(StringUtils.hasText(query.getDescription()), Plant::getDescription, query.getDescription())
                 .eq(StringUtils.hasText(query.getPlantCategory()), Plant::getPlantCategory, query.getPlantCategory())
                 .eq(query.getLatitude() != null, Plant::getLatitude, query.getLatitude())

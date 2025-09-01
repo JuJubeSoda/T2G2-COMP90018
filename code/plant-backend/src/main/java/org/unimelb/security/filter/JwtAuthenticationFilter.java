@@ -31,11 +31,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (!uri.endsWith("/user/login")
                 && !uri.endsWith("/user/sms/login")
                 && !uri.endsWith("/user/avatar")
-                && uri.indexOf("/user/info") < 0
-                && uri.indexOf("/survey/examination") < 0
+                && !uri.contains("/user/info")
+                && !uri.contains("/survey/examination")
                 && !uri.endsWith("/user/logout")
                 && !uri.endsWith("/user/reg")
-                && uri.indexOf("/sms") < 0
+                && !uri.contains("/sms")
         ) {
 
             String token = request.getHeader("Authorization");

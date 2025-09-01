@@ -64,7 +64,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
     @Override
     public Map<String,Object> getNewToken(String token) {
         User user = jwtUtil.parseJwt(token, User.class);
-        User newUser = userMapper.selectById(user.getId());
+        User newUser = userMapper.selectById(user.getUserId());
         String newToken = jwtUtil.createJwt(newUser);
         return Map.of("user",newUser,"token",newToken);
     }

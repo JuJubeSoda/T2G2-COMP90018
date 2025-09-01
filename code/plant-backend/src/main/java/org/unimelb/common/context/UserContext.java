@@ -15,7 +15,7 @@ public class UserContext {
 
     public static Long getCurrentUserId() {
         User user = getCurrentUser();
-        return user != null ? user.getId() : null;
+        return user != null ? user.getUserId() : null;
     }
 
     public static void clear() {

@@ -3,10 +3,10 @@ server:
 
 spring:
   profiles:
-    active: dev   # 本地和远程配置切换 dev:本地  prod:远程
+    active: dev
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
-    time-zone: GMT+8
+    time-zone: GMT+10
 #  data:
 #    redis:
 #      host: 8.137.85.150
@@ -15,14 +15,10 @@ spring:
     multipart:
       max-file-size: 10MB
 
-
 plant:
   jwt:
-    expire: 600  # 单位分钟
+    expire: 600
     secret: 12345678901234567890123456789012
-
-
-
 
 logging:
   level:

@@ -1,5 +1,6 @@
 package org.unimelb.base.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import org.unimelb.base.entity.BaseParam;
 import org.unimelb.base.sevice.BaseParamService;
 import org.unimelb.common.vo.Result;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Hidden
 @Tag(name = "Basic Arguments", description = "Basic Arguments API")
 @RestController
 @RequestMapping("/base")

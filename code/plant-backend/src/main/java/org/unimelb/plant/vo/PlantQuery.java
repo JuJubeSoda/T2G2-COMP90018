@@ -11,7 +11,7 @@ import java.time.LocalDate;
 public class PlantQuery extends MyPage{
     private Long plantId;
     private Long userId;
-    private String imageURL;
+    private byte[] image;
     private String description;
     private Double latitude;
     private Double longitude;

@@ -8,15 +8,15 @@ import org.apache.ibatis.annotations.Update;
 import java.sql.Blob;
 
 public interface UserMapper extends BaseMapper<User> {
-    @Select("select * from user where username=#{username} || phone=#{username}")
+    @Select("select * from users where username=#{username} OR phone=#{username}")
     User getUserByName(String username);
 
-    @Update("update user set nickname=#{nickname} where id = #{userId}")
+    @Update("update users set nickname=#{nickname} where id = #{userId}")
     void updateNickname(String userId, String nickname);
 
-    @Update("update user set password=#{password} where id = #{userId}")
+    @Update("update users set password=#{password} where id = #{userId}")
     void updatePassword(Integer userId, String password);
 
-    @Update("update user set avatar_data=#{avatarBlob} where id = #{userId}")
+    @Update("update users set avatar_data=#{avatarBlob} where id = #{userId}")
     void updateAvatar(Integer userId, Blob avatarBlob);
 }
