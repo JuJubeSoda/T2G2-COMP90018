@@ -10,8 +10,10 @@
         android:id="@+id/imageButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:backgroundTint="#00FFFFFF"
+        android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="Back"
+        android:minWidth="48dp"
+        android:minHeight="48dp"
         android:padding="16dp"
         app:srcCompat="@drawable/quantum_ic_arrow_back_grey600_24"
         app:layout_constraintStart_toStartOf="parent"
@@ -28,109 +30,18 @@
         app:layout_constraintTop_toTopOf="@+id/imageButton"
         app:layout_constraintBottom_toBottomOf="@+id/imageButton" />
 
-    <!-- Image Preview -->
 
-    <!-- Input Fields -->
-
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="218dp"
-        android:layout_height="94dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="72dp"
-        android:layout_marginEnd="16dp"
-        android:contentDescription="Plant image preview"
-        android:scaleType="centerCrop"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.496"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageButton"
-        tools:srcCompat="@tools:sample/avatars" />
-
-    <!-- Use hint instead of text for placeholders -->
-
-    <!-- Upload Button -->
-    <EditText
-        android:id="@+id/editTextText2"
-        android:layout_width="381dp"
-        android:layout_height="50dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginEnd="16dp"
-        android:ems="10"
-        android:hint="Search Tag"
-        android:inputType="text"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextText4"
-        tools:text="Search Tag" />
-
-    <EditText
-        android:id="@+id/editTextText3"
-        android:layout_width="381dp"
-        android:layout_height="54dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="72dp"
-        android:layout_marginEnd="16dp"
-        android:ems="10"
-        android:hint="Scientific Name"
-        android:inputType="text"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        tools:text="Scientific Name" />
-
-    <EditText
-        android:id="@+id/editTextText5"
-        android:layout_width="381dp"
-        android:layout_height="52dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="16dp"
-        android:ems="10"
-        android:hint="Location"
-        android:inputType="text"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextText3"
-        tools:text="Location" />
-
-    <EditText
-        android:id="@+id/editTextText4"
-        android:layout_width="381dp"
-        android:layout_height="54dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginEnd="16dp"
-        android:ems="10"
-        android:gravity="top"
-        android:hint="Introduction"
-        android:inputType="textMultiLine"
-        android:minLines="3"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextText5"
-        tools:text="Introduction" />
-
-    <Button
-        android:id="@+id/button3"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="24dp"
-        android:layout_marginEnd="16dp"
+    <!-- Dedicated Capture Button -->
+    <ImageButton
+        android:id="@+id/button_capture"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
         android:layout_marginBottom="16dp"
-        android:text="Upload and add to my collection"
+        android:background="@drawable/capture_button_background_dark"
+        android:contentDescription="Take Picture"
         app:layout_constraintBottom_toTopOf="@+id/bottomAppBar"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextText2"
-        app:layout_constraintVertical_bias="0.062" /> <!-- Bias towards top if space -->
+        app:layout_constraintStart_toStartOf="parent" />
 
     <!-- Bottom Navigation Area -->
     <com.google.android.material.bottomappbar.BottomAppBar
