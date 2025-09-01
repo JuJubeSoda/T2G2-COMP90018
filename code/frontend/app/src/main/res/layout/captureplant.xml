@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@android:color/black"> <!-- Set background to black for a seamless camera UI -->
 
     <!-- Top Bar: Back Button and Title -->
     <ImageButton
@@ -16,6 +17,7 @@
         android:minHeight="48dp"
         android:padding="16dp"
         app:srcCompat="@drawable/quantum_ic_arrow_back_grey600_24"
+        app:tint="@android:color/white"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -25,23 +27,34 @@
         android:layout_height="wrap_content"
         android:text="Upload the Discovery"
         android:textSize="18sp"
+        android:textColor="@android:color/white"
         android:layout_marginStart="8dp"
         app:layout_constraintStart_toEndOf="@+id/imageButton"
         app:layout_constraintTop_toTopOf="@+id/imageButton"
         app:layout_constraintBottom_toBottomOf="@+id/imageButton" />
 
-
-    <!-- Dedicated Capture Button -->
-    <ImageButton
-        android:id="@+id/button_capture"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:layout_marginBottom="16dp"
-        android:background="@drawable/capture_button_background_dark"
-        android:contentDescription="Take Picture"
+    <!-- Camera Preview Area -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/camera_preview"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:scaleType="fillCenter"
+        app:layout_constraintTop_toBottomOf="@+id/imageButton"
         app:layout_constraintBottom_toTopOf="@+id/bottomAppBar"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+<!--    &lt;!&ndash; Capture Button &ndash;&gt;-->
+<!--    <ImageButton-->
+<!--        android:id="@+id/button_capture"-->
+<!--        android:layout_width="72dp"-->
+<!--        android:layout_height="72dp"-->
+<!--        android:layout_marginBottom="16dp"-->
+<!--        android:background="@drawable/capture_button_background"-->
+<!--        android:contentDescription="Take Picture"-->
+<!--        app:layout_constraintBottom_toTopOf="@+id/bottomAppBar"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent" />-->
 
     <!-- Bottom Navigation Area -->
     <com.google.android.material.bottomappbar.BottomAppBar

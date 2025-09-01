@@ -59,6 +59,7 @@ dependencies {
     implementation libs.play.services.location
     implementation libs.places
     implementation libs.camera.view
+    implementation libs.camera.lifecycle
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
