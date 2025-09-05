@@ -36,7 +36,7 @@ public class SignInActivity extends AppCompatActivity {
         tvForgotPwd.setOnClickListener(v ->
                 Toast.makeText(this, "Forgot password clicked", Toast.LENGTH_SHORT).show());
 
-        // 核心：点击登录后，判断是否首次登录 -> 跳转
+        // 点击登录后，判断是否首次登录 -> 跳转
         btnSignIn.setOnClickListener(v -> {
             String email = etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
             String pwd   = etPassword.getText() != null ? etPassword.getText().toString() : "";
