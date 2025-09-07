@@ -145,8 +145,7 @@ public class UploadFragment extends Fragment {
 
                 // Navigate back or to another destination
                 if (navController != null) {
-                    navController.popBackStack(); // Example: Go back after success
-                    // Or navigate to a "My Plants" list, etc.
+                    navController.navigate(R.id.navigation_upload_complete_preview);
                     // navController.navigate(R.id.action_uploadFragment_to_myPlantsFragment);
                 } else {
                     Log.e(TAG, "NavController is null, cannot navigate after success overlay.");

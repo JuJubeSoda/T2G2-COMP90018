@@ -61,6 +61,58 @@
             android:name="imageUri"
             app:argType="string"
             app:nullable="true" />
+
+        <action
+            android:id="@+id/action_uploadFragment_to_uploadCompletePreviewFragment"
+            app:destination="@id/navigation_upload_complete_preview" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_upload_complete_preview"
+        android:name="com.example.myapplication.ui.myplants.UploadCompleteFragment"
+        android:label="Upload Complete"
+        tools:layout="@layout/uploadcompletepreview">
+
+        <argument
+            android:name="imageUri"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="scientificName"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="location"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="introduction"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="searchTag"
+            app:argType="string"
+            app:nullable="true" />
+        <!-- Add other arguments if needed -->
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_upload_details"
+        android:name="com.example.myapplication.ui.myplants.UploadCompleteFragment"
+        android:label="Upload Plant Details"
+        tools:layout="@layout/uploadcompletepreview">
+
+        <argument
+            android:name="imageUri"
+            app:argType="string"
+            app:nullable="true" />
+
+        <!-- New Action -->
+<!--        <action-->
+<!--            android:id="@+id/action_uploadFragment_to_uploadCompletePreviewFragment"-->
+<!--            app:destination="@id/navigation_upload_complete_preview"-->
+<!--            app:popUpTo="@id/navigation_capture"-->
+<!--            app:popUpToInclusive="false" />-->
     </fragment>
 
     <!-- My Garden Destination (Example, similar to Dashboard) -->
