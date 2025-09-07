@@ -59,42 +59,42 @@ public class UploadFragment extends Fragment { // Class name is UploadFragment
 
         if (receivedImageUriString != null && !receivedImageUriString.isEmpty()) {
             Uri imageUri = Uri.parse(receivedImageUriString);
-            binding.imageView.setImageURI(imageUri); // Assumes ID in uploadplant.xml is 'imageView'
+            binding.plantImageViewPreview.setImageURI(imageUri); // Assumes ID in uploadplant.xml is 'imageView'
             Log.d(TAG, "Image set to ImageView (ID: imageView).");
         } else {
             Toast.makeText(getContext(), "Error: No image to display.", Toast.LENGTH_LONG).show();
             Log.e(TAG, "receivedImageUriString is null or empty, cannot display image.");
         }
 
-        binding.imageButton.setOnClickListener(v -> { // Back button
+        binding.backButtonUpload.setOnClickListener(v -> { // Back button
             if (navController != null) {
                 navController.popBackStack();
             }
         });
 
-        binding.button3.setOnClickListener(v -> { // Upload button
-            String scientificName = binding.editTextText3.getText().toString().trim();
-            String location = binding.editTextText5.getText().toString().trim();
-            String introduction = binding.editTextText4.getText().toString().trim();
-            String searchTag = binding.editTextText2.getText().toString().trim();
+        binding.uploadButton.setOnClickListener(v -> { // Upload button
+            String scientificName = binding.editTextScientificName.getText().toString().trim();
+            String location = binding.editTextLocation.getText().toString().trim();
+            String introduction = binding.editTextIntroduction.getText().toString().trim();
+            String searchTag = binding.editTextSearchTags.getText().toString().trim();
 
             if (receivedImageUriString == null || receivedImageUriString.isEmpty()) {
                 Toast.makeText(getContext(), "No image has been captured to upload.", Toast.LENGTH_SHORT).show();
                 return;
             }
             if (scientificName.isEmpty()) {
-                binding.editTextText3.setError("Scientific Name is required");
-                binding.editTextText3.requestFocus();
+                binding.editTextScientificName.setError("Scientific Name is required");
+                binding.editTextScientificName.requestFocus();
                 return;
             }
             if (location.isEmpty()) {
-                binding.editTextText5.setError("Location is required");
-                binding.editTextText5.requestFocus();
+                binding.editTextLocation.setError("Location is required");
+                binding.editTextLocation.requestFocus();
                 return;
             }
             if (introduction.isEmpty()) {
-                binding.editTextText4.setError("Introduction is required");
-                binding.editTextText4.requestFocus();
+                binding.editTextIntroduction.setError("Introduction is required");
+                binding.editTextIntroduction.requestFocus();
                 return;
             }
 
