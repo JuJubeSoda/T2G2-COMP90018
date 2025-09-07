@@ -19,6 +19,37 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Horizontally Scrolling RecyclerView for Nearby Discoveries -->
+    <TextView
+        android:id="@+id/text_greeting_hello2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="456dp"
+        android:text="Nearby Discoveries"
+        android:textColor="#3DADA9"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view_nearby_discoveries"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:clipToPadding="false"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintBottom_toTopOf="@+id/bottomAppBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:itemCount="5"
+        tools:listitem="@layout/item_discovery_card" />
+
     <ImageView
         android:id="@+id/image_plant_bulb_icon"
         android:layout_width="48dp"
@@ -96,7 +127,7 @@
                 <ImageView
                     android:id="@+id/icon_card_1"
                     style="@style/Widget.App.InfoCardIcon"
-                    android:src="@drawable/home_icon_foreground"
+                    android:src="@drawable/camera_foreground"
                     app:tint="?attr/colorPrimary"
                     android:contentDescription="Upload Plants Icon"/>
                 <TextView
@@ -116,7 +147,7 @@
                 <ImageView
                     android:id="@+id/icon_card_2"
                     style="@style/Widget.App.InfoCardIcon"
-                    android:src="@drawable/map_icon_foreground"
+                    android:src="@drawable/map_foreground"
                     app:tint="?attr/colorPrimary"
                     android:contentDescription="Plant Map Icon"/>
                 <TextView
@@ -147,7 +178,7 @@
                 <ImageView
                     android:id="@+id/icon_card_3"
                     style="@style/Widget.App.InfoCardIcon"
-                    android:src="@drawable/home_icon_foreground"
+                    android:src="@drawable/bookmark_foreground"
                     app:tint="?attr/colorPrimary"
                     android:contentDescription="My Garden"/>
                 <TextView
@@ -165,7 +196,7 @@
                 <ImageView
                     android:id="@+id/icon_card_4"
                     style="@style/Widget.App.InfoCardIcon"
-                    android:src="@drawable/home_icon_foreground"
+                    android:src="@drawable/search_foreground"
                     app:tint="?attr/colorPrimary"
                     android:contentDescription="Plant Wiki"/>
                 <TextView
