@@ -140,7 +140,6 @@
         android:layout_height="wrap_content"
         android:hint="Location"
         app:boxBackgroundMode="none"
-        app:startIconDrawable="@drawable/ic_location_24"
         app:startIconTint="#A0A7B3"
         app:endIconMode="custom"
         app:endIconDrawable="@drawable/ic_check_24"

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.myapplication">
 
@@ -20,11 +21,13 @@
         </activity>
 
 
-        <activity android:name=".WelcomeActivity" android:exported="false" />
+        <activity android:name=".WelcomeActivity" android:exported="false" android:windowSoftInputMode="adjustResize"/>
 
         <activity android:name=".SignInActivity" android:exported="false" />
         <activity android:name=".SignUpActivity" android:exported="false" />
         <activity android:name=".SignUpSuccessActivity" android:exported="false"/>
+
+
 
 
         <activity
@@ -34,8 +37,11 @@
             android:name=".NewUserSetting2Activity"
             android:exported="false" />
 
-
-
-
     </application>
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+
+
+
+
 </manifest>

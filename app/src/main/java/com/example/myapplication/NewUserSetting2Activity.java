@@ -53,7 +53,7 @@ public class NewUserSetting2Activity extends AppCompatActivity {
             if (validateRequired(tilGender, etGender, "Gender is required")) return;
             if (validateRequired(tilLocation, etLocation, "Location is required")) return;
 
-            // 1) 保存资料（本地占位，后端就绪后改为调 API）
+            // 1) 保存资料（后端就绪后改为调 API）
             saveProfileLocal(getTrim(etName), getTrim(etGender), getTrim(etLocation));
 
             // 2) 标记该邮箱已完成首次引导（配合之前 SignInActivity 的本地首次登录判断）
@@ -107,7 +107,7 @@ public class NewUserSetting2Activity extends AppCompatActivity {
         return et.getText() == null ? "" : et.getText().toString().trim();
     }
 
-    // 先用 SharedPreferences 本地保存
+    // 本地保存
     private void saveProfileLocal(String name, String gender, String location) {
         SharedPreferences sp = getSharedPreferences("profile_local", MODE_PRIVATE);
         sp.edit()
