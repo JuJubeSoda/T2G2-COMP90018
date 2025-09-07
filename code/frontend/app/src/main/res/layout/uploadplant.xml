@@ -125,72 +125,10 @@
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
         android:text="Upload and add to my collection"
-        app:layout_constraintBottom_toTopOf="@+id/bottomAppBar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextText2"
         app:layout_constraintVertical_bias="0.062" /> <!-- Bias towards top if space -->
-
-    <!-- Bottom Navigation Area -->
-    <com.google.android.material.bottomappbar.BottomAppBar
-        android:id="@+id/bottomAppBar"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:ignore="BottomAppBar" />
-
-    <!-- Icons on BottomAppBar - Using a Chain for distribution -->
-    <ImageButton
-        android:id="@+id/imageButton6"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:backgroundTint="#00FFFFFF"
-        android:contentDescription="Home"
-        app:srcCompat="@drawable/home_icon_foreground"
-        app:layout_constraintHorizontal_chainStyle="spread_inside"
-        app:layout_constraintStart_toStartOf="@+id/bottomAppBar"
-        app:layout_constraintEnd_toStartOf="@+id/imageButton5"
-        app:layout_constraintTop_toTopOf="@+id/bottomAppBar"
-        app:layout_constraintBottom_toBottomOf="@+id/bottomAppBar"/>
-
-    <ImageButton
-        android:id="@+id/imageButton5"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:backgroundTint="#00FFFFFF"
-        android:contentDescription="Explore"
-        app:srcCompat="@drawable/explore_icon_foreground"
-        app:layout_constraintStart_toEndOf="@+id/imageButton6"
-        app:layout_constraintEnd_toStartOf="@+id/imageButton8"
-        app:layout_constraintTop_toTopOf="@+id/bottomAppBar"
-        app:layout_constraintBottom_toBottomOf="@+id/bottomAppBar"/>
-
-    <ImageButton
-        android:id="@+id/imageButton8"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:backgroundTint="#00FFFFFF"
-        android:contentDescription="Map"
-        app:srcCompat="@drawable/map_icon_foreground"
-        app:layout_constraintStart_toEndOf="@+id/imageButton5"
-        app:layout_constraintEnd_toStartOf="@+id/imageButton9"
-        app:layout_constraintTop_toTopOf="@+id/bottomAppBar"
-        app:layout_constraintBottom_toBottomOf="@+id/bottomAppBar"/>
-
-    <ImageButton
-        android:id="@+id/imageButton9"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:backgroundTint="#00FFFFFF"
-        android:contentDescription="Profile"
-        app:srcCompat="@drawable/profile_icon_foreground"
-        app:layout_constraintStart_toEndOf="@+id/imageButton8"
-        app:layout_constraintEnd_toEndOf="@+id/bottomAppBar"
-        app:layout_constraintTop_toTopOf="@+id/bottomAppBar"
-        app:layout_constraintBottom_toBottomOf="@+id/bottomAppBar"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

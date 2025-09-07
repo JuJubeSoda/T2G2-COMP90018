@@ -60,7 +60,7 @@ public class HomeFragment extends Fragment {
             if (navController != null) {
                 // Make sure R.id.action_navigation_home_to_uploadFragment is defined in your nav_graph.xml
                 try {
-                    navController.navigate(R.id.action_navigation_home_to_uploadFragment);
+                    navController.navigate(R.id.navigation_upload);
                 } catch (IllegalArgumentException e) {
                     Toast.makeText(getContext(), "Upload navigation action not found", Toast.LENGTH_SHORT).show();
                 }
@@ -73,7 +73,7 @@ public class HomeFragment extends Fragment {
                 if (navController != null) {
                     // Make sure R.id.action_navigation_home_to_plantMapFragment is defined
                     try {
-                        navController.navigate(R.id.action_navigation_home_to_plantMapFragment);
+                        navController.navigate(R.id.navigation_plant_map);
                     } catch (IllegalArgumentException e) {
                         Toast.makeText(getContext(), "Plant Map navigation action not found", Toast.LENGTH_SHORT).show();
                     }
@@ -82,34 +82,32 @@ public class HomeFragment extends Fragment {
         }
 
         // Card Row 2 exists if binding.cardRow2 is not null (assuming it's the LinearLayout ID)
-        if (binding.cardRow2 != null) { // Check if the container for card3 and card4 exists
-            // Card 3: My Garden
-            if (binding.card3 != null) { // Ensure card3 ID exists in your XML
-                binding.card3.setOnClickListener(v -> {
-                    if (navController != null) {
-                        // Make sure R.id.action_navigation_home_to_myGardenFragment is defined
-                        try {
-                            navController.navigate(R.id.action_navigation_home_to_myGardenFragment);
-                        } catch (IllegalArgumentException e) {
-                            Toast.makeText(getContext(), "My Garden navigation action not found", Toast.LENGTH_SHORT).show();
-                        }
+        // Card 3: My Garden
+        if (binding.card3 != null) { // Ensure card3 ID exists in your XML
+            binding.card3.setOnClickListener(v -> {
+                if (navController != null) {
+                    // Make sure R.id.action_navigation_home_to_myGardenFragment is defined
+                    try {
+                        navController.navigate(R.id.navigation_my_garden);
+                    } catch (IllegalArgumentException e) {
+                        Toast.makeText(getContext(), "My Garden navigation action not found", Toast.LENGTH_SHORT).show();
                     }
-                });
-            }
+                }
+            });
+        }
 
-            // Card 4: Plant Wiki
-            if (binding.card4 != null) { // Ensure card4 ID exists in your XML
-                binding.card4.setOnClickListener(v -> {
-                    if (navController != null) {
-                        // Make sure R.id.action_navigation_home_to_plantWikiFragment is defined
-                        try {
-                            navController.navigate(R.id.action_navigation_home_to_plantWikiFragment);
-                        } catch (IllegalArgumentException e) {
-                            Toast.makeText(getContext(), "Plant Wiki navigation action not found", Toast.LENGTH_SHORT).show();
-                        }
+        // Card 4: Plant Wiki
+        if (binding.card4 != null) { // Ensure card4 ID exists in your XML
+            binding.card4.setOnClickListener(v -> {
+                if (navController != null) {
+                    // Make sure R.id.action_navigation_home_to_plantWikiFragment is defined
+                    try {
+                        navController.navigate(R.id.navigation_plant_wiki);
+                    } catch (IllegalArgumentException e) {
+                        Toast.makeText(getContext(), "Plant Wiki navigation action not found", Toast.LENGTH_SHORT).show();
                     }
-                });
-            }
+                }
+            });
         }
     }
 
