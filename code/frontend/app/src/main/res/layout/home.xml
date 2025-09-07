@@ -84,7 +84,7 @@
         android:background="?attr/selectableItemBackgroundBorderless"
         android:padding="0dp"
         android:scaleType="centerCrop"
-        app:srcCompat="@tools:sample/avatars"
+        app:srcCompat="@drawable/profile_icon_foreground"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/image_plant_bulb_icon"
         app:layout_constraintBottom_toBottomOf="@+id/image_plant_bulb_icon"

@@ -150,7 +150,7 @@ public class HomeFragment extends Fragment {
     private void loadNearbyDiscoveryData() {
         // This is sample data. In a real app, you'd fetch this from a ViewModel, API, database, etc.
         List<DiscoveryItem> sampleData = new ArrayList<>();
-        int placeholderImage = R.drawable.ic_placeholder; // Ensure ic_placeholder.xml exists in res/drawable
+        int placeholderImage = R.drawable.map_foreground; // Ensure ic_placeholder.xml exists in res/drawable
 
         // Add some sample items
         sampleData.add(new DiscoveryItem("Mystic Fern", "0.2 km away", placeholderImage, "A beautiful fern found nearby."));
