@@ -1,10 +1,11 @@
-package com.example.myapplication.ui.myplants; // Your package
+package com.example.myapplication.ui.myplants;
 
-import android.app.Activity;
-import android.content.Intent;
+import android.Manifest;
+import android.content.ContentValues;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,54 +13,62 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ImageCapture;
+import androidx.camera.core.ImageCaptureException;
+import androidx.camera.core.Preview;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
+import androidx.lifecycle.LifecycleOwner; // Important
 
-// 1. IMPORTANT: Change this import to match your generated binding class
-import com.example.myapplication.databinding.CaptureplantBinding;
-import com.example.myapplication.R; // For R.drawable.ic_baseline_image_24 if you use it
+import com.example.myapplication.databinding.CaptureplantBinding; // Ensure this matches your layout file name
+import com.google.common.util.concurrent.ListenableFuture;
+
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class UploadFragment extends Fragment {
 
     private static final String TAG = "UploadFragment";
-    // 2. Use the correct binding class type
-    private CaptureplantBinding binding;
-    private Uri selectedImageUri;
+    private static final String FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS";
+    private CaptureplantBinding binding; // Make sure this matches your layout file name
 
-    // ActivityResultLauncher for picking an image
-    private final ActivityResultLauncher<Intent> pickImageLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-                    new ActivityResultCallback<ActivityResult>() {
-                        @Override
-                        public void onActivityResult(ActivityResult result) {
-                            if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                                selectedImageUri = result.getData().getData();
-                                if (selectedImageUri != null) {
-                                    // 3. Ensure your captureplant.xml has an ImageView with id 'imageViewPreview'
-                                    if (binding.imageViewPreview != null) {
-                                        binding.imageViewPreview.setImageURI(selectedImageUri);
-                                    }
-                                    Log.d(TAG, "Image selected: " + selectedImageUri.toString());
-                                } else {
-                                    Log.e(TAG, "Selected image URI is null");
-                                }
-                            } else {
-                                Log.d(TAG, "Image selection cancelled or failed.");
-                            }
-                        }
-                    });
+    private ExecutorService cameraExecutor;
+    private ImageCapture imageCapture;
+    private Uri capturedImageUri; // To store the URI of the captured image
+
+    // Permission Launcher
+    private final ActivityResultLauncher<String[]> requestPermissionsLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), new ActivityResultCallback<Map<String, Boolean>>() {
+                @Override
+                public void onActivityResult(Map<String, Boolean> result) {
+                    Boolean cameraGranted = result.getOrDefault(Manifest.permission.CAMERA, false);
+                    // You might also request WRITE_EXTERNAL_STORAGE here if needed for older APIs
+                    // Boolean storageGranted = result.getOrDefault(Manifest.permission.WRITE_EXTERNAL_STORAGE, false);
+
+                    if (cameraGranted != null && cameraGranted) {
+                        startCamera();
+                    } else {
+                        Toast.makeText(getContext(), "Camera permission is required to use this feature.", Toast.LENGTH_LONG).show();
+                        // Handle permission denial (e.g., navigate back or disable camera features)
+                    }
+                }
+            });
+
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // 4. Inflate using the correct binding class
         binding = CaptureplantBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
@@ -68,92 +77,133 @@ public class UploadFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // 5. Ensure your captureplant.xml has these Button IDs
-        if (binding.buttonSelectImage != null) {
-            binding.buttonSelectImage.setOnClickListener(v -> openImageChooser());
+        cameraExecutor = Executors.newSingleThreadExecutor();
+
+        // Request camera permissions
+        if (allPermissionsGranted()) {
+            startCamera();
+        } else {
+            requestPermissionsLauncher.launch(new String[]{Manifest.permission.CAMERA});
+            // Add Manifest.permission.WRITE_EXTERNAL_STORAGE if targeting API <= 28 and saving to public storage
         }
 
-        if (binding.buttonUpload != null) {
-            binding.buttonUpload.setOnClickListener(v -> attemptUpload());
-        }
+        binding.imageButton.setOnClickListener(v -> takePhoto());
 
-        // Add a Log to confirm onViewCreated is called
+        // You'll need an upload button and logic for the capturedImageUri
+        // binding.buttonUpload.setOnClickListener(v -> attemptUploadCapturedImage());
         Log.d(TAG, "UploadFragment onViewCreated");
     }
 
-    private void openImageChooser() {
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        pickImageLauncher.launch(intent);
+    private boolean allPermissionsGranted() {
+        return ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
+        // Add || ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        // if targeting API <= 28 and saving to public storage
     }
 
-    private void attemptUpload() {
-        // 6. Ensure your captureplant.xml has an EditText with id 'editTextPlantName'
-        String plantName = "";
-        if (binding.editTextPlantName != null) {
-            plantName = binding.editTextPlantName.getText().toString().trim();
-        }
+    private void startCamera() {
+        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext());
 
-        if (selectedImageUri == null) {
-            Toast.makeText(getContext(), "Please select an image first.", Toast.LENGTH_SHORT).show();
+        cameraProviderFuture.addListener(() -> {
+            try {
+                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+
+                // Preview Use Case
+                Preview preview = new Preview.Builder().build();
+                preview.setSurfaceProvider(binding.cameraPreview.getSurfaceProvider());
+
+                // ImageCapture Use Case
+                imageCapture = new ImageCapture.Builder()
+                        // .setTargetRotation(binding.cameraPreviewView.getDisplay().getRotation()) // Optional: handle rotation
+                        .build();
+
+                // Select back camera as a default
+                CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
+
+                // Unbind use cases before rebinding
+                cameraProvider.unbindAll();
+
+                // Bind use cases to camera
+                cameraProvider.bindToLifecycle(
+                        (LifecycleOwner)this, // Bind to fragment's lifecycle
+                        cameraSelector,
+                        preview,
+                        imageCapture);
+
+            } catch (ExecutionException | InterruptedException e) {
+                Log.e(TAG, "Use case binding failed", e);
+                Toast.makeText(getContext(), "Error starting camera: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        }, ContextCompat.getMainExecutor(requireContext()));
+    }
+
+    private void takePhoto() {
+        if (imageCapture == null) {
+            Log.e(TAG, "ImageCapture use case is null. Cannot take photo.");
             return;
         }
 
-        Log.d(TAG, "Attempting to upload: " + selectedImageUri.toString());
-        if (!plantName.isEmpty()) {
-            Log.d(TAG, "Plant Name: " + plantName);
+        // Create time-stamped name and MediaStore entry.
+        String name = new SimpleDateFormat(FILENAME_FORMAT, Locale.US)
+                .format(System.currentTimeMillis());
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
+        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) { // For API 29+
+            contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/MyPlantsApp"); // Saves to Pictures/MyPlantsApp
         }
 
-        // 7. Ensure your captureplant.xml has these View IDs
-        if (binding.progressBarUpload != null) {
-            binding.progressBarUpload.setVisibility(View.VISIBLE);
-        }
-        if (binding.buttonUpload != null) {
-            binding.buttonUpload.setEnabled(false);
-        }
-        if (binding.buttonSelectImage != null) {
-            binding.buttonSelectImage.setEnabled(false);
-        }
+        // Create output options object which contains file + metadata
+        ImageCapture.OutputFileOptions outputOptions = new ImageCapture.OutputFileOptions
+                .Builder(requireContext().getContentResolver(),
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI, // Save to gallery
+                contentValues)
+                .build();
 
-        new android.os.Handler(Looper.getMainLooper()).postDelayed( // Use getMainLooper() for Handler
-                () -> {
-                    boolean uploadSuccess = true; // Simulate success
+        // Set up image capture listener, which is triggered after photo has been taken
+        imageCapture.takePicture(
+                outputOptions,
+                ContextCompat.getMainExecutor(requireContext()), // Executes on main thread
+                new ImageCapture.OnImageSavedCallback() {
+                    @Override
+                    public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                        capturedImageUri = outputFileResults.getSavedUri();
+                        String msg = "Photo capture succeeded: " + capturedImageUri;
+                        Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, msg);
 
-                    if (uploadSuccess) {
-                        Toast.makeText(getContext(), "Plant uploaded successfully!", Toast.LENGTH_LONG).show();
-                        Log.d(TAG, "Simulated Upload Success.");
-                        // Optional: Navigate back
-                        // NavController navController = Navigation.findNavController(requireView());
-                        // navController.popBackStack();
-                    } else {
-                        Toast.makeText(getContext(), "Upload failed. Please try again.", Toast.LENGTH_LONG).show();
-                        Log.e(TAG, "Simulated Upload Failed.");
+//                        // Show the captured image in the small ImageView (optional)
+//                        if (binding.imageViewCapturedPreview != null && capturedImageUri != null) {
+//                            binding.imageViewCapturedPreview.setImageURI(capturedImageUri);
+//                            binding.imageViewCapturedPreview.setVisibility(View.VISIBLE);
+//                        }
+                        // Now you can enable an "Upload" button or proceed to an upload step
+                        // binding.buttonUpload.setEnabled(true);
                     }
 
-                    if (binding.progressBarUpload != null) {
-                        binding.progressBarUpload.setVisibility(View.GONE);
+                    @Override
+                    public void onError(@NonNull ImageCaptureException exception) {
+                        Log.e(TAG, "Photo capture failed: " + exception.getMessage(), exception);
+                        Toast.makeText(getContext(), "Photo capture failed: " + exception.getMessage(), Toast.LENGTH_LONG).show();
                     }
-                    if (binding.buttonUpload != null) {
-                        binding.buttonUpload.setEnabled(true);
-                    }
-                    if (binding.buttonSelectImage != null) {
-                        binding.buttonSelectImage.setEnabled(true);
-                    }
-                    if (binding.imageViewPreview != null) {
-                        // Assuming you have this placeholder drawable
-                        binding.imageViewPreview.setImageResource(R.drawable.ic_baseline_image_24);
-                    }
-                    selectedImageUri = null;
-                    if (binding.editTextPlantName != null) {
-                        binding.editTextPlantName.setText("");
-                    }
-                },
-                3000
+                }
         );
     }
+
+    // You would then have a method like this:
+    // private void attemptUploadCapturedImage() {
+    //     if (capturedImageUri != null) {
+    //         Log.d(TAG, "Uploading captured image: " + capturedImageUri);
+    //         // ... your upload logic using capturedImageUri ...
+    //     } else {
+    //         Toast.makeText(getContext(), "No image captured to upload.", Toast.LENGTH_SHORT).show();
+    //     }
+    // }
+
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        cameraExecutor.shutdown();
         binding = null;
     }
 }

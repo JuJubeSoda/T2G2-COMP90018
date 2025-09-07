@@ -1,6 +1,7 @@
 package com.example.myapplication.ui.home; // Adjust to your project's package structure
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,20 +48,25 @@ public class HomeFragment extends Fragment {
         // Initialize NavController here, as the view is now created
         navController = Navigation.findNavController(view);
 
+        Log.d("HomeFragment", "Check1");
         // Setup UI components
         setupTopCardClickListeners();
         setupSearchView();
         setupNearbyDiscoveriesRecyclerView();
         loadNearbyDiscoveryData();
+        Log.d("HomeFragment", "Check2");
     }
 
     private void setupTopCardClickListeners() {
         // Card 1: Upload Plants (leads to a camera/gallery flow eventually)
         binding.card1.setOnClickListener(v -> {
+            Log.d("HomeFragment", "Upload card clicked");
             if (navController != null) {
                 // Make sure R.id.action_navigation_home_to_uploadFragment is defined in your nav_graph.xml
                 try {
+                    Log.d("HomeFragment", "try navigate to upload plants.");
                     navController.navigate(R.id.navigation_upload);
+                    Log.d("HomeFragment", "After executing upload plants.");
                 } catch (IllegalArgumentException e) {
                     Toast.makeText(getContext(), "Upload navigation action not found", Toast.LENGTH_SHORT).show();
                 }

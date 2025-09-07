@@ -95,14 +95,14 @@
         <!-- Or app:layout_constraintGuide_percent="0.25" for percentage based positioning -->
 
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/card_1"
+            android:id="@+id/card1"
             style="@style/Widget.App.InfoCard"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="8dp"
-            app:layout_constraintEnd_toStartOf="@+id/card_2"
+            app:layout_constraintEnd_toStartOf="@+id/card2"
             app:layout_constraintHorizontal_chainStyle="spread_inside"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/search_view_main">
@@ -122,16 +122,16 @@
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/card_2"
+            android:id="@+id/card2"
             style="@style/Widget.App.InfoCard"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="16dp"
-            app:layout_constraintStart_toEndOf="@+id/card_1"
+            app:layout_constraintStart_toEndOf="@+id/card1"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/card_1"
-            app:layout_constraintBottom_toBottomOf="@+id/card_1">
+            app:layout_constraintTop_toTopOf="@+id/card1"
+            app:layout_constraintBottom_toBottomOf="@+id/card1">
             <!-- Content of Card 2 -->
             <LinearLayout style="@style/Widget.App.InfoCardContent">
                 <ImageView
@@ -149,17 +149,17 @@
 
         <!-- Card Row 2 -->
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/card_3"
+            android:id="@+id/card3"
             style="@style/Widget.App.InfoCard"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="8dp"
-            app:layout_constraintEnd_toStartOf="@+id/card_4"
+            app:layout_constraintEnd_toStartOf="@+id/card4"
             app:layout_constraintHorizontal_chainStyle="spread_inside"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/card_1">
+            app:layout_constraintTop_toBottomOf="@+id/card1">
             <!-- Content of Card 3 -->
             <LinearLayout style="@style/Widget.App.InfoCardContent">
                 <ImageView
@@ -176,16 +176,16 @@
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/card_4"
+            android:id="@+id/card4"
             style="@style/Widget.App.InfoCard"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="16dp"
-            app:layout_constraintStart_toEndOf="@+id/card_3"
+            app:layout_constraintStart_toEndOf="@+id/card3"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/card_3"
-            app:layout_constraintBottom_toBottomOf="@+id/card_3">
+            app:layout_constraintTop_toTopOf="@+id/card3"
+            app:layout_constraintBottom_toBottomOf="@+id/card3">
             <!-- Content of Card 4 -->
             <LinearLayout style="@style/Widget.App.InfoCardContent">
                 <ImageView
@@ -213,7 +213,7 @@
             android:textSize="20sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/card_3" />
+            app:layout_constraintTop_toBottomOf="@+id/card3" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_view_nearby_discoveries"
