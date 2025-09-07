@@ -42,9 +42,26 @@
     <!-- Upload Destination -->
     <fragment
         android:id="@+id/navigation_upload"
-        android:name="com.example.myapplication.ui.myplants.UploadFragment"
+        android:name="com.example.myapplication.ui.myplants.CaptureFragment"
         android:label="Upload Plant"
-        tools:layout="@layout/captureplant" /> <!-- Replace with your actual UploadFragment layout -->
+        tools:layout="@layout/captureplant" >
+        <!-- Action FROM CaptureFragment TO ConfirmUploadFragment -->
+        <action
+            android:id="@+id/action_captureFragment_to_confirmUploadFragment"
+            app:destination="@id/navigation_upload_plant" />
+    </fragment>
+
+    <!-- NEW: Confirm and Upload Plant Details Destination -->
+    <fragment
+        android:id="@+id/navigation_upload_plant"
+        android:name="com.example.myapplication.ui.myplants.UploadFragment"
+        android:label="Upload Plant Details"
+        tools:layout="@layout/uploadplant">
+        <argument
+            android:name="imageUri"
+            app:argType="string"
+            app:nullable="true" />
+    </fragment>
 
     <!-- My Garden Destination (Example, similar to Dashboard) -->
     <fragment

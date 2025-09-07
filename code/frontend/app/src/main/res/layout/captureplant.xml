@@ -4,34 +4,37 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black"> <!-- Set background to black for a seamless camera UI -->
+    android:background="@android:color/black"> <!-- Good for camera UI to fill screen -->
 
-    <!-- Top Bar: Back Button and Title -->
+    <!-- Top Bar -->
     <ImageButton
-        android:id="@+id/imageButton"
+        android:id="@+id/backButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="Back"
         android:minWidth="48dp"
         android:minHeight="48dp"
-        android:padding="16dp"
+        android:padding="12dp"
         app:srcCompat="@drawable/quantum_ic_arrow_back_grey600_24"
         app:tint="@android:color/white"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/camera_preview" />
 
     <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
+        android:id="@+id/titleTextView"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Upload the Discovery"
+        android:text="Capture Plant"
         android:textSize="18sp"
         android:textColor="@android:color/white"
         android:layout_marginStart="8dp"
-        app:layout_constraintStart_toEndOf="@+id/imageButton"
-        app:layout_constraintTop_toTopOf="@+id/imageButton"
-        app:layout_constraintBottom_toBottomOf="@+id/imageButton" />
+        android:layout_marginEnd="16dp"
+        app:layout_constraintStart_toEndOf="@+id/backButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/backButton"
+        app:layout_constraintBottom_toBottomOf="@+id/backButton" />
 
     <!-- Camera Preview Area -->
     <androidx.camera.view.PreviewView
@@ -39,82 +42,24 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:scaleType="fillCenter"
-        app:layout_constraintTop_toBottomOf="@+id/imageButton"
-        app:layout_constraintBottom_toTopOf="@+id/bottomAppBar"
+        app:layout_constraintTop_toBottomOf="@+id/backButton"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-<!--    &lt;!&ndash; Capture Button &ndash;&gt;-->
-<!--    <ImageButton-->
-<!--        android:id="@+id/button_capture"-->
-<!--        android:layout_width="72dp"-->
-<!--        android:layout_height="72dp"-->
-<!--        android:layout_marginBottom="16dp"-->
-<!--        android:background="@drawable/capture_button_background"-->
-<!--        android:contentDescription="Take Picture"-->
-<!--        app:layout_constraintBottom_toTopOf="@+id/bottomAppBar"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent" />-->
-
-    <!-- Bottom Navigation Area -->
-    <com.google.android.material.bottomappbar.BottomAppBar
-        android:id="@+id/bottomAppBar"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
+    <!-- Capture Button - Overlaid on the Preview -->
+    <ImageButton
+        android:id="@+id/imageCaptureButton"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_marginBottom="32dp"
+        android:background="@drawable/camera_button"
+        android:contentDescription="Take Picture"
+        android:scaleType="centerInside"
+        app:srcCompat="@android:drawable/ic_menu_camera"
+        app:tint="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        tools:ignore="BottomAppBar" />
-
-    <!-- Icons on BottomAppBar - Using a Chain for distribution -->
-    <ImageButton
-        android:id="@+id/imageButton6"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:backgroundTint="#00FFFFFF"
-        android:contentDescription="Home"
-        app:srcCompat="@drawable/home_icon_foreground"
-        app:layout_constraintHorizontal_chainStyle="spread_inside"
-        app:layout_constraintStart_toStartOf="@+id/bottomAppBar"
-        app:layout_constraintEnd_toStartOf="@+id/imageButton5"
-        app:layout_constraintTop_toTopOf="@+id/bottomAppBar"
-        app:layout_constraintBottom_toBottomOf="@+id/bottomAppBar"/>
-
-    <ImageButton
-        android:id="@+id/imageButton5"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:backgroundTint="#00FFFFFF"
-        android:contentDescription="Explore"
-        app:srcCompat="@drawable/explore_icon_foreground"
-        app:layout_constraintStart_toEndOf="@+id/imageButton6"
-        app:layout_constraintEnd_toStartOf="@+id/imageButton8"
-        app:layout_constraintTop_toTopOf="@+id/bottomAppBar"
-        app:layout_constraintBottom_toBottomOf="@+id/bottomAppBar"/>
-
-    <ImageButton
-        android:id="@+id/imageButton8"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:backgroundTint="#00FFFFFF"
-        android:contentDescription="Map"
-        app:srcCompat="@drawable/map_icon_foreground"
-        app:layout_constraintStart_toEndOf="@+id/imageButton5"
-        app:layout_constraintEnd_toStartOf="@+id/imageButton9"
-        app:layout_constraintTop_toTopOf="@+id/bottomAppBar"
-        app:layout_constraintBottom_toBottomOf="@+id/bottomAppBar"/>
-
-    <ImageButton
-        android:id="@+id/imageButton9"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:backgroundTint="#00FFFFFF"
-        android:contentDescription="Profile"
-        app:srcCompat="@drawable/profile_icon_foreground"
-        app:layout_constraintStart_toEndOf="@+id/imageButton8"
-        app:layout_constraintEnd_toEndOf="@+id/bottomAppBar"
-        app:layout_constraintTop_toTopOf="@+id/bottomAppBar"
-        app:layout_constraintBottom_toBottomOf="@+id/bottomAppBar"/>
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
