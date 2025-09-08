@@ -19,22 +19,25 @@
         android:padding="8dp"/>
 
     <!-- Page Title "Add Plant" -->
-    <TextView
-        android:id="@+id/pageTitleAddPlant"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Add Plant"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="?attr/colorOnSurface"
-        android:gravity="center_horizontal"
-        app:layout_constraintTop_toTopOf="@+id/backButtonAddPlant"
-        app:layout_constraintBottom_toBottomOf="@+id/backButtonAddPlant"
-        app:layout_constraintStart_toEndOf="@+id/backButtonAddPlant"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginStart="8dp"/>
 
     <!-- "Scientific Name" Label -->
+    <TextView
+        android:id="@+id/pageTitleAddPlant"
+        android:layout_width="136dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="8dp"
+        android:gravity="center_horizontal"
+        android:text="Add Plant"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/backButtonAddPlant"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.041"
+        app:layout_constraintStart_toEndOf="@+id/backButtonAddPlant"
+        app:layout_constraintTop_toTopOf="@+id/backButtonAddPlant"
+        app:layout_constraintVertical_bias="1.0" />
+
     <TextView
         android:id="@+id/labelScientificName"
         android:layout_width="wrap_content"
