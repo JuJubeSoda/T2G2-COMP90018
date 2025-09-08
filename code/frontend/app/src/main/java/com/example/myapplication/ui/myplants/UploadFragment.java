@@ -143,10 +143,39 @@ public class UploadFragment extends Fragment {
             binding.successOverlay.okButtonSuccess.setOnClickListener(view -> {
                 binding.successOverlay.getRoot().setVisibility(View.GONE); // Hide the overlay
 
-                // Navigate back or to another destination
                 if (navController != null) {
-                    navController.navigate(R.id.navigation_upload_complete_preview);
-                    // navController.navigate(R.id.action_uploadFragment_to_myPlantsFragment);
+                    Bundle args = new Bundle();
+                    String currentImageUri = receivedImageUriString; // Ensure this holds the URI from CaptureFragment
+                    String scientificName = binding.editTextScientificName.getText().toString().trim();
+                    String location = binding.editTextLocation.getText().toString().trim();
+                    String introduction = binding.editTextIntroduction.getText().toString().trim();
+                    String searchTag = binding.editTextSearchTags.getText().toString().trim();
+
+                    // Put data into the bundle
+                    args.putString(UploadCompleteFragment.ARG_IMAGE_URI, currentImageUri);
+                    args.putString(UploadCompleteFragment.ARG_SCIENTIFIC_NAME, scientificName);
+                    args.putString(UploadCompleteFragment.ARG_LOCATION, location);
+                    args.putString(UploadCompleteFragment.ARG_INTRODUCTION, introduction);
+                    args.putString(UploadCompleteFragment.ARG_SEARCH_TAG, searchTag);
+
+                    // *** Log what's being SENT ***
+                    Log.d("UploadFragment_SendData", "Action: Navigating to UploadCompleteFragment");
+                    Log.d("UploadFragment_SendData", "Sending Image URI: " + currentImageUri);
+                    Log.d("UploadFragment_SendData", "Sending Scientific Name: " + scientificName);
+                    Log.d("UploadFragment_SendData", "Sending Location: " + location);
+                    Log.d("UploadFragment_SendData", "Sending Introduction: " + introduction);
+                    Log.d("UploadFragment_SendData", "Sending Search Tag: " + searchTag);
+
+                    try {
+                        // Ensure this action ID is correct in your mobile_navigation.xml
+                        // and leads from UploadFragment to UploadCompleteFragment
+                        navController.navigate(R.id.navigation_upload_complete_preview, args);
+                    } catch (IllegalArgumentException e) {
+                        Log.e(TAG, "Navigation to UploadCompleteFragment failed. Check action ID ("
+                                + "R.id.action_uploadFragment_to_uploadCompleteFragment"
+                                + ") and arguments.", e);
+                        Toast.makeText(getContext(), "Error navigating to preview.", Toast.LENGTH_SHORT).show();
+                    }
                 } else {
                     Log.e(TAG, "NavController is null, cannot navigate after success overlay.");
                 }

@@ -1,4 +1,6 @@
-package com.example.myapplication.ui.myplants; // Make sure this is your correct package
+// Inside UploadCompleteFragment.java (this is your file from the context)
+
+package com.example.myapplication.ui.myplants;
 
 import android.net.Uri;
 import android.os.Bundle;
@@ -16,27 +18,25 @@ import androidx.navigation.Navigation;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.myapplication.R;
+// This should be UploadcompletepreviewBinding if your XML is uploadcompletepreview.xml
 import com.example.myapplication.databinding.UploadcompletepreviewBinding;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-// CLASS NAME MATCHES YOUR FILE NAME
 public class UploadCompleteFragment extends Fragment {
 
-    // Logcat TAG uses the correct class name
-    private static final String TAG = "UploadCompleteFragment";
+    private static final String TAG = "UploadCompleteFragment"; // Matches class name
 
-    // Argument keys (must match those defined in mobile_navigation.xml for this fragment)
+    // Argument keys - these are the "contracts" for data passing
     public static final String ARG_IMAGE_URI = "imageUri";
     public static final String ARG_SCIENTIFIC_NAME = "scientificName";
     public static final String ARG_LOCATION = "location";
     public static final String ARG_INTRODUCTION = "introduction";
     public static final String ARG_SEARCH_TAG = "searchTag";
 
-    // Binding class name matches the layout file it's supposed to inflate
-    private UploadcompletepreviewBinding binding;
+    private UploadcompletepreviewBinding binding; // Ensure this matches your XML file name
     private NavController navController;
 
     private String imageUriString;
@@ -49,18 +49,23 @@ public class UploadCompleteFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate called");
-        if (getArguments() != null) {
-            imageUriString = getArguments().getString(ARG_IMAGE_URI);
-            scientificName = getArguments().getString(ARG_SCIENTIFIC_NAME);
-            location = getArguments().getString(ARG_LOCATION);
-            introduction = getArguments().getString(ARG_INTRODUCTION);
-            searchTag = getArguments().getString(ARG_SEARCH_TAG);
+        Bundle arguments = getArguments();
+        if (arguments != null) {
+            imageUriString = arguments.getString(ARG_IMAGE_URI); // Use the defined constant
+            scientificName = arguments.getString(ARG_SCIENTIFIC_NAME);
+            location = arguments.getString(ARG_LOCATION);
+            introduction = arguments.getString(ARG_INTRODUCTION);
+            searchTag = arguments.getString(ARG_SEARCH_TAG);
 
-            Log.d(TAG, "Received image URI: " + imageUriString);
+            // *** Log what's being RECEIVED ***
+            Log.d(TAG, "Received Image URI: " + imageUriString);
             Log.d(TAG, "Received Scientific Name: " + scientificName);
-            // ... log other received arguments
+            Log.d(TAG, "Received Location: " + location);
+            Log.d(TAG, "Received Introduction: " + introduction);
+            Log.d(TAG, "Received Search Tag: " + searchTag);
         } else {
-            Log.e(TAG, "No arguments bundle received for " + TAG);
+            Log.e(TAG, "No arguments bundle received for " + TAG + ". Data will be missing.");
+            Toast.makeText(getContext(), "Error: Could not load plant details.", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -68,7 +73,7 @@ public class UploadCompleteFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         Log.d(TAG, "onCreateView called");
-        // Ensure this binding class name matches your XML file name
+        // Make sure UploadcompletepreviewBinding matches your XML file name (e.g., uploadcompletepreview.xml)
         binding = UploadcompletepreviewBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
@@ -80,43 +85,57 @@ public class UploadCompleteFragment extends Fragment {
         try {
             navController = NavHostFragment.findNavController(this);
         } catch (IllegalStateException e) {
-            Log.e(TAG, "Failed to find NavController", e);
-            if (getView() != null) {
+            Log.e(TAG, "Failed to find NavController via NavHostFragment", e);
+            if (getView() != null) { // Fallback
                 navController = Navigation.findNavController(getView());
             }
         }
 
-        populateViews();
-        setupButtonListeners();
+        populateViews(); // Call to set data to views
+        setupButtonListeners(); // Your existing method
     }
 
     private void populateViews() {
         if (binding == null) {
-            Log.e(TAG, "populateViews: Binding is null.");
+            Log.e(TAG, "populateViews: Binding is null. Cannot set data.");
             return;
         }
 
+        // *** Log data just BEFORE setting it to views ***
+        Log.d(TAG, "Populating views with Image URI: " + imageUriString);
+        Log.d(TAG, "Populating views with Scientific Name: " + scientificName);
+        // Add logs for other fields if needed
+
+        // Set the image
         if (imageUriString != null && !imageUriString.isEmpty()) {
             try {
+                // Ensure imageViewPlantPreview is the correct ID from uploadcompletepreview.xml
                 binding.imageViewPlantPreview.setImageURI(Uri.parse(imageUriString));
             } catch (Exception e) {
-                Log.e(TAG, "Error setting image URI: " + imageUriString, e);
+                Log.e(TAG, "Error setting image URI in populateViews: " + imageUriString, e);
+                // Ensure you have a placeholder drawable
                 binding.imageViewPlantPreview.setImageResource(R.drawable.plantbulb_foreground);
             }
         } else {
-            Log.w(TAG, "Image URI is null or empty, setting placeholder.");
+            Log.w(TAG, "Image URI is null or empty in populateViews, setting placeholder.");
             binding.imageViewPlantPreview.setImageResource(R.drawable.plantbulb_foreground);
         }
 
+        // Set text fields
+        // Ensure these IDs from binding match your uploadcompletepreview.xml
         binding.textViewScientificName.setText(scientificName != null && !scientificName.isEmpty() ? scientificName : "N/A");
         binding.textViewLocation.setText(location != null && !location.isEmpty() ? location : "N/A");
         binding.textViewIntroduction.setText(introduction != null && !introduction.isEmpty() ? introduction : "N/A");
+        // Your XML uses "textViewSearchTag" for the value and "labelSearchTag" for the label.
+        // The value here is "Tags: N/A" or "Tags: actualTag"
         binding.textViewSearchTag.setText(searchTag != null && !searchTag.isEmpty() ? "Tags: " + searchTag : "Tags: N/A");
-        binding.textViewDiscoveredBy.setText("Discovered by: You");
+
+        binding.textViewDiscoveredBy.setText("Discovered by: You"); // Assuming static for now
         String currentDate = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date());
         binding.textViewDate.setText("Date: " + currentDate);
     }
 
+    // Your setupButtonListeners() and onDestroyView() methods remain the same
     private void setupButtonListeners() {
         if (binding == null || navController == null) {
             Log.e(TAG, "setupButtonListeners: Binding or NavController is null.");
@@ -129,9 +148,9 @@ public class UploadCompleteFragment extends Fragment {
                 if (navController.getCurrentDestination() != null &&
                         navController.getCurrentDestination().getId() != navController.getGraph().getStartDestinationId()) {
                     navController.popBackStack(navController.getGraph().getStartDestinationId(), false);
-                }  else if (navController.getGraph().getStartDestinationId() != 0) {
+                } else if (navController.getGraph().getStartDestinationId() != 0) {
                     navController.navigate(navController.getGraph().getStartDestinationId());
-                }else {
+                } else {
                     Toast.makeText(getContext(), "Cannot determine start destination.", Toast.LENGTH_SHORT).show();
                 }
             } catch (Exception e) {
@@ -143,14 +162,13 @@ public class UploadCompleteFragment extends Fragment {
         binding.buttonGatherMoreInfo.setOnClickListener(v -> {
             Log.d(TAG, "Gather More Information button clicked");
             Toast.makeText(getContext(), "Functionality to gather more info coming soon!", Toast.LENGTH_LONG).show();
-            // ... (Example browser intent logic from previous answer if needed)
         });
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        Log.d(TAG, "onDestroyView called");
+        Log.d(TAG, "onDestroyView called, binding set to null.");
         binding = null;
     }
 }
