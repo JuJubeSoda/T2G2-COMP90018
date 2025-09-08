@@ -120,7 +120,7 @@
         android:id="@+id/navigation_my_garden"
         android:name="com.example.myapplication.ui.myplants.MyGardenFragment"
         android:label="My Garden"
-        tools:layout="@layout/mycollection" /> <!-- Replace with your actual MyGardenFragment layout -->
+        tools:layout="@layout/mycollectionlist" /> <!-- Replace with your actual MyGardenFragment layout -->
 
     <!-- Plant Map Destination (Example, similar to Notifications) -->
     <fragment
@@ -134,7 +134,7 @@
         android:id="@+id/navigation_plant_wiki"
         android:name="com.example.myapplication.ui.myplants.PlantWikiFragment"
         android:label="Plant Wiki"
-        tools:layout="@layout/mycollection" /> <!-- Replace with your actual PlantWikiFragment layout -->
+        tools:layout="@layout/mycollectionlist" /> <!-- Replace with your actual PlantWikiFragment layout -->
 
     <!-- Example of an Activity destination (if you had one defined) -->
     <!-- <activity
