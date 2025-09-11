@@ -115,7 +115,7 @@
         android:id="@+id/navigation_plant_wiki"
         android:name="com.example.myapplication.ui.myplants.PlantWikiFragment"
         android:label="Plant Wiki"
-        tools:layout="@layout/mycollectionlist" /> <!-- Replace with your actual PlantWikiFragment layout -->
+        tools:layout="@layout/mygardenlist" /> <!-- Replace with your actual PlantWikiFragment layout -->
 
     <!-- Example of an Activity destination (if you had one defined) -->
     <!-- <activity

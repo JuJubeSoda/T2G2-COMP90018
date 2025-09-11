@@ -9,6 +9,7 @@
     app:cardCornerRadius="8dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/plantCardConstraintLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -38,7 +39,7 @@
             tools:text="Monstera Deliciosa" />
 
         <TextView
-            android:id="@+id/textViewPlantScientificName"
+            android:id="@+id/textViewPlantDate"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
@@ -53,7 +54,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            tools:text="Monstera deliciosa" />
+            tools:text="01/09/2025" />
 
         <!-- You can add more elements like an "Added Date", "Watering Status Icon", etc. -->
 

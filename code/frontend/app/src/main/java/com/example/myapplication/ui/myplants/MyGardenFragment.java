@@ -1,26 +1,23 @@
-package com.example.myapplication.ui.myplants; // Ensure this is your correct package
+package com.example.myapplication.ui.myplants;
 
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 import android.view.inputmethod.EditorInfo;
-
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.GridLayoutManager; // For RecyclerView
-import androidx.recyclerview.widget.RecyclerView;    // For RecyclerView
-
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+// Remove import for MycollectiongridBinding if your XML is now mygardenlist.xml
+// import com.example.myapplication.databinding.MycollectiongridBinding;
+import com.example.myapplication.databinding.MygardenlistBinding; // Assuming this matches your XML file name
 import com.example.myapplication.R;
-// Binding class for mycollectiongrid.xml
-import com.example.myapplication.databinding.MygardengridBinding;
-
-// *** ADJUST THESE IMPORTS TO YOUR ACTUAL PROJECT STRUCTURE ***
-import com.example.myapplication.ui.myplants.PlantCardAdapter; // Example
+import com.example.myapplication.adapter.PlantCardAdapter; // Your updated adapter
 import com.example.myapplication.ui.myplants.Plant;
 
 import java.util.ArrayList;
@@ -28,12 +25,13 @@ import java.util.List;
 
 public class MyGardenFragment extends Fragment {
 
-    // Binding for mycollectiongrid.xml which NOW includes the RecyclerView
-    private MygardengridBinding binding;
+    // Update this binding variable if your XML file is named 'mygardenlist.xml'
+    private MygardenlistBinding binding; // Or MycollectiongridBinding if that's still the main file name
 
     private PlantCardAdapter plantCardAdapter;
-    private ArrayList<Plant> allSamplePlants = new ArrayList<>(); // Stores all generated sample plants
-    private boolean currentViewIsFavourites = false; // To track current filter state
+    private ArrayList<Plant> allSamplePlants = new ArrayList<>();
+    private boolean currentViewIsFavourites = false;
+    private boolean isCurrentlyListView = false;
 
     public static MyGardenFragment newInstance() {
         return new MyGardenFragment();
@@ -42,7 +40,6 @@ public class MyGardenFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Generate all sample plants once when the fragment is created
         generateAllSamplePlants();
     }
 
@@ -50,141 +47,142 @@ public class MyGardenFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        Log.d("MyGardenFragment", "onCreateView CALLED - Inflating mycollectiongrid.xml");
-        binding = MygardengridBinding.inflate(inflater, container, false);
+        // Ensure this inflate matches your main fragment XML file name (e.g., mygardenlist.xml)
+        binding = MygardenlistBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        Log.d("MyGardenFragment", "onViewCreated CALLED for mycollectiongrid.xml");
+        Log.d("MyGardenFragment", "onViewCreated");
 
-        // --- Setup UI elements from mycollectiongrid.xml ---
         if (binding.pageTitleAddPlant != null) {
-            binding.pageTitleAddPlant.setText("My Garden");
+            binding.pageTitleAddPlant.setText(getString(R.string.my_garden_title));
         }
 
+        setupRecyclerView();
+
+        // --- View Toggle Buttons ---
+        // Assuming IDs imageButton (list) and imageButton2 (grid) are in your fragment's XML
         if (binding.imageButton != null) {
-            binding.imageButton.setOnClickListener(v -> Toast.makeText(getContext(), "List View Clicked (Not Implemented)", Toast.LENGTH_SHORT).show());
+            binding.imageButton.setOnClickListener(v -> {
+                if (!isCurrentlyListView) {
+                    switchToListView();
+                }
+            });
         }
         if (binding.imageButton2 != null) {
-            binding.imageButton2.setOnClickListener(v -> Toast.makeText(getContext(), "Grid View Clicked (Not Implemented)", Toast.LENGTH_SHORT).show());
+            binding.imageButton2.setOnClickListener(v -> {
+                if (isCurrentlyListView) {
+                    switchToGridView(); // Or switchToCardView if that's more accurate
+                }
+            });
         }
+        updateToggleButtonsVisualState();
 
+        // --- Search, Collection/Favourite, Add Plant buttons setup (remains the same if IDs are consistent) ---
         if (binding.searchScientificNameEditText != null) {
             binding.searchScientificNameEditText.setOnEditorActionListener((v, actionId, event) -> {
-                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    String searchQuery = v.getText().toString().trim();
-                    Toast.makeText(getContext(), "Searching for: " + searchQuery, Toast.LENGTH_SHORT).show();
-                    // TODO: Implement actual search filtering on 'allSamplePlants' and refresh adapter
-                    return true;
-                }
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) { /* ... search ... */ return true; }
                 return false;
             });
         }
-
-        // --- Setup RecyclerView DIRECTLY in this fragment ---
-        setupRecyclerView(); // Call the new setup method
-
-        if (binding.button2 != null) { // "My Collection"
+        if (binding.button2 != null) { /* My Collection click */
             binding.button2.setOnClickListener(v -> {
-                Log.d("MyGardenFragment", "My Collection button clicked.");
                 currentViewIsFavourites = false;
-                displayPlants(); // Refresh the RecyclerView
+                displayPlants();
             });
         }
-
-        if (binding.button3 != null) { // "My Favourite"
+        if (binding.button3 != null) { /* My Favourite click */
             binding.button3.setOnClickListener(v -> {
-                Log.d("MyGardenFragment", "My Favourite button clicked.");
                 currentViewIsFavourites = true;
-                displayPlants(); // Refresh the RecyclerView
+                displayPlants();
             });
         }
-
-        if (binding.imageButton4 != null) { // "Add Plant"
-            binding.imageButton4.setOnClickListener(v -> {
-                Log.d("MyGardenFragment", "Add Plant button clicked.");
-                Toast.makeText(getContext(), "Add Plant Clicked (Navigate to Add Screen)", Toast.LENGTH_SHORT).show();
-                // TODO: Navigate to your "Add Plant" screen/fragment
-            });
+        if (binding.imageButton4 != null) { /* Add Plant click */
+            binding.imageButton4.setOnClickListener(v -> Toast.makeText(getContext(), "Add Plant Clicked", Toast.LENGTH_SHORT).show());
         }
 
-        // Load the "My Collection" view by default
+
         if (savedInstanceState == null) {
-            Log.i("MyGardenFragment", "Initial load: Displaying All Collection.");
             currentViewIsFavourites = false;
-            displayPlants(); // Display initial data
+            switchToGridView(); // Default to grid view
+            displayPlants();
         }
     }
 
     private void setupRecyclerView() {
-        // *** Access RecyclerView directly from binding of mycollectiongrid.xml ***
+        // Use the RecyclerView ID from your fragment's XML (e.g., mygardenlist.xml)
         if (binding.recyclerViewMyGardenPlants == null) {
-            Log.e("MyGardenFragment", "CRITICAL: recyclerViewMyGardenPlants is NULL in binding! Check ID in mycollectiongrid.xml.");
+            Log.e("MyGardenFragment", "CRITICAL: recyclerViewMyGardenPlants is NULL!");
             return;
         }
-        binding.recyclerViewMyGardenPlants.setLayoutManager(new GridLayoutManager(getContext(), 2)); // 2 columns
-
-        // Initialize adapter with an empty list; data will be set in displayPlants()
-        plantCardAdapter = new PlantCardAdapter(new ArrayList<>(), plant -> {
-            Toast.makeText(getContext(), "Clicked on: " + plant.getName(), Toast.LENGTH_SHORT).show();
-            // TODO: Handle plant card click (e.g., navigate to detail screen)
+        plantCardAdapter = new PlantCardAdapter(requireContext(), new ArrayList<>(), plant -> {
+            Toast.makeText(getContext(), "Clicked: " + plant.getName(), Toast.LENGTH_SHORT).show();
         });
         binding.recyclerViewMyGardenPlants.setAdapter(plantCardAdapter);
-        Log.d("MyGardenFragment", "RecyclerView setup complete directly in MyGardenFragment.");
+        // Initial layout set by switchToGridView()
+    }
+
+    private void switchToListView() {
+        if (binding.recyclerViewMyGardenPlants == null || plantCardAdapter == null) return;
+        binding.recyclerViewMyGardenPlants.setLayoutManager(new LinearLayoutManager(getContext()));
+        plantCardAdapter.setViewType(PlantCardAdapter.VIEW_TYPE_LIST_WITH_DATE); // Use the new type
+        isCurrentlyListView = true;
+        updateToggleButtonsVisualState();
+        Log.d("MyGardenFragment", "Switched to List View with Date (Modified Card)");
+    }
+
+    private void switchToGridView() { // Renamed from switchToCardView for consistency if using GridLayoutManager
+        if (binding.recyclerViewMyGardenPlants == null || plantCardAdapter == null) return;
+        binding.recyclerViewMyGardenPlants.setLayoutManager(new GridLayoutManager(getContext(), 2)); // 2 columns for grid
+        plantCardAdapter.setViewType(PlantCardAdapter.VIEW_TYPE_GRID); // Back to default grid type
+        isCurrentlyListView = false;
+        updateToggleButtonsVisualState();
+        Log.d("MyGardenFragment", "Switched to Grid View");
+    }
+
+    private void updateToggleButtonsVisualState() {
+        if (binding.imageButton == null || binding.imageButton2 == null) return;
+        if (isCurrentlyListView) {
+            binding.imageButton.setImageResource(R.drawable.list_select_foreground);
+            binding.imageButton2.setImageResource(R.drawable.grid_unselect_foreground);
+        } else {
+            binding.imageButton.setImageResource(R.drawable.list_unselect_foreground);
+            binding.imageButton2.setImageResource(R.drawable.grid_select_foreground);
+        }
     }
 
     private void generateAllSamplePlants() {
-        if (!allSamplePlants.isEmpty()) return; // Generate only once
-
-        Log.d("MyGardenFragment", "Generating all sample plant data.");
-        // Parameters: id, name, scientificName, imageUrl, description, dateAdded, isFavourite
-        allSamplePlants.add(new Plant("p1", "Monstera Deliciosa", "Monstera deliciosa", "https://via.placeholder.com/150/771796", "Loves humidity", System.currentTimeMillis(), false));
-        allSamplePlants.add(new Plant("p2", "Snake Plant", "Sansevieria trifasciata", "https://via.placeholder.com/150/24f355", "Drought tolerant", System.currentTimeMillis(), true));
-        allSamplePlants.add(new Plant("p3", "Pothos", "Epipremnum aureum", "https://via.placeholder.com/150/d32776", "Easy to grow", System.currentTimeMillis(), false));
-        allSamplePlants.add(new Plant("p4", "ZZ Plant", "Zamioculcas zamiifolia", "https://via.placeholder.com/150/f66b97", "Low light ok", System.currentTimeMillis(), true));
-        allSamplePlants.add(new Plant("p5", "Fiddle Leaf Fig", "Ficus lyrata", "https://via.placeholder.com/150/56a8c2", "Needs bright light", System.currentTimeMillis(), false));
-        allSamplePlants.add(new Plant("p6", "Spider Plant", "Chlorophytum comosum", "https://via.placeholder.com/150/b0f7cc", "Produces plantlets", System.currentTimeMillis(), true));
+        if (!allSamplePlants.isEmpty()) return;
+        Log.d("MyGardenFragment", "Generating sample plants.");
+        long now = System.currentTimeMillis();
+        long oneDay = 24 * 60 * 60 * 1000;
+        // Ensure your Plant constructor can take these parameters
+        allSamplePlants.add(new Plant("p1", "Monstera", "M. deliciosa", "url", "Desc", now - 5 * oneDay, false));
+        allSamplePlants.add(new Plant("p2", "Snake Plant", "S. trifasciata", "url", "Desc", now - 2 * oneDay, true));
+        // Add more plants
     }
 
     private void displayPlants() {
-        if (plantCardAdapter == null) {
-            Log.e("MyGardenFragment", "plantCardAdapter is null in displayPlants. Cannot update UI.");
-            return;
-        }
-
+        if (plantCardAdapter == null) return;
         ArrayList<Plant> listToDisplay = new ArrayList<>();
         if (currentViewIsFavourites) {
-            Log.d("MyGardenFragment", "Filtering for Favourites. Total sample plants: " + allSamplePlants.size());
-            for (Plant p : allSamplePlants) {
-                if (p.isFavourite()) {
-                    listToDisplay.add(p);
-                }
-            }
+            for (Plant p : allSamplePlants) if (p.isFavourite()) listToDisplay.add(p);
         } else {
-            Log.d("MyGardenFragment", "Displaying All Collection. Total sample plants: " + allSamplePlants.size());
             listToDisplay.addAll(allSamplePlants);
         }
-
-        plantCardAdapter.setPlants(listToDisplay); // Make sure PlantCardAdapter has this method
-        Log.d("MyGardenFragment", "Adapter updated with " + listToDisplay.size() + " plants.");
-
+        plantCardAdapter.setPlants(listToDisplay);
         updateEmptyViewVisibility(listToDisplay.isEmpty());
     }
 
     private void updateEmptyViewVisibility(boolean isEmpty) {
-        // *** Access views directly from binding of mycollectiongrid.xml ***
-        if (binding.textViewMyGardenEmptyMessage == null || binding.recyclerViewMyGardenPlants == null) {
-            Log.w("MyGardenFragment", "Cannot update empty view visibility, required views are null in binding. Check IDs in mycollectiongrid.xml.");
-            return;
-        }
-
+        if (binding.textViewMyGardenEmptyMessage == null || binding.recyclerViewMyGardenPlants == null) return;
         if (isEmpty) {
             binding.recyclerViewMyGardenPlants.setVisibility(View.GONE);
             binding.textViewMyGardenEmptyMessage.setVisibility(View.VISIBLE);
-            binding.textViewMyGardenEmptyMessage.setText(currentViewIsFavourites ? "No favourites yet!" : "Your collection is empty.");
+            binding.textViewMyGardenEmptyMessage.setText(currentViewIsFavourites ? R.string.no_favourites_yet : R.string.collection_is_empty);
         } else {
             binding.recyclerViewMyGardenPlants.setVisibility(View.VISIBLE);
             binding.textViewMyGardenEmptyMessage.setVisibility(View.GONE);
@@ -194,9 +192,9 @@ public class MyGardenFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        Log.d("MyGardenFragment", "onDestroyView CALLED for mycollectiongrid.xml");
-        // Important to nullify the binding object
-        binding.recyclerViewMyGardenPlants.setAdapter(null); // Recommended to clear adapter
+        if (binding != null && binding.recyclerViewMyGardenPlants != null) {
+            binding.recyclerViewMyGardenPlants.setAdapter(null);
+        }
         binding = null;
     }
 }
