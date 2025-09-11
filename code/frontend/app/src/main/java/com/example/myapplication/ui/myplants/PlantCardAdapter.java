@@ -8,10 +8,11 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 // import com.bumptech.glide.Glide; // Example image loading library
+import java.util.ArrayList;
 import java.util.List;
 
 import com.example.myapplication.R;
-import com.example.yourapp.model.Plant;
+import com.example.myapplication.ui.myplants.Plant;
 
 public class PlantCardAdapter extends RecyclerView.Adapter<PlantCardAdapter.PlantViewHolder> {
 
@@ -48,7 +49,7 @@ public class PlantCardAdapter extends RecyclerView.Adapter<PlantCardAdapter.Plan
     }
 
     // Method to update data (e.g., when new plants are added)
-    public void setPlants(List<Plant> newPlantList) {
+    public void setPlants(ArrayList<com.example.myapplication.ui.myplants.Plant> newPlantList) {
         this.plantList = newPlantList;
         notifyDataSetChanged(); // Or use DiffUtil for better performance
     }

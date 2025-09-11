@@ -21,7 +21,7 @@ import com.example.myapplication.databinding.MygardengridBinding;
 
 // *** ADJUST THESE IMPORTS TO YOUR ACTUAL PROJECT STRUCTURE ***
 import com.example.myapplication.ui.myplants.PlantCardAdapter; // Example
-import com.example.yourapp.model.Plant;
+import com.example.myapplication.ui.myplants.Plant;
 
 import java.util.ArrayList;
 import java.util.List;
