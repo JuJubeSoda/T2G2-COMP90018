@@ -96,31 +96,12 @@
         <!-- Add other arguments if needed -->
     </fragment>
 
-    <fragment
-        android:id="@+id/navigation_upload_details"
-        android:name="com.example.myapplication.ui.myplants.UploadCompleteFragment"
-        android:label="Upload Plant Details"
-        tools:layout="@layout/uploadcompletepreview">
-
-        <argument
-            android:name="imageUri"
-            app:argType="string"
-            app:nullable="true" />
-
-        <!-- New Action -->
-<!--        <action-->
-<!--            android:id="@+id/action_uploadFragment_to_uploadCompletePreviewFragment"-->
-<!--            app:destination="@id/navigation_upload_complete_preview"-->
-<!--            app:popUpTo="@id/navigation_capture"-->
-<!--            app:popUpToInclusive="false" />-->
-    </fragment>
-
     <!-- My Garden Destination (Example, similar to Dashboard) -->
     <fragment
         android:id="@+id/navigation_my_garden"
         android:name="com.example.myapplication.ui.myplants.MyGardenFragment"
         android:label="My Garden"
-        tools:layout="@layout/mycollectionlist" /> <!-- Replace with your actual MyGardenFragment layout -->
+        tools:layout="@layout/mygardengrid" /> <!-- Replace with your actual MyGardenFragment layout -->
 
     <!-- Plant Map Destination (Example, similar to Notifications) -->
     <fragment

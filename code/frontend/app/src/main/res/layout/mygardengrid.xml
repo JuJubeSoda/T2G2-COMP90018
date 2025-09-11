@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:padding="16dp"
+    tools:context=".ui.myplants.MyGardenFragment"> <!-- Context points to MyGardenFragment -->
 
     <!-- Page Title "My Garden" -->
     <TextView
@@ -114,26 +115,32 @@
         app:layout_constraintBottom_toBottomOf="@+id/button3"
         app:srcCompat="@drawable/plus_foreground" />
 
-    <!--
-    Placeholder for where the actual grid/list of plants would go.
-    -->
-    <FrameLayout
-        android:id="@+id/plant_collection_container"
+    <!-- RecyclerView to display plant cards directly -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewMyGardenPlants"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
+        android:padding="4dp"
+        android:clipToPadding="false"
         app:layout_constraintTop_toBottomOf="@+id/button2"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:listitem="@layout/item_plant_card" /> <!-- Assuming item_plant_card.xml for card layout -->
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="Plant collection will be displayed here" />
-
-    </FrameLayout>
+    <!-- TextView for empty state message -->
+    <TextView
+        android:id="@+id/textViewMyGardenEmptyMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Your collection is empty."
+        android:textAppearance="?attr/textAppearanceSubtitle1"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@+id/recyclerViewMyGardenPlants"
+        app:layout_constraintBottom_toBottomOf="@+id/recyclerViewMyGardenPlants"
+        app:layout_constraintStart_toStartOf="@+id/recyclerViewMyGardenPlants"
+        app:layout_constraintEnd_toEndOf="@+id/recyclerViewMyGardenPlants"
+        tools:visibility="visible"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-
