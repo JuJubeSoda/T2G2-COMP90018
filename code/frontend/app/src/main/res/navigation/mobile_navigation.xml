@@ -103,6 +103,10 @@
         android:label="My Garden"
         tools:layout="@layout/mygardengrid" /> <!-- Replace with your actual MyGardenFragment layout -->
 
+    <action
+        android:id="@+id/action_myGardenFragment_to_addPlantFragment"
+        app:destination="@id/addPlantFragment" />
+
     <!-- Plant Map Destination (Example, similar to Notifications) -->
     <fragment
         android:id="@+id/navigation_plant_map"
@@ -116,6 +120,13 @@
         android:name="com.example.myapplication.ui.myplants.PlantWikiFragment"
         android:label="Plant Wiki"
         tools:layout="@layout/mygardenlist" /> <!-- Replace with your actual PlantWikiFragment layout -->
+
+    <!-- AddPlantFragment DESTINATION **** -->
+    <fragment
+        android:id="@+id/addPlantFragment"
+        android:name="com.example.myapplication.ui.myplants.AddPlantFragment"
+        android:label="Add New Plant"
+        tools:layout="@layout/addplant" />
 
     <!-- Example of an Activity destination (if you had one defined) -->
     <!-- <activity

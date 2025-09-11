@@ -11,6 +11,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 // Remove import for MycollectiongridBinding if your XML is now mygardenlist.xml
@@ -109,6 +111,20 @@ public class MyGardenFragment extends Fragment {
             currentViewIsFavourites = false;
             switchToGridView(); // Default to grid view
             displayPlants();
+        }
+
+        if (binding.imageButton4 != null) { // Assuming imageButton4 is your "Add Plant" button
+            binding.imageButton4.setOnClickListener(v -> {
+                Log.d("MyGardenFragment", "Add Plant button clicked, attempting to navigate.");
+                NavController navController = Navigation.findNavController(v);
+                try {
+                    // Use the action ID defined in your mobile_navigation.xml
+                    navController.navigate(R.id.action_myGardenFragment_to_addPlantFragment);
+                } catch (IllegalArgumentException e) {
+                    Log.e("MyGardenFragment", "Navigation action ID not found. Check mobile_navigation.xml: " + e.getMessage());
+                    Toast.makeText(getContext(), "Error: Could not navigate to Add Plant screen.", Toast.LENGTH_LONG).show();
+                }
+            });
         }
     }
 
