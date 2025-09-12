@@ -75,7 +75,7 @@ public class SignInActivity extends AppCompatActivity {
             api.login(new LoginRequest(username, pwd)).enqueue(new Callback<BaseResponse>() {
                 @Override
                 public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
-                    btnSignIn.setEnabled(true); // 恢复按钮
+                    btnSignIn.setEnabled(true);
                     if (!response.isSuccessful() || response.body() == null) {
                         Toast.makeText(SignInActivity.this, "Login failed: " + response.code(), Toast.LENGTH_SHORT).show();
                         return;
@@ -161,7 +161,7 @@ public class SignInActivity extends AppCompatActivity {
         sp.edit().putString(KEY_TOKEN, token).apply();
     }
 
-    // 读取 token（后续请求需要带上 Authorization 时用）
+    // 读取 token
     private String readToken() {
         SharedPreferences sp = getSharedPreferences(PREFS_AUTH, MODE_PRIVATE);
         return sp.getString(KEY_TOKEN, "");

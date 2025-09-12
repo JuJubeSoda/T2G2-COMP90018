@@ -91,7 +91,7 @@ public class SignUpActivity extends AppCompatActivity {
         });
     }
 
-    // 工具：安全读取输入框文本
+    // 读取输入框文本
     private String val(TextInputEditText v) {
         return v.getText() != null ? v.getText().toString().trim() : "";
     }
