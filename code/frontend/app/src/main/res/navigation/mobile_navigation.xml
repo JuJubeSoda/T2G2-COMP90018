@@ -108,9 +108,9 @@
         app:destination="@id/addPlantFragment" />
 
     <!-- Plant Map Destination (Example, similar to Notifications) -->
-    <fragment
+    <activity
         android:id="@+id/navigation_plant_map"
-        android:name="com.example.myapplication.ui.myplants.PlantMapFragment"
+        android:name="com.example.myapplication.MapsActivity"
         android:label="Plant Map"
         tools:layout="@layout/activity_maps" /> <!-- Replace with your actual PlantMapFragment layout -->
 
