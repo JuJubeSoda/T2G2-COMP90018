@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+    <!-- Top Title -->
+    <TextView
+        android:id="@+id/textViewPageTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="The Collection"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Plant Image Preview -->
+    <ImageView
+        android:id="@+id/imageViewPlantPreview"
+        android:layout_width="0dp"
+        android:layout_height="220dp"
+        android:layout_marginTop="16dp"
+        android:contentDescription="Image of the collected plant"
+        android:scaleType="centerCrop"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewPageTitle"
+        tools:src="@tools:sample/backgrounds/scenic" />
+
+    <!-- Details Section - Using a Guideline for label/value alignment -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineLabelEnd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.35" />
+
+    <!-- Scientific Name -->
+    <TextView
+        android:id="@+id/labelScientificName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Scientific Name:"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineLabelEnd"
+        app:layout_constraintTop_toBottomOf="@+id/imageViewPlantPreview" />
+
+    <TextView
+        android:id="@+id/textViewScientificName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        tools:text="Quercus robur"
+        app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/labelScientificName"
+        app:layout_constraintBottom_toBottomOf="@+id/labelScientificName" />
+
+    <!-- Introduction -->
+    <TextView
+        android:id="@+id/labelIntroduction"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Introduction:"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineLabelEnd"
+        app:layout_constraintTop_toBottomOf="@+id/labelScientificName" />
+
+    <TextView
+        android:id="@+id/textViewIntroduction"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        tools:text="A large deciduous tree, native to most of Europe west of the Caucasus."
+        app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/labelIntroduction" />
+
+    <!-- Location -->
+
+        <!-- Search Tag -->
+
+        <TextView
+            android:id="@+id/textViewLocation"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
+            app:layout_constraintTop_toTopOf="@+id/labelLocation"
+            tools:text="Royal Botanic Gardens" />
+
+        <TextView
+            android:id="@+id/labelLocation"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:text="Location:"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineLabelEnd"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textViewIntroduction" />
+
+        <TextView
+            android:id="@+id/labelSearchTag"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Search Tags:"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineLabelEnd"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/labelLocation" />
+
+        <TextView
+            android:id="@+id/textViewDiscoveredBy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:textSize="12sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/labelSearchTag"
+            tools:text="Discovered by: Jonathan" />
+
+        <Button
+            android:id="@+id/buttonUploadMore"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Upload More"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textViewDiscoveredBy" />
+
+        <Button
+            android:id="@+id/buttonGatherMoreInfo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:text="Gather More Information"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/buttonUploadMore"
+            app:layout_constraintVertical_bias="0.0" />
+
+        <TextView
+            android:id="@+id/textViewSearchTag"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
+            app:layout_constraintTop_toTopOf="@+id/labelSearchTag"
+            tools:text="Tree, Oak, Deciduous" />
+
+        <TextView
+            android:id="@+id/textViewDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="@+id/textViewDiscoveredBy"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/textViewDiscoveredBy"
+            app:layout_constraintVertical_bias="1.0"
+            tools:text="Date: 2025-09-01" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

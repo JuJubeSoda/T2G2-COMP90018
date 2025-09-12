@@ -3,23 +3,136 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/navigation_home">
+    app:startDestination="@id/navigation_home"> <!-- Sets HomeFragment as the starting point -->
 
+    <!-- Home Destination -->
     <fragment
         android:id="@+id/navigation_home"
         android:name="com.example.myapplication.ui.home.HomeFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home"> <!-- Or tools:layout="@layout/home" if your file is home.xml -->
+
+        <!-- Action to navigate from Home to UploadFragment -->
+        <action
+            android:id="@+id/action_navigation_home_to_uploadFragment"
+            app:destination="@id/navigation_upload" />
+
+        <!-- Action to navigate from Home to MyGardenFragment -->
+        <action
+            android:id="@+id/action_navigation_home_to_myGardenFragment"
+            app:destination="@id/navigation_my_garden" />
+
+        <!-- Action to navigate from Home to PlantMapFragment -->
+        <action
+            android:id="@+id/action_navigation_home_to_plantMapFragment"
+            app:destination="@id/navigation_plant_map" />
+
+        <!-- Action to navigate from Home to PlantWikiFragment -->
+        <action
+            android:id="@+id/action_navigation_home_to_plantWikiFragment"
+            app:destination="@id/navigation_plant_wiki" />
+
+        <!-- You can also navigate to an Activity -->
+        <!-- <action
+            android:id="@+id/action_navigation_home_to_mainActivity2"
+            app:destination="@id/mainActivity2" /> -->
+
+    </fragment>
+
+    <!-- Upload Destination -->
+    <fragment
+        android:id="@+id/navigation_upload"
+        android:name="com.example.myapplication.ui.myplants.CaptureFragment"
+        android:label="Upload Plant"
+        tools:layout="@layout/captureplant" >
+        <!-- Action FROM CaptureFragment TO ConfirmUploadFragment -->
+        <action
+            android:id="@+id/action_captureFragment_to_confirmUploadFragment"
+            app:destination="@id/navigation_upload_plant" />
+    </fragment>
+
+    <!-- NEW: Confirm and Upload Plant Details Destination -->
+    <fragment
+        android:id="@+id/navigation_upload_plant"
+        android:name="com.example.myapplication.ui.myplants.UploadFragment"
+        android:label="Upload Plant Details"
+        tools:layout="@layout/uploadplant">
+        <argument
+            android:name="imageUri"
+            app:argType="string"
+            app:nullable="true" />
+
+        <action
+            android:id="@+id/action_uploadFragment_to_uploadCompletePreviewFragment"
+            app:destination="@id/navigation_upload_complete_preview" />
+    </fragment>
 
     <fragment
-        android:id="@+id/navigation_dashboard"
-        android:name="com.example.myapplication.ui.dashboard.DashboardFragment"
-        android:label="@string/title_dashboard"
-        tools:layout="@layout/fragment_dashboard" />
+        android:id="@+id/navigation_upload_complete_preview"
+        android:name="com.example.myapplication.ui.myplants.UploadCompleteFragment"
+        android:label="Upload Complete"
+        tools:layout="@layout/uploadcompletepreview">
 
+        <argument
+            android:name="imageUri"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="scientificName"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="location"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="introduction"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="searchTag"
+            app:argType="string"
+            app:nullable="true" />
+        <!-- Add other arguments if needed -->
+    </fragment>
+
+    <!-- My Garden Destination (Example, similar to Dashboard) -->
     <fragment
-        android:id="@+id/navigation_notifications"
-        android:name="com.example.myapplication.ui.notifications.NotificationsFragment"
-        android:label="@string/title_notifications"
-        tools:layout="@layout/fragment_notifications" />
+        android:id="@+id/navigation_my_garden"
+        android:name="com.example.myapplication.ui.myplants.MyGardenFragment"
+        android:label="My Garden"
+        tools:layout="@layout/mygardengrid" /> <!-- Replace with your actual MyGardenFragment layout -->
+
+    <action
+        android:id="@+id/action_myGardenFragment_to_addPlantFragment"
+        app:destination="@id/addPlantFragment" />
+
+    <!-- Plant Map Destination (Example, similar to Notifications) -->
+    <fragment
+        android:id="@+id/navigation_plant_map"
+        android:name="com.example.myapplication.ui.myplants.PlantMapFragment"
+        android:label="Plant Map"
+        tools:layout="@layout/activity_maps" /> <!-- Replace with your actual PlantMapFragment layout -->
+
+    <!-- Plant Wiki Destination -->
+    <fragment
+        android:id="@+id/navigation_plant_wiki"
+        android:name="com.example.myapplication.ui.myplants.PlantWikiFragment"
+        android:label="Plant Wiki"
+        tools:layout="@layout/mygardenlist" /> <!-- Replace with your actual PlantWikiFragment layout -->
+
+    <!-- AddPlantFragment DESTINATION **** -->
+    <fragment
+        android:id="@+id/addPlantFragment"
+        android:name="com.example.myapplication.ui.myplants.AddPlantFragment"
+        android:label="Add New Plant"
+        tools:layout="@layout/addplant" />
+
+    <!-- Example of an Activity destination (if you had one defined) -->
+    <!-- <activity
+        android:id="@+id/mainActivity2"
+        android:name="com.example.myapplication.MainActivity2"
+        android:label="MainActivity2"
+        tools:layout="@layout/activity_main2"/> -->
+
 </navigation>

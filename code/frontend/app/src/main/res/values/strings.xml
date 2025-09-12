@@ -8,4 +8,8 @@
     <string name="default_info_snippet">No places found, because location permission is disabled.</string>
     <string name="option_get_place">Get place</string>
     <string name="pick_place">Choose a place</string>
+    <string name="plant_added_on_date_format">AddedL %s</string>
+    <string name="my_garden_title">My Garden</string>
+    <string name="collection_is_empty">Empty Collection</string>
+    <string name="no_favourites_yet">No Favourites</string>
 </resources>

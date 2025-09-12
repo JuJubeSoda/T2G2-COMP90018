@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="?attr/actionBarSize"> <!-- Padding for BottomAppBar if it overlays -->
+
+        <!-- Upper Banner Elements -->
+
+        <TextView
+            android:id="@+id/text_greeting_hello"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="16dp"
+            android:text="Hello!"
+            android:textColor="#3DADA9"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/button_profile_avatar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="User avatar"
+            android:padding="0dp"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toBottomOf="@+id/text_greeting_hello"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/text_greeting_hello"
+            app:layout_constraintVertical_bias="1.0"
+            app:srcCompat="@drawable/profile_icon_foreground" />
+
+        <ImageView
+            android:id="@+id/image_plant_bulb_icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="Plant bulb icon"
+            app:srcCompat="@drawable/plantbulb_foreground"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/text_greeting_hello" />
+
+        <TextView
+            android:id="@+id/text_discovery_prompt"
+            android:layout_width="300dp"
+            android:layout_height="49dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="16dp"
+            android:text="Discover green life, record every encounter, let plants be with you everyday!"
+            android:textColor="#989898"
+            android:textSize="14sp"
+            android:textStyle="italic"
+            app:layout_constraintBottom_toBottomOf="@+id/image_plant_bulb_icon"
+            app:layout_constraintEnd_toStartOf="@+id/button_profile_avatar"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@+id/image_plant_bulb_icon"
+            app:layout_constraintTop_toTopOf="@+id/image_plant_bulb_icon" />
+
+        <!-- Search Bar -->
+        <SearchView
+            android:id="@+id/search_view_main"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="16dp"
+            android:background="#E0E0E0"
+            android:iconifiedByDefault="false"
+            android:queryHint="Search plants..."
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/image_plant_bulb_icon" />
+
+        <!-- Card Row 1 -->
+        <!-- Using a Guideline for consistent vertical spacing for card rows -->
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_card_row1_top"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_begin="190dp"/> <!-- Adjust as needed based on content above -->
+        <!-- Or app:layout_constraintGuide_percent="0.25" for percentage based positioning -->
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card1"
+            style="@style/Widget.App.InfoCard"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="8dp"
+            app:layout_constraintEnd_toStartOf="@+id/card2"
+            app:layout_constraintHorizontal_chainStyle="spread_inside"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/search_view_main">
+            <!-- Content of Card 1 -->
+            <LinearLayout style="@style/Widget.App.InfoCardContent">
+                <ImageView
+                    android:id="@+id/icon_card_1"
+                    style="@style/Widget.App.InfoCardIcon"
+                    android:src="@drawable/camera_foreground"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="Upload Plants Icon"/>
+                <TextView
+                    android:id="@+id/text_card_1"
+                    style="@style/Widget.App.InfoCardTitle"
+                    android:text="Upload Plants"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card2"
+            style="@style/Widget.App.InfoCard"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp"
+            app:layout_constraintStart_toEndOf="@+id/card1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/card1"
+            app:layout_constraintBottom_toBottomOf="@+id/card1">
+            <!-- Content of Card 2 -->
+            <LinearLayout style="@style/Widget.App.InfoCardContent">
+                <ImageView
+                    android:id="@+id/icon_card_2"
+                    style="@style/Widget.App.InfoCardIcon"
+                    android:src="@drawable/map_foreground"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="Plant Map Icon"/>
+                <TextView
+                    android:id="@+id/text_card_2"
+                    style="@style/Widget.App.InfoCardTitle"
+                    android:text="Plant Map"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card Row 2 -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card3"
+            style="@style/Widget.App.InfoCard"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="8dp"
+            app:layout_constraintEnd_toStartOf="@+id/card4"
+            app:layout_constraintHorizontal_chainStyle="spread_inside"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/card1">
+            <!-- Content of Card 3 -->
+            <LinearLayout style="@style/Widget.App.InfoCardContent">
+                <ImageView
+                    android:id="@+id/icon_card_3"
+                    style="@style/Widget.App.InfoCardIcon"
+                    android:src="@drawable/bookmark_foreground"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="My Garden"/>
+                <TextView
+                    android:id="@+id/text_card_3"
+                    style="@style/Widget.App.InfoCardTitle"
+                    android:text="My Garden"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card4"
+            style="@style/Widget.App.InfoCard"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp"
+            app:layout_constraintStart_toEndOf="@+id/card3"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/card3"
+            app:layout_constraintBottom_toBottomOf="@+id/card3">
+            <!-- Content of Card 4 -->
+            <LinearLayout style="@style/Widget.App.InfoCardContent">
+                <ImageView
+                    android:id="@+id/icon_card_4"
+                    style="@style/Widget.App.InfoCardIcon"
+                    android:src="@drawable/search_foreground"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="Plant Wiki"/>
+                <TextView
+                    android:id="@+id/text_card_4"
+                    style="@style/Widget.App.InfoCardTitle"
+                    android:text="Plant Wiki"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Horizontally Scrolling RecyclerView for Nearby Discoveries -->
+        <TextView
+            android:id="@+id/text_nearby_discoveries_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="24dp"
+            android:text="Nearby Discoveries"
+            android:textColor="#3DADA9"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/card3" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view_nearby_discoveries"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/text_nearby_discoveries_title"
+            tools:itemCount="5"
+            tools:listitem="@layout/item_discovery_card" />
+
+        <!-- Spacer view to push content up if it's too short for the NestedScrollView to scroll,
+             ensuring BottomAppBar doesn't overlap content unnecessarily when content is short.
+             Only needed if paddingBottom on ConstraintLayout is not enough or BottomAppBar is not an overlay. -->
+        <View
+            android:id="@+id/spacer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toBottomOf="@+id/recycler_view_nearby_discoveries"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_bias="1.0"
+            android:minHeight="16dp"/> <!-- Minimum space at the bottom -->
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.core.widget.NestedScrollView>
