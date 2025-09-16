@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Root ConstraintLayout for the "My Garden" screen. -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    tools:context=".ui.myplants.MyGardenFragment"> <!-- Context points to MyGardenFragment -->
+    tools:context=".ui.myplants.MyGardenFragment">
 
-    <!-- Page Title "My Garden" -->
+    <!-- TextView displaying the main title of the screen: "My Garden". -->
     <TextView
         android:id="@+id/pageTitleAddPlant"
         android:layout_width="wrap_content"
@@ -19,7 +20,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- View Toggle: List Button -->
+    <!-- ImageButton to switch to a list view representation of the garden. -->
     <ImageButton
         android:id="@+id/imageButton"
         android:layout_width="46dp"
@@ -34,7 +35,7 @@
         app:layout_constraintTop_toBottomOf="@+id/pageTitleAddPlant"
         app:srcCompat="@drawable/list_unselect_foreground" />
 
-    <!-- View Toggle: Grid Button -->
+    <!-- ImageButton to switch to a grid view representation of the garden. -->
     <ImageButton
         android:id="@+id/imageButton2"
         android:layout_width="42dp"
@@ -49,7 +50,7 @@
         app:layout_constraintTop_toBottomOf="@+id/pageTitleAddPlant"
         app:srcCompat="@drawable/grid_select_foreground" />
 
-    <!-- Search Bar -->
+    <!-- TextInputLayout containing an EditText for searching the plant collection. -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/searchScientificNameLayout"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -62,6 +63,7 @@
         app:layout_constraintTop_toTopOf="@+id/imageButton"
         app:layout_constraintBottom_toBottomOf="@+id/imageButton">
 
+        <!-- EditText field for entering search queries for the plant collection. -->
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/searchScientificNameEditText"
             android:layout_width="match_parent"
@@ -73,7 +75,7 @@
             android:textSize="14sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- "My Collection" Button -->
+    <!-- Button to filter or view the user's main plant collection. -->
     <Button
         android:id="@+id/button2"
         android:layout_width="0dp"
@@ -86,7 +88,7 @@
         app:layout_constraintTop_toBottomOf="@+id/imageButton"
         app:strokeColor="#CAC7C7" />
 
-    <!-- "My Favourite" Button -->
+    <!-- Button to filter or view the user's favorite plants. -->
     <Button
         android:id="@+id/button3"
         android:layout_width="0dp"
@@ -99,7 +101,7 @@
         app:layout_constraintTop_toBottomOf="@+id/imageButton"
         app:strokeColor="#CAC7C7" />
 
-    <!-- Add Plant Button -->
+    <!-- ImageButton to navigate to a screen or dialog for adding a new plant. -->
     <ImageButton
         android:id="@+id/imageButton4"
         android:layout_width="54dp"
@@ -115,7 +117,7 @@
         app:layout_constraintBottom_toBottomOf="@+id/button3"
         app:srcCompat="@drawable/plus_foreground" />
 
-    <!-- RecyclerView to display plant cards directly -->
+    <!-- RecyclerView for displaying the list or grid of plants in the user's garden. -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewMyGardenPlants"
         android:layout_width="0dp"
@@ -127,9 +129,9 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        tools:listitem="@layout/item_plant_card" /> <!-- Assuming item_plant_card.xml for card layout -->
+        tools:listitem="@layout/item_plant_card" />
 
-    <!-- TextView for empty state message -->
+    <!-- TextView displayed when the RecyclerView is empty, indicating no plants in the collection. -->
     <TextView
         android:id="@+id/textViewMyGardenEmptyMessage"
         android:layout_width="wrap_content"
