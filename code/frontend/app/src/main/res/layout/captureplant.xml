@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Root ConstraintLayout for the camera capture screen.
+     android:background="@android:color/black" sets a black background, common
+     for camera UIs to make the preview stand out. -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black"> <!-- Good for camera UI to fill screen -->
+    android:background="@android:color/black">
 
-    <!-- Top Bar -->
+    <!-- Top Bar Container for Back Button and Title -->
+
+    <!-- ImageButton acting as a 'Back' button, typically to navigate to the previous screen.
+         Positioned at the top-start of the layout. -->
     <ImageButton
         android:id="@+id/backButton"
         android:layout_width="wrap_content"
@@ -22,6 +27,8 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/camera_preview" />
 
+    <!-- TextView displaying the title of the screen, e.g., "Capture Plant".
+         Positioned to the right of the back button and centered vertically with it. -->
     <TextView
         android:id="@+id/titleTextView"
         android:layout_width="0dp"
@@ -37,6 +44,10 @@
         app:layout_constraintBottom_toBottomOf="@+id/backButton" />
 
     <!-- Camera Preview Area -->
+    <!-- PreviewView from CameraX library, used to display the live camera feed.
+         It fills the majority of the screen below the top bar.
+         app:scaleType="fillCenter" scales the preview to fill its bounds while maintaining
+         aspect ratio, potentially cropping. -->
     <androidx.camera.view.PreviewView
         android:id="@+id/camera_preview"
         android:layout_width="0dp"
@@ -48,6 +59,10 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Capture Button - Overlaid on the Preview -->
+    <!-- ImageButton acting as the shutter or capture button to take a picture.
+         Overlaid on top of the PreviewView, typically centered at the bottom.
+         android:background="@drawable/camera_button" likely refers to a custom drawable
+         for the button's appearance. -->
     <ImageButton
         android:id="@+id/imageCaptureButton"
         android:layout_width="72dp"

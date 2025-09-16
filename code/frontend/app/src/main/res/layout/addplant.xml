@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Root ConstraintLayout for the "Add Plant" screen.
+     Defines the basic structure and padding for the screen. -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -6,7 +8,8 @@
     android:layout_height="match_parent"
     android:padding="16dp">
 
-    <!-- Back Button -->
+    <!-- ImageButton serving as a 'Back' button to navigate to the previous screen.
+         Positioned at the top-start of the layout. -->
     <ImageButton
         android:id="@+id/backButtonAddPlant"
         android:layout_width="wrap_content"
@@ -18,9 +21,8 @@
         app:layout_constraintStart_toStartOf="parent"
         android:padding="8dp"/>
 
-    <!-- Page Title "Add Plant" -->
-
-    <!-- "Scientific Name" Label -->
+    <!-- TextView displaying the main title of the screen: "Add Plant".
+         Aligned to the right of the back button and vertically centered with it. -->
     <TextView
         android:id="@+id/pageTitleAddPlant"
         android:layout_width="136dp"
@@ -38,6 +40,8 @@
         app:layout_constraintTop_toTopOf="@+id/backButtonAddPlant"
         app:layout_constraintVertical_bias="1.0" />
 
+    <!-- TextView acting as a label for the scientific name input field.
+         Positioned below the top bar elements. -->
     <TextView
         android:id="@+id/labelScientificName"
         android:layout_width="wrap_content"
@@ -49,9 +53,8 @@
         app:layout_constraintTop_toBottomOf="@+id/backButtonAddPlant"
         app:layout_constraintStart_toStartOf="parent"/>
 
-    <!-- Search Input Field -->
-
-    <!-- RecyclerView for displaying search results -->
+    <!-- TextInputLayout providing a Material Design container for the search input field.
+         Used for entering the scientific name to search. -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/searchScientificNameLayout"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -64,6 +67,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/labelScientificName">
 
+        <!-- TextInputEditText where the user types the scientific name for searching.
+             Includes a hint and configures IME options for search action. -->
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/searchScientificNameEditText"
             android:layout_width="match_parent"
@@ -74,7 +79,9 @@
             android:maxLines="1" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Progress bar for loading search results -->
+    <!-- RecyclerView for displaying the list of search results for scientific names.
+         Initially set to 'gone' and made visible when search results are available.
+         tools:visibility and tools:itemCount are for design-time preview. -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewScientificNames"
         android:layout_width="377dp"
@@ -90,6 +97,9 @@
         tools:itemCount="5"
         tools:visibility="visible" />
 
+    <!-- ProgressBar displayed while search results are being loaded.
+         Centered within the bounds of the RecyclerView.
+         Initially set to 'gone' and made visible during loading. -->
     <ProgressBar
         android:id="@+id/progressBarSearch"
         style="?android:attr/progressBarStyle"
@@ -101,7 +111,10 @@
         app:layout_constraintStart_toStartOf="@+id/recyclerViewScientificNames"
         app:layout_constraintEnd_toEndOf="@+id/recyclerViewScientificNames"/>
 
-    <!-- TextView for "No results found" or other messages -->
+    <!-- TextView for displaying status messages like "No results found" or initial prompt.
+         Centered within the bounds of the RecyclerView.
+         Initially set to 'gone' or shows a prompt, and visibility/text changes based on search status.
+         tools:visibility="visible" allows previewing this TextView in the layout editor. -->
     <TextView
         android:id="@+id/textViewSearchStatus"
         android:layout_width="wrap_content"
@@ -115,6 +128,7 @@
         app:layout_constraintEnd_toEndOf="@+id/recyclerViewScientificNames"
         tools:visibility="visible"/>
 
+    <!-- ImageView, possibly a search icon or similar, positioned next to the search input field. -->
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="40dp"

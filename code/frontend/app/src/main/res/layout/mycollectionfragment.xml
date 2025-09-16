@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Root ConstraintLayout for the fragment that displays a collection of plants. -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- RecyclerView to display a list or grid of plant items (cards). -->
+    <!-- It is constrained to fill the entire parent layout. -->
+    <!-- android:clipToPadding="false" allows shadows or decorations from items to extend into the padding area. -->
+    <!-- tools:listitem specifies the layout for a single item in the RecyclerView for design-time preview. -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewPlantCards"
         android:layout_width="0dp"
@@ -17,6 +22,10 @@
         app:layout_constraintEnd_toEndOf="parent"
         tools:listitem="@layout/item_plant_card" />
 
+    <!-- TextView displayed when the plant collection is empty. -->
+    <!-- It is centered within the parent ConstraintLayout. -->
+    <!-- android:visibility="gone" makes it initially invisible; it should be made visible programmatically when the collection is empty. -->
+    <!-- tools:visibility="visible" allows previewing this TextView in the layout editor. -->
     <TextView
         android:id="@+id/textViewEmptyCollectionMessage"
         android:layout_width="wrap_content"

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Root MaterialCardView: Provides a styled container with elevation and rounded corners for a single plant item. -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -8,11 +9,16 @@
     app:cardElevation="4dp"
     app:cardCornerRadius="8dp">
 
+    <!-- ConstraintLayout within the card to arrange its contents. -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/plantCardConstraintLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <!-- ImageView to display the plant's image. -->
+        <!-- It spans the width of the card and has a fixed height. -->
+        <!-- android:scaleType="centerCrop" ensures the image fills the bounds, cropping if necessary. -->
+        <!-- tools:srcCompat provides a sample image for design-time preview. -->
         <ImageView
             android:id="@+id/imageViewPlant"
             android:layout_width="0dp"
@@ -23,6 +29,10 @@
             app:layout_constraintEnd_toEndOf="parent"
             tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
+        <!-- TextView to display the name of the plant. -->
+        <!-- Positioned below the image, with margins for spacing. -->
+        <!-- android:maxLines="1" and android:ellipsize="end" ensure the name fits on one line, adding "..." if too long. -->
+        <!-- tools:text provides sample text for design-time preview. -->
         <TextView
             android:id="@+id/textViewPlantName"
             android:layout_width="0dp"
@@ -38,6 +48,11 @@
             app:layout_constraintEnd_toEndOf="parent"
             tools:text="Monstera Deliciosa" />
 
+        <!-- TextView to display a date associated with the plant (e.g., added date, last watered). -->
+        <!-- Positioned below the plant name, with appropriate margins. -->
+        <!-- Uses a secondary text appearance and color. -->
+        <!-- Also limited to one line with an ellipsis for overflow. -->
+        <!-- tools:text provides sample text for design-time preview. -->
         <TextView
             android:id="@+id/textViewPlantDate"
             android:layout_width="0dp"
@@ -56,6 +71,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             tools:text="01/09/2025" />
 
+        <!-- Placeholder comment indicating where more UI elements could be added to the card. -->
         <!-- You can add more elements like an "Added Date", "Watering Status Icon", etc. -->
 
     </androidx.constraintlayout.widget.ConstraintLayout>

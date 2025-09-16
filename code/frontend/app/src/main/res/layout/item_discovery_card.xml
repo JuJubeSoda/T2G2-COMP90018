@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Root MaterialCardView: Defines a compact card layout, likely for displaying a "discovery" item. -->
+<!-- This card has a fixed width (160dp) and wraps its content height. -->
+<!-- Margins are applied for spacing, and it features rounded corners and elevation for a Material Design look. -->
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -11,10 +14,16 @@
     app:cardCornerRadius="8dp"
     app:cardElevation="4dp">
 
+    <!-- ConstraintLayout within the card to arrange its content (image and text). -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <!-- ImageView to display the photo of the discovery item. -->
+        <!-- It spans the width of the card and has a fixed height. -->
+        <!-- android:scaleType="centerCrop" ensures the image fills the bounds, cropping if necessary. -->
+        <!-- tools:srcCompat provides a sample image for design-time preview. -->
+        <!-- android:contentDescription provides an accessible label for the image. -->
         <ImageView
             android:id="@+id/image_discovery_photo"
             android:layout_width="0dp"
@@ -26,6 +35,11 @@
             tools:srcCompat="@tools:sample/backgrounds/scenic"
             android:contentDescription="Discovery item image" />
 
+        <!-- TextView to display the name of the discovery item. -->
+        <!-- Positioned below the image, with appropriate margins. -->
+        <!-- Uses Subtitle2 text appearance. -->
+        <!-- android:maxLines="1" and android:ellipsize="end" ensure the name fits on one line, adding "..." if too long. -->
+        <!-- tools:text provides sample text for design-time preview. -->
         <TextView
             android:id="@+id/text_discovery_name"
             android:layout_width="0dp"
@@ -41,6 +55,10 @@
             app:layout_constraintEnd_toEndOf="parent"
             tools:text="Beautiful Rose" />
 
+        <!-- TextView to display distance information related to the discovery item. -->
+        <!-- Positioned below the discovery name, with appropriate margins. -->
+        <!-- Uses Caption text appearance. -->
+        <!-- tools:text provides sample text for design-time preview. -->
         <TextView
             android:id="@+id/text_discovery_distance"
             android:layout_width="0dp"
