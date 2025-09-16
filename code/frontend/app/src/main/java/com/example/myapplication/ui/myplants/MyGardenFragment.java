@@ -19,7 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 // import com.example.myapplication.databinding.MycollectiongridBinding;
 import com.example.myapplication.databinding.MygardenlistBinding; // Assuming this matches your XML file name
 import com.example.myapplication.R;
-import com.example.myapplication.adapter.PlantCardAdapter; // Your updated adapter
+import com.example.myapplication.ui.myplants.PlantCardAdapter; // Your updated adapter
 import com.example.myapplication.ui.myplants.Plant;
 
 import java.util.ArrayList;
