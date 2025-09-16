@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Root ScrollView for the entire layout, enabling vertical scrolling. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -6,92 +7,92 @@
     android:layout_height="match_parent"
     android:fillViewport="true">
 
+    <!-- Main ConstraintLayout holding all content within the ScrollView. -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp">
 
-    <!-- Top Title -->
-    <TextView
-        android:id="@+id/textViewPageTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="The Collection"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        <!-- TextView displaying the main title of the page. -->
+        <TextView
+            android:id="@+id/textViewPageTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="The Collection"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Plant Image Preview -->
-    <ImageView
-        android:id="@+id/imageViewPlantPreview"
-        android:layout_width="0dp"
-        android:layout_height="220dp"
-        android:layout_marginTop="16dp"
-        android:contentDescription="Image of the collected plant"
-        android:scaleType="centerCrop"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textViewPageTitle"
-        tools:src="@tools:sample/backgrounds/scenic" />
+        <!-- ImageView for showing a preview of the plant image. -->
+        <ImageView
+            android:id="@+id/imageViewPlantPreview"
+            android:layout_width="0dp"
+            android:layout_height="220dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="Image of the collected plant"
+            android:scaleType="centerCrop"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textViewPageTitle"
+            tools:src="@tools:sample/backgrounds/scenic" />
 
-    <!-- Details Section - Using a Guideline for label/value alignment -->
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guidelineLabelEnd"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.35" />
+        <!-- Guideline to help align labels and their corresponding values vertically. -->
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineLabelEnd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.35" />
 
-    <!-- Scientific Name -->
-    <TextView
-        android:id="@+id/labelScientificName"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Scientific Name:"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/guidelineLabelEnd"
-        app:layout_constraintTop_toBottomOf="@+id/imageViewPlantPreview" />
+        <!-- TextView acting as a label for the scientific name. -->
+        <TextView
+            android:id="@+id/labelScientificName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Scientific Name:"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineLabelEnd"
+            app:layout_constraintTop_toBottomOf="@+id/imageViewPlantPreview" />
 
-    <TextView
-        android:id="@+id/textViewScientificName"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        tools:text="Quercus robur"
-        app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/labelScientificName"
-        app:layout_constraintBottom_toBottomOf="@+id/labelScientificName" />
+        <!-- TextView displaying the actual scientific name value. -->
+        <TextView
+            android:id="@+id/textViewScientificName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            tools:text="Quercus robur"
+            app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/labelScientificName"
+            app:layout_constraintBottom_toBottomOf="@+id/labelScientificName" />
 
-    <!-- Introduction -->
-    <TextView
-        android:id="@+id/labelIntroduction"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="Introduction:"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/guidelineLabelEnd"
-        app:layout_constraintTop_toBottomOf="@+id/labelScientificName" />
+        <!-- TextView acting as a label for the introduction/description. -->
+        <TextView
+            android:id="@+id/labelIntroduction"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Introduction:"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineLabelEnd"
+            app:layout_constraintTop_toBottomOf="@+id/labelScientificName" />
 
-    <TextView
-        android:id="@+id/textViewIntroduction"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        tools:text="A large deciduous tree, native to most of Europe west of the Caucasus."
-        app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/labelIntroduction" />
+        <!-- TextView displaying the actual introduction/description text. -->
+        <TextView
+            android:id="@+id/textViewIntroduction"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            tools:text="A large deciduous tree, native to most of Europe west of the Caucasus."
+            app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/labelIntroduction" />
 
-    <!-- Location -->
-
-        <!-- Search Tag -->
-
+        <!-- TextView displaying the plant's location information. -->
         <TextView
             android:id="@+id/textViewLocation"
             android:layout_width="0dp"
@@ -104,6 +105,7 @@
             app:layout_constraintTop_toTopOf="@+id/labelLocation"
             tools:text="Royal Botanic Gardens" />
 
+        <!-- TextView acting as a label for the location. -->
         <TextView
             android:id="@+id/labelLocation"
             android:layout_width="0dp"
@@ -116,6 +118,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewIntroduction" />
 
+        <!-- TextView acting as a label for search tags. -->
         <TextView
             android:id="@+id/labelSearchTag"
             android:layout_width="0dp"
@@ -128,6 +131,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/labelLocation" />
 
+        <!-- TextView displaying who discovered/uploaded the plant. -->
         <TextView
             android:id="@+id/textViewDiscoveredBy"
             android:layout_width="wrap_content"
@@ -138,6 +142,7 @@
             app:layout_constraintTop_toBottomOf="@+id/labelSearchTag"
             tools:text="Discovered by: Jonathan" />
 
+        <!-- Button to navigate to an "Upload More" screen or action. -->
         <Button
             android:id="@+id/buttonUploadMore"
             android:layout_width="0dp"
@@ -149,6 +154,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewDiscoveredBy" />
 
+        <!-- Button to trigger an action to gather more information about the plant. -->
         <Button
             android:id="@+id/buttonGatherMoreInfo"
             android:layout_width="0dp"
@@ -163,6 +169,7 @@
             app:layout_constraintTop_toBottomOf="@+id/buttonUploadMore"
             app:layout_constraintVertical_bias="0.0" />
 
+        <!-- TextView displaying the actual search tags. -->
         <TextView
             android:id="@+id/textViewSearchTag"
             android:layout_width="0dp"
@@ -175,6 +182,7 @@
             app:layout_constraintTop_toTopOf="@+id/labelSearchTag"
             tools:text="Tree, Oak, Deciduous" />
 
+        <!-- TextView displaying the date of discovery/upload. -->
         <TextView
             android:id="@+id/textViewDate"
             android:layout_width="wrap_content"
