@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Root ConstraintLayout for the entire screen. -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Top Bar: Back Button and Title (Stays Fixed) -->
+    <!-- Back navigation button. -->
     <ImageButton
         android:id="@+id/backButtonUpload"
         android:layout_width="wrap_content"
@@ -17,6 +18,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Title text for the screen. -->
     <TextView
         android:id="@+id/titleTextViewUpload"
         android:layout_width="0dp"
@@ -31,7 +33,7 @@
         app:layout_constraintTop_toTopOf="@+id/backButtonUpload"
         app:layout_constraintBottom_toBottomOf="@+id/backButtonUpload" />
 
-    <!-- ScrollView for all content below the top bar -->
+    <!-- ScrollView to contain the main form content, allowing it to scroll if needed. -->
     <ScrollView
         android:id="@+id/scrollView"
         android:layout_width="0dp"
@@ -42,92 +44,96 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-    <!-- Use a LinearLayout or ConstraintLayout as a single direct child for ScrollView -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp">
+        <!-- Inner ConstraintLayout to structure the content within the ScrollView. -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
 
-    <!-- Image Preview -->
-    <ImageView
-        android:id="@+id/plantImageViewPreview"
-        android:layout_width="0dp"
-        android:layout_height="200dp"
-        android:contentDescription="Plant image preview"
-        android:scaleType="centerCrop"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:srcCompat="@tools:sample/backgrounds/scenic" />
+            <!-- ImageView for displaying a preview of the plant image. -->
+            <ImageView
+                android:id="@+id/plantImageViewPreview"
+                android:layout_width="0dp"
+                android:layout_height="200dp"
+                android:contentDescription="Plant image preview"
+                android:scaleType="centerCrop"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
-    <!-- Input Fields in logical order -->
-    <EditText
-        android:id="@+id/editTextScientificName"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:hint="Scientific Name"
-        android:inputType="textCapWords"
-        android:imeOptions="actionNext"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/plantImageViewPreview" />
+            <!-- EditText for entering the plant's scientific name. -->
+            <EditText
+                android:id="@+id/editTextScientificName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:hint="Scientific Name"
+                android:inputType="textCapWords"
+                android:imeOptions="actionNext"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/plantImageViewPreview" />
 
-    <EditText
-        android:id="@+id/editTextLocation"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:hint="Location (e.g., Park Name, City)"
-        android:inputType="textCapWords"
-        android:imeOptions="actionNext"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextScientificName" />
+            <!-- EditText for entering the location where the plant was found. -->
+            <EditText
+                android:id="@+id/editTextLocation"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Location (e.g., Park Name, City)"
+                android:inputType="textCapWords"
+                android:imeOptions="actionNext"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/editTextScientificName" />
 
-    <EditText
-        android:id="@+id/editTextIntroduction"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:gravity="top"
-        android:hint="Introduction (Describe your discovery)"
-        android:inputType="textMultiLine|textCapSentences"
-        android:minLines="3"
-        android:maxLines="6"
-        android:scrollHorizontally="false"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextLocation" />
+            <!-- EditText for entering a multi-line introduction or description of the plant. -->
+            <EditText
+                android:id="@+id/editTextIntroduction"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="top"
+                android:hint="Introduction (Describe your discovery)"
+                android:inputType="textMultiLine|textCapSentences"
+                android:minLines="3"
+                android:maxLines="6"
+                android:scrollHorizontally="false"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/editTextLocation" />
 
-    <EditText
-        android:id="@+id/editTextSearchTags"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:hint="Tags (e.g., flower, rare, park)"
-        android:inputType="text"
-        android:imeOptions="actionDone"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextIntroduction" />
+            <!-- EditText for entering search tags related to the plant. -->
+            <EditText
+                android:id="@+id/editTextSearchTags"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Tags (e.g., flower, rare, park)"
+                android:inputType="text"
+                android:imeOptions="actionDone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/editTextIntroduction" />
 
-    <!-- Upload Button -->
-    <Button
-        android:id="@+id/uploadButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:layout_marginBottom="16dp"
-        android:text="Upload and Add to Collection"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextSearchTags"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+            <!-- Button to trigger the upload process. -->
+            <Button
+                android:id="@+id/uploadButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:layout_marginBottom="16dp"
+                android:text="Upload and Add to Collection"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/editTextSearchTags"
+                app:layout_constraintBottom_toBottomOf="parent"/>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
-    <!-- Success Overlay (Initially Gone) -->
+
+    <!-- Include directive to embed the success overlay layout. -->
     <include
         android:id="@+id/successOverlay"
         layout="@layout/uploadplantsuccess"
@@ -139,4 +145,4 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         tools:visibility="visible"/>
-    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
