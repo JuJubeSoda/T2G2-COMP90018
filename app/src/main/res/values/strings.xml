@@ -1,8 +1,0 @@
-<resources>
-    <string name="app_name">My Application</string>
-    <string name="back">Back</string>
-    <string name="create_account">Create account</string>
-    <string name="hello">Hello!</string>
-    <string name="let_s_get_your_profile_set_up">Let’s get your profile set up.</string>
-    <string name="next">Next</string>
-</resources>

@@ -12,4 +12,11 @@
     <string name="my_garden_title">My Garden</string>
     <string name="collection_is_empty">Empty Collection</string>
     <string name="no_favourites_yet">No Favourites</string>
+
+    <!-- Strings for login/onboarding screens -->
+    <string name="hello">Hello!</string>
+    <string name="let_s_get_your_profile_set_up">Let’s get your profile set up</string>
+    <string name="next">Next</string>
+    <string name="back">Back</string>
+    <string name="create_account">Create account</string>
 </resources>

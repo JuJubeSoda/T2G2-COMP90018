@@ -1,9 +1,0 @@
-<resources>
-    <style name="Theme.MyApplication" parent="Theme.Material3.Light.NoActionBar">
-        <item name="colorPrimary">@color/brand_teal</item>
-        <item name="colorSecondary">@color/brand_teal</item>
-        <item name="colorPrimaryContainer">@color/brand_teal</item>
-        <item name="colorOnPrimary">@android:color/white</item>
-    </style>
-
-</resources>
