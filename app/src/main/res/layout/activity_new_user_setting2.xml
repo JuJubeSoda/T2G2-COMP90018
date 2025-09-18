@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingStart="24dp"
+    android:paddingEnd="24dp"
+    android:paddingTop="12dp"
+    android:background="@android:color/white">
+
+    <!-- Back -->
+    <ImageButton
+        android:id="@+id/btnBack"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@android:color/transparent"
+        android:src="@drawable/ic_arrow_back_24"
+        android:contentDescription="Back"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+
+
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="About me"
+        android:textAlignment="center"
+        android:textColor="#42464D"
+        android:textSize="44sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnBack" />
+
+    <FrameLayout
+        android:id="@+id/avatarContainer"
+        android:layout_width="160dp"
+        android:layout_height="160dp"
+        app:layout_constraintTop_toBottomOf="@id/tvTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp">
+
+        <ImageView
+            android:id="@+id/imgAvatar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_avatar_circle"
+            android:contentDescription="Avatar"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_avatar_placeholder" />
+
+        <ImageButton
+            android:id="@+id/btnPickPhoto"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="-6dp"
+            android:layout_marginBottom="-6dp"
+            android:background="@drawable/bg_avatar_camera_badge"
+            android:contentDescription="Pick photo"
+            android:src="@drawable/ic_camera_24"
+            app:tint="@color/brand_teal" />
+    </FrameLayout>
+
+    <!-- Upload text -->
+    <TextView
+        android:id="@+id/tvUpload"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Upload your photo"
+        android:textColor="#7C8793"
+        android:textSize="22sp"
+        android:textAlignment="center"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/avatarContainer"
+        android:layout_marginTop="12dp"/>
+
+    <!-- Name (required) -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Name"
+        app:boxBackgroundMode="none"
+        app:endIconMode="custom"
+        app:endIconDrawable="@drawable/ic_check_24"
+        app:endIconTint="@color/brand_teal"
+        app:layout_constraintTop_toBottomOf="@id/tvUpload"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="24dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:inputType="textPersonName"
+            android:imeOptions="actionNext"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Gender (required) -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilGender"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Gender"
+        app:boxBackgroundMode="none"
+        app:endIconMode="custom"
+        app:endIconDrawable="@drawable/ic_check_24"
+        app:endIconTint="@color/brand_teal"
+        app:layout_constraintTop_toBottomOf="@id/tilName"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etGender"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:inputType="textCapWords"
+            android:imeOptions="actionNext"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Location (required) -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilLocation"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Location"
+        app:boxBackgroundMode="none"
+        app:startIconTint="#A0A7B3"
+        app:endIconMode="custom"
+        app:endIconDrawable="@drawable/ic_check_24"
+        app:endIconTint="@color/brand_teal"
+        app:layout_constraintTop_toBottomOf="@id/tilGender"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:inputType="textCapWords"
+            android:imeOptions="actionDone"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnNext"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_marginBottom="56dp"
+        android:text="Start"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        app:backgroundTint="@color/brand_teal"
+        app:cornerRadius="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:rippleColor="@color/brand_teal_light" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
