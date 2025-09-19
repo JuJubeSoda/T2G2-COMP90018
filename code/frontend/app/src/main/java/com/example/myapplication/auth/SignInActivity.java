@@ -72,31 +72,6 @@ public class SignInActivity extends AppCompatActivity {
 
             btnSignIn.setEnabled(false);
 
-
-
-            // ===== 临时注释掉API调用，直接测试页面跳转 =====
-            // 模拟登录成功，直接跳转
-            Toast.makeText(SignInActivity.this, "模拟登录成功: " + username, Toast.LENGTH_SHORT).show();
-            
-            // 模拟首次登录逻辑
-            boolean isFirstLogin = isFirstLoginLocal(username);
-            
-            if (isFirstLogin) {
-                // 跳转到首次登录设置页，并传递 username
-                Intent it = new Intent(SignInActivity.this, NewUserSetting1Activity.class);
-                it.putExtra("username", username);
-                startActivity(it);
-            } else {
-                // 非首次，进入主页面
-                startActivity(new Intent(SignInActivity.this, MainActivity.class));
-                finish();
-            }
-            
-            btnSignIn.setEnabled(true);
-
-
-            
-            /* 原始API调用代码（已注释）
             // 调用后端 /user/login 接口
             api.login(new LoginRequest(username, pwd)).enqueue(new Callback<BaseResponse>() {
                 @Override
@@ -159,7 +134,6 @@ public class SignInActivity extends AppCompatActivity {
                     Toast.makeText(SignInActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             });
-            */
         });
     }
 
