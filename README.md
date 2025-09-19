@@ -15,9 +15,6 @@
 
   `docker run -p 9999:9999 plant-world`
 
-## Database
-Excute sql file in main project path: plant_db.sql
-
 
 ## Test Backend api (RESTFUL API)
 
@@ -29,13 +26,9 @@ POST body:
 ```json
 {
   "username": "pengyu3333",
-  "nickname": "dasdsa",
   "phone": "13812345678",
   "password": "123456",
   "email": "pengyu3@example.com",
-  "wechat": "pengyu3_wechat",
-  "userType": "normal",
-  "avatar": "default.png"
 }
 ```
 
@@ -73,3 +66,6 @@ Add jwt token to request headers:
 Authorization: eyJhbGciOiJIUzI1NiJ9.ey...
 
 <img width="2110" height="273" alt="image" src="https://github.com/user-attachments/assets/36c438eb-e680-40d8-9020-8007ce619d29" />
+
+### API List address
+<src="http://localhost:9999/swagger-ui/index.html" />

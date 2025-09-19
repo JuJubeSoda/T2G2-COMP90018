@@ -1,0 +1,29 @@
+server:
+  port: 9999
+
+spring:
+  profiles:
+    active: dev
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+10
+#  data:
+#    redis:
+#      host: 8.137.85.150
+#      port: 6379
+  servlet:
+    multipart:
+      max-file-size: 10MB
+
+plant:
+  jwt:
+    expire: 600
+    secret: 12345678901234567890123456789012
+
+logging:
+  level:
+    org.unimelb: debug
+    com.baomidou.mybatisplus: debug  # MyBatis-Plus 的日志
+    org.apache.ibatis: debug       # MyBatis 的日志
+  pattern:
+    dateformat: ss.SSS
