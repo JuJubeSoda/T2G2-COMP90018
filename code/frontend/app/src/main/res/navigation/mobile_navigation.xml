@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    This is the main navigation graph for the application.
+    It defines all the possible navigation paths between different screens (Fragments and Activities).
+    The Navigation Component uses this graph to manage transitions.
+-->
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@id/navigation_home"> <!-- Sets HomeFragment as the starting point of the navigation graph. -->
+
+    <!--
+        Home Destination: Represents the main home screen of the application.
+        android:id - Unique identifier for this navigation destination.
+        android:name - The fully qualified class name of the Fragment to be displayed.
+        android:label - A human-readable title for this destination, often used in UI elements like Toolbars.
+                        Here, it refers to a string resource.
+        tools:layout - Specifies the layout file associated with this Fragment, primarily for design-time preview in Android Studio.
+    -->
+    <fragment
+        android:id="@+id/navigation_home"
+        android:name="com.example.myapplication.ui.home.HomeFragment"
+        android:label="@string/title_home"
+        tools:layout="@layout/fragment_home">
+
+        <!--
+            Action to navigate from Home to UploadFragment.
+            android:id - Unique identifier for this navigation action.
+            app:destination - The ID of the destination Fragment/Activity this action navigates to.
+        -->
+        <action
+            android:id="@+id/action_navigation_home_to_uploadFragment"
+            app:destination="@id/navigation_upload" />
+
+        <!-- Action to navigate from Home to MyGardenFragment. -->
+        <action
+            android:id="@+id/action_navigation_home_to_myGardenFragment"
+            app:destination="@id/navigation_my_garden" />
+
+        <!-- Action to navigate from Home to PlantMapFragment (which is defined as an Activity here). -->
+        <action
+            android:id="@+id/action_navigation_home_to_plantMapFragment"
+            app:destination="@id/navigation_plant_map" />
+
+        <!-- Action to navigate from Home to PlantWikiFragment. -->
+        <action
+            android:id="@+id/action_navigation_home_to_plantWikiFragment"
+            app:destination="@id/navigation_plant_wiki" />
+
+        <!-- Example of a commented-out action that could navigate to another Activity. -->
+        <!-- <action
+            android:id="@+id/action_navigation_home_to_mainActivity2"
+            app:destination="@id/mainActivity2" /> -->
+
+    </fragment>
+
+    <!--
+        Upload Destination (CaptureFragment): Represents the first step in the plant upload process,
+        likely for capturing an image of the plant.
+    -->
+    <fragment
+        android:id="@+id/navigation_upload"
+        android:name="com.example.myapplication.ui.myplants.CaptureFragment"
+        android:label="Upload Plant"
+        tools:layout="@layout/captureplant" >
+        <!-- Action to navigate from CaptureFragment to the next step, ConfirmUploadFragment (navigation_upload_plant). -->
+        <action
+            android:id="@+id/action_captureFragment_to_confirmUploadFragment"
+            app:destination="@id/navigation_upload_plant" />
+    </fragment>
+
+    <!--
+        Confirm and Upload Plant Details Destination (UploadFragment): The screen where users confirm
+        the details of the plant they are uploading, after capturing an image.
+    -->
+    <fragment
+        android:id="@+id/navigation_upload_plant"
+        android:name="com.example.myapplication.ui.myplants.UploadFragment"
+        android:label="Upload Plant Details"
+        tools:layout="@layout/uploadplant">
+        <!--
+            Defines an argument that this destination can receive.
+            android:name - The name of the argument.
+            app:argType - The data type of the argument (e.g., string, integer).
+            app:nullable - Specifies if the argument can be null.
+            This destination expects an 'imageUri' string, which can be null.
+        -->
+        <argument
+            android:name="imageUri"
+            app:argType="string"
+            app:nullable="true" />
+
+        <!-- Action to navigate from UploadFragment (details confirmation) to the UploadCompletePreviewFragment. -->
+        <action
+            android:id="@+id/action_uploadFragment_to_uploadCompletePreviewFragment"
+            app:destination="@id/navigation_upload_complete_preview" />
+    </fragment>
+
+    <!--
+        Upload Complete Preview Destination (UploadCompleteFragment): The final screen in the upload process,
+        showing a summary or preview of the successfully uploaded plant.
+    -->
+    <fragment
+        android:id="@+id/navigation_upload_complete_preview"
+        android:name="com.example.myapplication.ui.myplants.UploadCompleteFragment"
+        android:label="Upload Complete"
+        tools:layout="@layout/uploadcompletepreview">
+
+        <!-- Argument for the image URI. -->
+        <argument
+            android:name="imageUri"
+            app:argType="string"
+            app:nullable="true" />
+        <!-- Argument for the plant's scientific name. -->
+        <argument
+            android:name="scientificName"
+            app:argType="string"
+            app:nullable="true" />
+        <!-- Argument for the location where the plant was found or recorded. -->
+        <argument
+            android:name="location"
+            app:argType="string"
+            app:nullable="true" />
+        <!-- Argument for an introduction or description of the plant. -->
+        <argument
+            android:name="introduction"
+            app:argType="string"
+            app:nullable="true" />
+        <!-- Argument for search tags associated with the plant. -->
+        <argument
+            android:name="searchTag"
+            app:argType="string"
+            app:nullable="true" />
+        <!-- Placeholder comment indicating more arguments could be added if needed for the preview. -->
+    </fragment>
+
+    <!--
+        My Garden Destination (MyGardenFragment): Represents the screen where users can view
+        their personal collection of plants.
+        The tools:layout suggests a grid layout by default for this fragment.
+    -->
+    <fragment
+        android:id="@+id/navigation_my_garden"
+        android:name="com.example.myapplication.ui.myplants.MyGardenFragment"
+        android:label="My Garden"
+        tools:layout="@layout/mygardengrid" /> <!-- Suggests the primary layout for MyGardenFragment. -->
+
+    <!--
+        Global Action (defined outside a specific fragment, but logically related to MyGarden):
+        This action allows navigation from MyGardenFragment to AddPlantFragment.
+        While placed here, it's typically used from within MyGardenFragment's code.
+    -->
+    <action
+        android:id="@+id/action_myGardenFragment_to_addPlantFragment"
+        app:destination="@id/addPlantFragment" />
+
+    <!--
+        Plant Map Destination: Represents the screen that displays a map, likely for showing plant locations.
+        This destination is defined as an <activity>, meaning it will launch MapsActivity.
+    -->
+    <activity
+        android:id="@+id/navigation_plant_map"
+        android:name="com.example.myapplication.MapsActivity"
+        android:label="Plant Map"
+        tools:layout="@layout/activity_maps" /> <!-- Specifies the layout for MapsActivity for design preview. -->
+
+    <!--
+        Plant Wiki Destination (PlantWikiFragment): Represents a screen for displaying informational
+        content about plants, like a wiki or encyclopedia.
+        The tools:layout suggests it might reuse the mygardenlist layout, which should be verified.
+    -->
+    <fragment
+        android:id="@+id/navigation_plant_wiki"
+        android:name="com.example.myapplication.ui.myplants.PlantWikiFragment"
+        android:label="Plant Wiki"
+        tools:layout="@layout/mygardenlist" /> <!-- Suggests the layout for PlantWikiFragment. -->
+
+    <!--
+        AddPlantFragment Destination: Represents the screen where users can manually add
+        a new plant to their collection by filling out a form.
+    -->
+    <fragment
+        android:id="@+id/addPlantFragment"
+        android:name="com.example.myapplication.ui.myplants.AddPlantFragment"
+        android:label="Add New Plant"
+        tools:layout="@layout/addplant" />
+
+</navigation>

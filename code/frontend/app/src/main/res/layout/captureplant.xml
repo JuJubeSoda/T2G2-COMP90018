@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Root ConstraintLayout for the camera capture screen.
+     android:background="@android:color/black" sets a black background, common
+     for camera UIs to make the preview stand out. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <!-- Top Bar Container for Back Button and Title -->
+
+    <!-- ImageButton acting as a 'Back' button, typically to navigate to the previous screen.
+         Positioned at the top-start of the layout. -->
+    <ImageButton
+        android:id="@+id/backButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Back"
+        android:minWidth="48dp"
+        android:minHeight="48dp"
+        android:padding="12dp"
+        app:srcCompat="@drawable/quantum_ic_arrow_back_grey600_24"
+        app:tint="@android:color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/camera_preview" />
+
+    <!-- TextView displaying the title of the screen, e.g., "Capture Plant".
+         Positioned to the right of the back button and centered vertically with it. -->
+    <TextView
+        android:id="@+id/titleTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Capture Plant"
+        android:textSize="18sp"
+        android:textColor="@android:color/white"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintStart_toEndOf="@+id/backButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/backButton"
+        app:layout_constraintBottom_toBottomOf="@+id/backButton" />
+
+    <!-- Camera Preview Area -->
+    <!-- PreviewView from CameraX library, used to display the live camera feed.
+         It fills the majority of the screen below the top bar.
+         app:scaleType="fillCenter" scales the preview to fill its bounds while maintaining
+         aspect ratio, potentially cropping. -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/camera_preview"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:scaleType="fillCenter"
+        app:layout_constraintTop_toBottomOf="@+id/backButton"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Capture Button - Overlaid on the Preview -->
+    <!-- ImageButton acting as the shutter or capture button to take a picture.
+         Overlaid on top of the PreviewView, typically centered at the bottom.
+         android:background="@drawable/camera_button" likely refers to a custom drawable
+         for the button's appearance. -->
+    <ImageButton
+        android:id="@+id/imageCaptureButton"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_marginBottom="32dp"
+        android:background="@drawable/camera_button"
+        android:contentDescription="Take Picture"
+        android:scaleType="centerInside"
+        app:srcCompat="@android:drawable/ic_menu_camera"
+        app:tint="@android:color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

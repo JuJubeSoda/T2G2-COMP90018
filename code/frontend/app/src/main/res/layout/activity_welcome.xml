@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Fullscreen background image (your merged artwork) -->
+    <ImageView
+        android:id="@+id/bg"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:src="@drawable/welcome"
+        android:scaleType="centerCrop"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Guideline to control vertical position of buttons (smaller = higher) -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/glButtons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.78" />
+
+    <!-- Solid Sign in (MaterialButton) -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSignIn"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="12dp"
+        android:text="Sign in"
+        android:textSize="18sp"
+        android:textColor="@android:color/white"
+        app:cornerRadius="20dp"
+        app:backgroundTint="@color/brand_teal"
+        app:rippleColor="@color/brand_teal_light"
+        app:iconTint="@android:color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btnCreate" />
+
+    <!-- Outlined Create new account (MaterialButton) -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnCreate"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:text="Create new account"
+        android:textSize="18sp"
+        android:textColor="@color/brand_teal_text"
+        app:cornerRadius="20dp"
+        app:backgroundTint="@android:color/transparent"
+        app:strokeColor="@color/brand_teal_stroke"
+        app:strokeWidth="2dp"
+        app:rippleColor="@color/brand_teal_light"
+        app:iconTint="@color/brand_teal_text"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/glButtons" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

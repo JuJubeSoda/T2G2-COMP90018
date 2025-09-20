@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Root ConstraintLayout for the "My Garden" screen. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context=".ui.myplants.MyGardenFragment">
+
+    <!-- TextView displaying the main title of the screen: "My Garden". -->
+    <TextView
+        android:id="@+id/pageTitleAddPlant"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="My Garden"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- ImageButton to switch to a list view representation of the garden. -->
+    <ImageButton
+        android:id="@+id/imageButton"
+        android:layout_width="46dp"
+        android:layout_height="45dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:backgroundTint="#00FFFFFF"
+        android:contentDescription="List View"
+        android:padding="0dp"
+        android:scaleType="centerInside"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/pageTitleAddPlant"
+        app:srcCompat="@drawable/list_unselect_foreground" />
+
+    <!-- ImageButton to switch to a grid view representation of the garden. -->
+    <ImageButton
+        android:id="@+id/imageButton2"
+        android:layout_width="42dp"
+        android:layout_height="45dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="#00FFFFFF"
+        android:contentDescription="Grid View"
+        android:padding="0dp"
+        android:scaleType="centerInside"
+        app:layout_constraintStart_toEndOf="@+id/imageButton"
+        app:layout_constraintTop_toBottomOf="@+id/pageTitleAddPlant"
+        app:srcCompat="@drawable/grid_select_foreground" />
+
+    <!-- TextInputLayout containing an EditText for searching the plant collection. -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/searchScientificNameLayout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:hintEnabled="false"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/imageButton2"
+        app:layout_constraintTop_toTopOf="@+id/imageButton"
+        app:layout_constraintBottom_toBottomOf="@+id/imageButton">
+
+        <!-- EditText field for entering search queries for the plant collection. -->
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/searchScientificNameEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Search collection..."
+            android:imeOptions="actionSearch"
+            android:inputType="textCapWords"
+            android:maxLines="1"
+            android:textSize="14sp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Button to filter or view the user's main plant collection. -->
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:text="My Collection"
+        app:layout_constraintEnd_toStartOf="@+id/button3"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageButton"
+        app:strokeColor="#CAC7C7" />
+
+    <!-- Button to filter or view the user's favorite plants. -->
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:text="My Favourite"
+        app:layout_constraintEnd_toStartOf="@+id/imageButton4"
+        app:layout_constraintStart_toEndOf="@+id/button2"
+        app:layout_constraintTop_toBottomOf="@+id/imageButton"
+        app:strokeColor="#CAC7C7" />
+
+    <!-- ImageButton to navigate to a screen or dialog for adding a new plant. -->
+    <ImageButton
+        android:id="@+id/imageButton4"
+        android:layout_width="54dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="#00FFFFFF"
+        android:contentDescription="Add Plant"
+        android:padding="0dp"
+        android:scaleType="centerInside"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageButton"
+        app:layout_constraintBottom_toBottomOf="@+id/button3"
+        app:srcCompat="@drawable/plus_foreground" />
+
+    <!-- RecyclerView for displaying the list or grid of plants in the user's garden. -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewMyGardenPlants"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:padding="4dp"
+        android:clipToPadding="false"
+        app:layout_constraintTop_toBottomOf="@+id/button2"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:listitem="@layout/item_plant_card" />
+
+    <!-- TextView displayed when the RecyclerView is empty, indicating no plants in the collection. -->
+    <TextView
+        android:id="@+id/textViewMyGardenEmptyMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Your collection is empty."
+        android:textAppearance="?attr/textAppearanceSubtitle1"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@+id/recyclerViewMyGardenPlants"
+        app:layout_constraintBottom_toBottomOf="@+id/recyclerViewMyGardenPlants"
+        app:layout_constraintStart_toStartOf="@+id/recyclerViewMyGardenPlants"
+        app:layout_constraintEnd_toEndOf="@+id/recyclerViewMyGardenPlants"
+        tools:visibility="visible"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
