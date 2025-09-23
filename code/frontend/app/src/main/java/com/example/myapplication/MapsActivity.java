@@ -1,6 +1,7 @@
 package com.example.myapplication;
 
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 
 import android.content.DialogInterface;
@@ -14,6 +15,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -34,6 +36,11 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
+import com.google.maps.android.data.Feature;
+import com.google.maps.android.data.geojson.GeoJsonFeature;
+import com.google.maps.android.data.geojson.GeoJsonLayer;
+import com.google.maps.android.data.geojson.GeoJsonPointStyle;
+
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.api.model.PlaceLikelihood;
@@ -41,8 +48,18 @@ import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest;
 import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
 
+
+
 import com.example.myapplication.databinding.ActivityMapsBinding;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
@@ -87,6 +104,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private List[] likelyPlaceAttributions;
     private LatLng[] likelyPlaceLatLngs;
 
+    protected int getLayoutId(){
+        return R.layout.activity_maps;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -102,8 +123,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         // [END_EXCLUDE]
 
         // Retrieve the content view that renders the map.
-        binding = ActivityMapsBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        setContentView(getLayoutId());
 
         // [START_EXCLUDE silent]
         // Construct a PlacesClient
@@ -213,6 +233,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Get the current location of the device and set the position of the map.
         getDeviceLocation();
+
+        retrieveFileFromUrl();
     }
     // [END maps_current_place_on_map_ready]
 
@@ -451,4 +473,67 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
     // [END maps_current_place_update_location_ui]
+
+
+    private void retrieveFileFromUrl(){
+        new DownloadGeoJsonFile().execute(getString(R.string.geojson_url));
+    }
+
+    private class DownloadGeoJsonFile extends AsyncTask<String, Void, GeoJsonLayer> {
+
+        @Override
+        protected GeoJsonLayer doInBackground(String... urls) {
+            try {
+
+                // open a stream from the URL
+                InputStream stream = new URL(urls[0]).openStream();
+
+                String line;
+                StringBuilder result = new StringBuilder();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+
+                while ((line = reader.readLine()) != null) {
+                    result.append(line);
+                }
+
+                reader.close();
+                stream.close();
+
+                return new GeoJsonLayer(mMap, new JSONObject(result.toString()));
+            } catch (IOException e) {
+                Log.e("GeoJson Layer", "GeoJSON file could not be read");
+            } catch (JSONException e) {
+                Log.e("GeoJson Layer", "GeoJSON file could not be converted to a JSONObject");
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(GeoJsonLayer geoJsonLayer) {
+            if (geoJsonLayer != null) {
+                addGeoJsonLayer(geoJsonLayer);
+            }
+        }
+    }
+
+    private void addGeoJsonLayer(GeoJsonLayer geoJsonLayer) {
+
+        customizeMarkerStyle(geoJsonLayer);
+
+        geoJsonLayer.addLayerToMap();
+
+        // Demostrate receiving features via GeoJsonLayer clicks.
+
+        geoJsonLayer.setOnFeatureClickListener(new GeoJsonLayer.OnFeatureClickListener() {
+            @Override
+            public void onFeatureClick(Feature feature) {
+
+            }
+        }
+        );
+    }
+
+
+
+
 }
