@@ -517,8 +517,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void addGeoJsonLayer(GeoJsonLayer geoJsonLayer) {
-
-        customizeMarkerStyle(geoJsonLayer);
+        //customizeMapStyle(geoJsonLayer);
 
         geoJsonLayer.addLayerToMap();
 
