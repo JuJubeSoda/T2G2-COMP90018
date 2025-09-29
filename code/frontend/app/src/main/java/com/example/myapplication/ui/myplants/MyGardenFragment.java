@@ -4,6 +4,8 @@ package com.example.myapplication.ui.myplants;
 
 // Android framework and utility imports.
 import android.os.Bundle; // For passing data between components and saving instance state.
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log; // For logging messages for debugging.
 import android.view.LayoutInflater; // For instantiating layout XML files into View objects.
 import android.view.View; // Base class for widgets, used to create interactive UI components.
@@ -55,10 +57,12 @@ public class MyGardenFragment extends Fragment {
     private PlantCardAdapter plantCardAdapter;
     // List to hold all sample plants (in a real app, this would come from a database or API).
     private ArrayList<Plant> allSamplePlants = new ArrayList<>();
+    private ArrayList<Plant> plants = new ArrayList<>();
     // Boolean flag to track if the current view is showing only favourite plants.
     private boolean currentViewIsFavourites = false;
     // Boolean flag to track if the current RecyclerView layout is a list (true) or grid (false).
     private boolean isCurrentlyListView = false;
+    private String currentSearchText = "";
 
     /**
      * Factory method to create a new instance of this fragment.
@@ -163,31 +167,52 @@ public class MyGardenFragment extends Fragment {
         if (binding.searchScientificNameEditText != null) {
             binding.searchScientificNameEditText.setOnEditorActionListener((v, actionId, event) -> {
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    // TODO: Implement actual search functionality.
-                    Toast.makeText(getContext(), "Search action triggered for: " + v.getText().toString(), Toast.LENGTH_SHORT).show();
-                    // Hide keyboard perhaps
+                    currentSearchText = v.getText().toString().trim();
+                    displayPlants(); // Trigger the filtering
+                    Log.d(TAG, "Search triggered for: " + currentSearchText);
+
                     return true; // Return true to indicate the action was handled.
                 }
                 return false; // Return false if the action was not handled.
             });
         }
 
-        // Setup listener for the "My Collection" button (to show all plants).
-        // Assumes ID 'button2' for this button.
+        // Clear text after searching
+        binding.searchScientificNameEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // If the text is cleared, reset the search and refresh the list
+                if (s.toString().isEmpty()) {
+                    currentSearchText = "";
+                    displayPlants();
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) { }
+        });
+
+        // Setup listener for the "My Collection" button
         if (binding.button2 != null) {
             binding.button2.setOnClickListener(v -> {
-                currentViewIsFavourites = false; // Set filter to show all plants.
-                displayPlants(); // Refresh the displayed plant list.
+                currentViewIsFavourites = false;
+                binding.searchScientificNameEditText.setText(""); // Clear search text
+                currentSearchText = ""; // Clear search state
+                displayPlants();
                 Log.d(TAG, "Switched to 'My Collection' view.");
             });
         }
 
-        // Setup listener for the "My Favourite" button (to show only favourite plants).
-        // Assumes ID 'button3' for this button.
+        // Setup listener for the "My Favourite" button
         if (binding.button3 != null) {
             binding.button3.setOnClickListener(v -> {
-                currentViewIsFavourites = true; // Set filter to show only favourite plants.
-                displayPlants(); // Refresh the displayed plant list.
+                currentViewIsFavourites = true;
+                binding.searchScientificNameEditText.setText(""); // Clear search text
+                currentSearchText = ""; // Clear search state
+                displayPlants();
                 Log.d(TAG, "Switched to 'My Favourite' view.");
             });
         }
@@ -328,7 +353,7 @@ public class MyGardenFragment extends Fragment {
 
     /**
      * Filters the `allSamplePlants` list based on the `currentViewIsFavourites` flag
-     * and updates the {@link PlantCardAdapter} with the filtered list.
+     * and the `currentSearchText`, then updates the adapter.
      * Also updates the visibility of an "empty view" message if the list is empty.
      */
     private void displayPlants() {
@@ -336,21 +361,38 @@ public class MyGardenFragment extends Fragment {
             Log.e(TAG, "displayPlants: plantCardAdapter is null. Cannot display plants.");
             return;
         }
-        ArrayList<Plant> listToDisplay = new ArrayList<>();
+
+        // Step 1: Filter by Favourites first
+        ArrayList<Plant> filteredByFavourite = new ArrayList<>();
         if (currentViewIsFavourites) {
-            // If viewing favourites, filter the list.
             for (Plant p : allSamplePlants) {
                 if (p.isFavourite()) {
+                    filteredByFavourite.add(p);
+                }
+            }
+        } else {
+            filteredByFavourite.addAll(allSamplePlants);
+        }
+
+        // --- THIS IS THE NEW PART ---
+        // Step 2: Filter the result of Step 1 by the search text
+        ArrayList<Plant> listToDisplay = new ArrayList<>();
+        if (currentSearchText.isEmpty()) {
+            // If no search text, display the result from the favourite filter
+            listToDisplay.addAll(filteredByFavourite);
+            Log.d(TAG, "Displaying " + listToDisplay.size() + " plants (no search filter).");
+        } else {
+            // If there is search text, filter further
+            for (Plant p : filteredByFavourite) {
+                // Check if the plant's name contains the search text (case-insensitive)
+                if (p.getName().toLowerCase().contains(currentSearchText.toLowerCase())) {
                     listToDisplay.add(p);
                 }
             }
-            Log.d(TAG, "Displaying " + listToDisplay.size() + " favourite plants.");
-        } else {
-            // If not viewing favourites, display all plants.
-            listToDisplay.addAll(allSamplePlants);
-            Log.d(TAG, "Displaying all " + listToDisplay.size() + " plants.");
+            Log.d(TAG, "Displaying " + listToDisplay.size() + " plants matching search: '" + currentSearchText + "'");
         }
-        // Set the filtered list to the adapter.
+
+        // Set the final filtered list to the adapter.
         plantCardAdapter.setPlants(listToDisplay);
         // Update the visibility of the empty message TextView.
         updateEmptyViewVisibility(listToDisplay.isEmpty());
