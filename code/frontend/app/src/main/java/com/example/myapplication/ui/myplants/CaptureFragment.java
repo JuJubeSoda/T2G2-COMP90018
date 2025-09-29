@@ -140,6 +140,20 @@ public class CaptureFragment extends Fragment {
             startCamera();
         }
 
+        // Set up back button click listener.
+        if (binding.backButton != null) {
+            binding.backButton.setOnClickListener(v -> {
+                // Use the NavController to navigate back to the previous screen in the stack
+                if (navController != null) {
+                    navController.popBackStack();
+                }
+                Log.d(TAG, "Back button clicked, navigating back.");
+            });
+            Log.d(TAG, "Back button listener set up.");
+        } else {
+            Log.e(TAG, "Back button NOT FOUND in binding.");
+        }
+
         // Set up the click listener for the image capture button.
         // Ensure that 'imageCaptureButton' is the correct ID of your capture button in captureplant.xml.
         if (binding.imageCaptureButton != null) {

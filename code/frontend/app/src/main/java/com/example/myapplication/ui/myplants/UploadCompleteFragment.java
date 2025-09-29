@@ -215,29 +215,21 @@ public class UploadCompleteFragment extends Fragment {
         }
 
         // Set click listener for the "Upload More" button.
-        // This button typically navigates the user back to the start of the upload flow.
+        // This button navigates the user back to the CaptureFragment to start a new upload flow.
         binding.buttonUploadMore.setOnClickListener(v -> {
             Log.d(TAG, "Upload More button clicked");
             try {
-                // Navigate to the start destination of the navigation graph.
-                // This logic attempts to pop back to the start destination if it's in the back stack,
-                // otherwise, it navigates directly to it.
-                if (navController.getCurrentDestination() != null &&
-                        navController.getCurrentDestination().getId() != navController.getGraph().getStartDestinationId()) {
-                    // Pop back stack up to (but not including) the start destination.
-                    navController.popBackStack(navController.getGraph().getStartDestinationId(), false);
-                } else if (navController.getGraph().getStartDestinationId() != 0) {
-                    // If already at or not able to pop, navigate to the start destination directly.
-                    // This handles cases where the start destination might not be on the back stack.
-                    navController.navigate(navController.getGraph().getStartDestinationId());
-                } else {
-                    // If the start destination cannot be determined, show an error.
-                    Toast.makeText(getContext(), "Cannot determine start destination.", Toast.LENGTH_SHORT).show();
-                }
+                // To restart the upload flow, navigate to the CaptureFragment.
+                // We should also clear the previous upload screens from the back stack.
+                // The popUpTo attribute in a navigation action is the best way to handle this cleanly.
+                // For a programmatic solution, we can pop the stack up to the screen
+                // before the capture flow began (e.g., myGardenFragment) and then navigate.
+                navController.navigate(R.id.navigation_upload); // Now, navigate to the camera.
+
             } catch (Exception e) {
                 // Log and show an error if navigation fails.
-                Log.e(TAG, "Error navigating to start destination for 'Upload More'", e);
-                Toast.makeText(getContext(), "Error navigating.", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Error navigating to CaptureFragment for 'Upload More'", e);
+                Toast.makeText(getContext(), "Error navigating to camera.", Toast.LENGTH_SHORT).show();
             }
         });
 
