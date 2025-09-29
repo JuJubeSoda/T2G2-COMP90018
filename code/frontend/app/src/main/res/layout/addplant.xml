@@ -25,20 +25,16 @@
          Aligned to the right of the back button and vertically centered with it. -->
     <TextView
         android:id="@+id/pageTitleAddPlant"
-        android:layout_width="136dp"
-        android:layout_height="32dp"
-        android:layout_marginStart="8dp"
-        android:gravity="center_horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:text="Add Plant"
         android:textColor="?attr/colorOnSurface"
         android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="@+id/backButtonAddPlant"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.041"
         app:layout_constraintStart_toEndOf="@+id/backButtonAddPlant"
-        app:layout_constraintTop_toTopOf="@+id/backButtonAddPlant"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintTop_toTopOf="@+id/backButtonAddPlant" />
 
     <!-- TextView acting as a label for the scientific name input field.
          Positioned below the top bar elements. -->
@@ -53,22 +49,32 @@
         app:layout_constraintTop_toBottomOf="@+id/backButtonAddPlant"
         app:layout_constraintStart_toStartOf="parent"/>
 
-    <!-- TextInputLayout providing a Material Design container for the search input field.
-         Used for entering the scientific name to search. -->
+    <!-- MODIFIED: ImageView for the search icon -->
+    <!-- Positioned at the end of the screen -->
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="40dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/searchScientificNameLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/searchScientificNameLayout"
+        app:srcCompat="@drawable/search_foreground" />
+
+    <!-- MODIFIED: TextInputLayout providing a Material Design container for the search input field. -->
+    <!-- Its width is now dynamic (0dp), constrained between the start of the parent and the search icon. -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/searchScientificNameLayout"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        android:layout_width="331dp"
-        android:layout_height="58dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         app:hintEnabled="false"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintEnd_toStartOf="@+id/imageView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/labelScientificName">
 
-        <!-- TextInputEditText where the user types the scientific name for searching.
-             Includes a hint and configures IME options for search action. -->
+        <!-- TextInputEditText where the user types the scientific name for searching. -->
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/searchScientificNameEditText"
             android:layout_width="match_parent"
@@ -79,27 +85,23 @@
             android:maxLines="1" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- RecyclerView for displaying the list of search results for scientific names.
-         Initially set to 'gone' and made visible when search results are available.
-         tools:visibility and tools:itemCount are for design-time preview. -->
+    <!-- MODIFIED: RecyclerView for displaying the list of search results. -->
+    <!-- Its width is now dynamic (0dp), constrained to the parent's start and end. -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewScientificNames"
-        android:layout_width="377dp"
-        android:layout_height="459dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_marginTop="16dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/searchScientificNameLayout"
-        app:layout_constraintVertical_bias="0.0"
         tools:itemCount="5"
+        tools:listitem="@android:layout/simple_list_item_1"
         tools:visibility="visible" />
 
-    <!-- ProgressBar displayed while search results are being loaded.
-         Centered within the bounds of the RecyclerView.
-         Initially set to 'gone' and made visible during loading. -->
+    <!-- ProgressBar displayed while search results are being loaded. -->
     <ProgressBar
         android:id="@+id/progressBarSearch"
         style="?android:attr/progressBarStyle"
@@ -111,32 +113,18 @@
         app:layout_constraintStart_toStartOf="@+id/recyclerViewScientificNames"
         app:layout_constraintEnd_toEndOf="@+id/recyclerViewScientificNames"/>
 
-    <!-- TextView for displaying status messages like "No results found" or initial prompt.
-         Centered within the bounds of the RecyclerView.
-         Initially set to 'gone' or shows a prompt, and visibility/text changes based on search status.
-         tools:visibility="visible" allows previewing this TextView in the layout editor. -->
+    <!-- TextView for displaying status messages like "No results found" or initial prompt. -->
     <TextView
         android:id="@+id/textViewSearchStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Type to search for scientific names."
         android:textSize="16sp"
-        android:visibility="gone"
+        android:visibility="visible"
         app:layout_constraintTop_toTopOf="@+id/recyclerViewScientificNames"
         app:layout_constraintBottom_toBottomOf="@+id/recyclerViewScientificNames"
         app:layout_constraintStart_toStartOf="@+id/recyclerViewScientificNames"
         app:layout_constraintEnd_toEndOf="@+id/recyclerViewScientificNames"
-        tools:visibility="visible"/>
-
-    <!-- ImageView, possibly a search icon or similar, positioned next to the search input field. -->
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="40dp"
-        android:layout_height="52dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginBottom="14dp"
-        app:layout_constraintBottom_toTopOf="@+id/recyclerViewScientificNames"
-        app:layout_constraintStart_toEndOf="@+id/searchScientificNameLayout"
-        app:srcCompat="@drawable/search_foreground" />
+        tools:visibility="gone"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
