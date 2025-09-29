@@ -54,6 +54,7 @@ public class AddPlantFragment extends Fragment {
         setupRecyclerView();
         setupSearchLogic();
         setupBackButton();
+        setupNextButton();
     }
 
     /**
@@ -149,6 +150,32 @@ public class AddPlantFragment extends Fragment {
             binding.recyclerViewScientificNames.setVisibility(View.VISIBLE);
             binding.textViewSearchStatus.setVisibility(View.GONE);
         }
+    }
+
+    /**
+     * This will navigate to the CaptureFragment, passing the scientific name.
+     */
+    private void setupNextButton() {
+        binding.imageView.setOnClickListener(v -> {
+            String scientificName = binding.searchScientificNameEditText.getText().toString().trim();
+
+            // Validate that the user has entered a name
+            if (scientificName.isEmpty()) {
+                binding.searchScientificNameEditText.setError("Please enter or select a name");
+                return;
+            }
+
+            Log.d(TAG, "Navigating to CaptureFragment with scientific name: " + scientificName);
+
+            // Create a bundle to pass the scientific name
+            Bundle args = new Bundle();
+            args.putString("scientificName", scientificName);
+
+            // Navigate to the CaptureFragment with the arguments
+            // Make sure you have an action defined in your navigation graph
+            // or that captureFragment is a valid destination ID.
+            navController.navigate(R.id.navigation_upload, args);
+        });
     }
 
     private void setupBackButton() {

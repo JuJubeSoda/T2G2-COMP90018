@@ -59,7 +59,7 @@
         app:layout_constraintBottom_toBottomOf="@+id/searchScientificNameLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/searchScientificNameLayout"
-        app:srcCompat="@drawable/search_foreground" />
+        app:srcCompat="@drawable/plus_foreground" />
 
     <!-- MODIFIED: TextInputLayout providing a Material Design container for the search input field. -->
     <!-- Its width is now dynamic (0dp), constrained between the start of the parent and the search icon. -->
