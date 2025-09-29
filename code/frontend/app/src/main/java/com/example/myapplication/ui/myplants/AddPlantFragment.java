@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.content.Context;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,7 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.myapplication.R;
 import com.example.myapplication.databinding.AddplantBinding;
-import com.example.myapplication.ui.myplants.Plant; // Assuming you have a Plant entity
+import com.example.myapplication.ui.myplants.Plant;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +34,10 @@ public class AddPlantFragment extends Fragment {
     private SearchResultAdapter searchAdapter;
 
     // This will hold all possible plant names to search against.
-    // In a real app, this should be fetched from your backend.
     private final List<String> allPlantNames = new ArrayList<>();
+
+    // --- MODIFICATION 1: Field to hold the isFavouriteFlow flag ---
+    private boolean isFavouriteFlow = false;
 
     @Nullable
     @Override
@@ -48,9 +51,13 @@ public class AddPlantFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         navController = Navigation.findNavController(view);
 
-        // Load the data that the user will be searching through
-        loadAllPlantNames();
+        // --- MODIFICATION 2: Receive the isFavouriteFlow argument ---
+        if (getArguments() != null) {
+            isFavouriteFlow = getArguments().getBoolean("isFavouriteFlow", false);
+            Log.d(TAG, "Received isFavouriteFlow: " + isFavouriteFlow);
+        }
 
+        loadAllPlantNames();
         setupRecyclerView();
         setupSearchLogic();
         setupBackButton();
@@ -59,7 +66,6 @@ public class AddPlantFragment extends Fragment {
 
     /**
      * Loads the master list of all searchable plant names.
-     * TODO: Replace this with a real API call to your backend.
      */
     private void loadAllPlantNames() {
         // Placeholder: generating sample data
@@ -67,8 +73,8 @@ public class AddPlantFragment extends Fragment {
         allPlantNames.clear();
         allPlantNames.addAll(
                 allPlants.stream()
-                        .map(Plant::getName) // Assuming Plant has a getName() method
-                        .distinct() // Ensure no duplicate names
+                        .map(Plant::getScientificName) // Search by scientific name now
+                        .distinct()
                         .collect(Collectors.toList())
         );
         Log.d(TAG, "Loaded " + allPlantNames.size() + " unique plant names for searching.");
@@ -78,18 +84,13 @@ public class AddPlantFragment extends Fragment {
      * Initializes the RecyclerView and its adapter.
      */
     private void setupRecyclerView() {
-        // This listener defines what happens when a user clicks on a search result
         searchAdapter = new SearchResultAdapter(scientificName -> {
             Log.d(TAG, "User selected: " + scientificName);
 
-            // Set the text in the search box to the selected item
             binding.searchScientificNameEditText.setText(scientificName);
-            // Move cursor to the end
             binding.searchScientificNameEditText.setSelection(scientificName.length());
-            // Hide the RecyclerView
             binding.recyclerViewScientificNames.setVisibility(View.GONE);
 
-            // Hide the keyboard
             InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(binding.searchScientificNameEditText.getWindowToken(), 0);
         });
@@ -102,7 +103,7 @@ public class AddPlantFragment extends Fragment {
      * Sets up the TextWatcher to listen for user input and trigger filtering.
      */
     private void setupSearchLogic() {
-        // Initially, show the prompt and hide the RecyclerView
+        binding.textViewSearchStatus.setText("Search for a plant by its scientific name.");
         binding.textViewSearchStatus.setVisibility(View.VISIBLE);
         binding.recyclerViewScientificNames.setVisibility(View.GONE);
 
@@ -112,7 +113,6 @@ public class AddPlantFragment extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // As the user types, filter the list
                 filterPlantNames(s.toString());
             }
 
@@ -122,26 +122,22 @@ public class AddPlantFragment extends Fragment {
     }
 
     /**
-     * Filters the master list of plant names based on the user's query and updates the UI.
-     * @param query The text entered by the user.
+     * Filters the master list of plant names based on the user's query.
      */
     private void filterPlantNames(String query) {
         if (query.isEmpty()) {
             binding.recyclerViewScientificNames.setVisibility(View.GONE);
             binding.textViewSearchStatus.setVisibility(View.VISIBLE);
-            searchAdapter.updateData(new ArrayList<>()); // Clear previous results
+            searchAdapter.updateData(new ArrayList<>());
             return;
         }
 
-        // Filter the master list
         List<String> filteredList = allPlantNames.stream()
                 .filter(name -> name.toLowerCase().contains(query.toLowerCase()))
                 .collect(Collectors.toList());
 
-        // Update the adapter with the filtered results
         searchAdapter.updateData(filteredList);
 
-        // Update UI visibility based on whether results were found
         if (filteredList.isEmpty()) {
             binding.recyclerViewScientificNames.setVisibility(View.GONE);
             binding.textViewSearchStatus.setText("No results found.");
@@ -153,28 +149,33 @@ public class AddPlantFragment extends Fragment {
     }
 
     /**
-     * This will navigate to the CaptureFragment, passing the scientific name.
+     * --- MODIFICATION 3: Pass both scientificName and isFavouriteFlow ---
+     * This will navigate to the CaptureFragment, passing all necessary data.
      */
     private void setupNextButton() {
         binding.imageView.setOnClickListener(v -> {
             String scientificName = binding.searchScientificNameEditText.getText().toString().trim();
 
-            // Validate that the user has entered a name
             if (scientificName.isEmpty()) {
                 binding.searchScientificNameEditText.setError("Please enter or select a name");
                 return;
             }
 
-            Log.d(TAG, "Navigating to CaptureFragment with scientific name: " + scientificName);
+            Log.d(TAG, "Navigating to CaptureFragment with scientific name: " + scientificName + " and isFavouriteFlow: " + isFavouriteFlow);
 
-            // Create a bundle to pass the scientific name
+            // Create a bundle to pass all necessary data
             Bundle args = new Bundle();
             args.putString("scientificName", scientificName);
+            args.putBoolean("isFavouriteFlow", isFavouriteFlow);
 
-            // Navigate to the CaptureFragment with the arguments
-            // Make sure you have an action defined in your navigation graph
-            // or that captureFragment is a valid destination ID.
-            navController.navigate(R.id.navigation_upload, args);
+            try {
+                // Navigate to the CaptureFragment with the arguments.
+                // Ensure this action exists in your navigation graph.
+                navController.navigate(R.id.navigation_upload, args);
+            } catch (IllegalArgumentException e) {
+                Log.e(TAG, "Navigation failed. Check action 'action_addPlantFragment_to_captureFragment' in your nav graph.", e);
+                Toast.makeText(getContext(), "Error: Cannot proceed.", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
@@ -186,16 +187,22 @@ public class AddPlantFragment extends Fragment {
         });
     }
 
-    // This is a temporary method to provide data. Replace with your actual data source.
+    /**
+     * --- MODIFICATION 4: Update Plant constructor to match new fields ---
+     * This is a temporary method to provide data. Replace with your actual data source.
+     */
     private List<Plant> generateAllSamplePlants() {
         List<Plant> samplePlants = new ArrayList<>();
         long now = System.currentTimeMillis();
         long oneDay = 24 * 60 * 60 * 1000;
-        samplePlants.add(new Plant("p1", "Monstera Deliciosa", "M. deliciosa", "url_monstera", "A popular houseplant...", now - 5 * oneDay, false));
-        samplePlants.add(new Plant("p2", "Snake Plant", "Sansevieria trifasciata", "url_snakeplant", "Hardy plant...", now - 2 * oneDay, true));
-        samplePlants.add(new Plant("p3", "Spider Plant", "Chlorophytum comosum", "url_spiderplant", "Easy to grow...", now - 10 * oneDay, false));
-        samplePlants.add(new Plant("p4", "Peace Lily", "Spathiphyllum spp.", "url_peacelily", "Features elegant white spathes.", now - 7 * oneDay, true));
-        samplePlants.add(new Plant("p5", "Fiddle Leaf Fig", "Ficus lyrata", "url_fiddle", "A popular indoor tree.", now - 30 * oneDay, false));
+
+        // Using the new Plant constructor
+        samplePlants.add(new Plant("p1", "Monstera", "Monstera deliciosa", "A popular houseplant with iconic leaves.", "Indoor", "Houseplant, Tropical", "UserA", now - 5 * oneDay, "url_monstera", false));
+        samplePlants.add(new Plant("p2", "Snake Plant", "Dracaena trifasciata", "A very hardy plant.", "Indoor", "Succulent, Hardy", "UserB", now - 2 * oneDay, "url_snakeplant", true));
+        samplePlants.add(new Plant("p3", "Spider Plant", "Chlorophytum comosum", "Produces small 'spiderettes'.", "Indoor", "Easy Care", "UserA", now - 10 * oneDay, "url_spiderplant", false));
+        samplePlants.add(new Plant("p4", "Peace Lily", "Spathiphyllum wallisii", "Features elegant white spathes.", "Indoor", "Flowering, Air Purifying", "UserC", now - 7 * oneDay, "url_peacelily", true));
+        samplePlants.add(new Plant("p5", "Fiddle Leaf Fig", "Ficus lyrata", "A popular but tricky indoor tree.", "Indoor", "Tree, Fussy", "UserB", now - 30 * oneDay, "url_fiddle", false));
+
         return samplePlants;
     }
 

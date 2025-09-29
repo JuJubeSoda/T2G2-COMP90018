@@ -176,6 +176,17 @@
         android:label="Plant Wiki"
         tools:layout="@layout/mygardenlist" /> <!-- Suggests the layout for PlantWikiFragment. -->
 
+    <!-- Define the new destination fragment for plant details -->
+    <fragment
+        android:id="@+id/plantDetailFragment"
+        android:name="com.example.myapplication.ui.myplants.PlantDetailFragment"
+        android:label="Plant Details"
+        tools:layout="@layout/plantdetail">
+        <argument
+            android:name="plant_object"
+            app:argType="com.example.myapplication.ui.myplants.Plant" />
+    </fragment>
+
     <!--
         AddPlantFragment Destination: Represents the screen where users can manually add
         a new plant to their collection by filling out a form.

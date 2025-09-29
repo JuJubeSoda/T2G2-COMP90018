@@ -166,7 +166,7 @@ public class PlantCardAdapter extends RecyclerView.Adapter<PlantCardAdapter.Plan
             holder.textViewPlantDate.setVisibility(View.VISIBLE);
             // Format the plant's added date.
             SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
-            String formattedDate = sdf.format(new Date(plant.getDateAdded())); // Assumes Plant model has getDateAdded() returning long.
+            String formattedDate = sdf.format(new Date(plant.getDiscoveredOn())); // Assumes Plant model has getDateAdded() returning long.
             // Set the formatted date string, using a string resource for localization.
             holder.textViewPlantDate.setText(context.getString(R.string.plant_added_on_date_format, formattedDate));
 
