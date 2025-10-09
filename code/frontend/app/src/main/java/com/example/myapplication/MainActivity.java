@@ -2,6 +2,7 @@
 package com.example.myapplication;
 
 // Android core imports
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -61,5 +62,11 @@ public class MainActivity extends AppCompatActivity {
         // Profile / My Garden
         activityBinding.imageButton9.setOnClickListener(v ->
                 navController.navigate(R.id.navigation_my_garden));
+
+        // ✅ AI Chat
+        activityBinding.imageButtonAI.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, AIChatActivity.class);
+            startActivity(intent);
+        });
     }
 }

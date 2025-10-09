@@ -58,6 +58,19 @@
         app:layout_constraintBottom_toBottomOf="@+id/bottomAppBar"/>
 
     <ImageButton
+        android:id="@+id/imageButtonAI"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:backgroundTint="@color/white"
+        android:contentDescription="AI Chat"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/imageButton8"
+        app:layout_constraintStart_toEndOf="@+id/imageButton5"
+        app:layout_constraintTop_toTopOf="@+id/bottomAppBar"
+        app:srcCompat="@drawable/ai_icon_foreground" />
+
+    <ImageButton
         android:id="@+id/imageButton8"
         android:layout_width="48dp"
         android:layout_height="48dp"

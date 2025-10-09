@@ -3,6 +3,9 @@ package org.unimelb.ai.controller;
 
 import org.unimelb.ai.service.OpenAIService;
 import org.springframework.web.bind.annotation.*;
+import org.unimelb.ai.vo.BaseResponse;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ai_bot")
@@ -15,8 +18,9 @@ public class OpenAIController {
     }
 
     @GetMapping("/ask")
-    public String ask(@RequestParam String q) {
-        return openAIService.ask(q);
+    public BaseResponse<Map<String, String>> ask(@RequestParam String q) {
+        String answer = openAIService.ask(q);
+        return new BaseResponse<>(200, "ok", Map.of("reply", answer));
     }
 }
 
