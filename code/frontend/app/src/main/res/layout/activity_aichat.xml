@@ -4,24 +4,26 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8F9FB">
+    android:background="@color/white">
 
     <LinearLayout
         android:id="@+id/topBar"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:padding="12dp"
-        android:background="?attr/colorPrimary"
+        android:background="@color/brand_teal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        android:elevation="4dp">
 
         <ImageButton
             android:id="@+id/backButton"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ai_icon_foreground"/>
+            android:src="@android:drawable/ic_menu_revert"
+            app:tint="@android:color/white" />
 
         <TextView
             android:id="@+id/titleText"
@@ -34,13 +36,13 @@
             android:layout_height="wrap_content"/>
     </LinearLayout>
 
-
     <ScrollView
         android:id="@+id/chatScrollView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
-        android:padding="12dp"
+        android:scrollbars="vertical"
+        android:overScrollMode="always"
         app:layout_constraintTop_toBottomOf="@id/topBar"
         app:layout_constraintBottom_toTopOf="@id/inputLayout"
         app:layout_constraintStart_toStartOf="parent"
@@ -50,18 +52,15 @@
             android:id="@+id/chatContainer"
             android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:dividerPadding="8dp"
-            android:showDividers="none"/>
+            android:layout_height="wrap_content"/>
     </ScrollView>
-
 
     <LinearLayout
         android:id="@+id/inputLayout"
         android:orientation="horizontal"
         android:padding="8dp"
-        android:background="#FFFFFF"
-        android:elevation="4dp"
+        android:background="@android:color/white"
+        android:elevation="8dp"
         android:gravity="center_vertical"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -74,23 +73,27 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="Ask something..."
-            android:padding="8dp"
+            android:hint="Ask me anything..."
+            android:padding="10dp"
             android:textSize="16sp"
             android:maxLines="4"
             android:scrollbars="vertical"
-            android:background="@android:drawable/edit_text"
-            android:textColor="@android:color/black"/>
+            android:background="@drawable/bg_input_field"
+            android:textColor="@color/black"
+            android:textColorHint="#999999"/>
 
         <Button
             android:id="@+id/sendButton"
             android:text="Send"
             android:textAllCaps="false"
-            android:textColor="@android:color/white"
             android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/brand_teal"
             android:layout_marginStart="8dp"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="48dp"
+            android:minWidth="72dp"
+            android:paddingHorizontal="16dp"/>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

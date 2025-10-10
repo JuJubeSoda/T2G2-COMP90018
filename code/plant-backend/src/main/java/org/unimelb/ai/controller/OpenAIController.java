@@ -19,7 +19,10 @@ public class OpenAIController {
 
     @GetMapping("/ask")
     public BaseResponse<Map<String, String>> ask(@RequestParam String q) {
+        System.out.println("===== AI Reply =====");
         String answer = openAIService.ask(q);
+        System.out.println(answer);
+        System.out.println("====================");
         return new BaseResponse<>(200, "ok", Map.of("reply", answer));
     }
 }

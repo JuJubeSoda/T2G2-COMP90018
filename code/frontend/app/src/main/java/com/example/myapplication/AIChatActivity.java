@@ -2,6 +2,7 @@ package com.example.myapplication;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.Gravity;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,13 +16,20 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import io.noties.markwon.Markwon;
+
+
 public class AIChatActivity extends AppCompatActivity {
 
     private LinearLayout chatContainer;
     private ScrollView chatScrollView;
     private EditText inputMessage;
     private Button sendButton;
+
+    private Markwon markwon;
+
     private ApiService apiService;
+    private Handler handler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +43,15 @@ public class AIChatActivity extends AppCompatActivity {
 
         apiService = ApiClient.create(this);
 
+        markwon = Markwon.create(this);
+
         sendButton.setOnClickListener(v -> sendMessage());
+
+        ImageButton backButton = findViewById(R.id.backButton);
+        backButton.setOnClickListener(v -> {
+            finish();
+            overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+        });
     }
 
     private void sendMessage() {
@@ -45,43 +61,43 @@ public class AIChatActivity extends AppCompatActivity {
             return;
         }
 
-        // 用户消息
         addMessage("You: " + message, true);
         inputMessage.setText("");
 
-        // 调用后端 AI 接口
+        TextView aiThinking = addMessage("AI Assistant: ...", false);
+
         apiService.askQuestion(message).enqueue(new Callback<BaseResponse>() {
             @Override
             public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     BaseResponse base = response.body();
 
-                    // ✅ 判断 code、msg、data
                     if (base.code != null && base.code == 200 && base.data != null) {
                         JsonElement data = base.data;
                         if (data.isJsonObject() && data.getAsJsonObject().has("reply")) {
                             String reply = data.getAsJsonObject().get("reply").getAsString();
-                            addMessage("AI Assistant: " + reply, false);
+
+
+                            typewriterEffect(aiThinking, "\uD83E\uDD16 AI Assistant: " + reply);
                         } else {
-                            addMessage("⚠️ AI Assistant: Unexpected data format.", false);
+                            aiThinking.setText("⚠️ AI Assistant: Unexpected data format.");
                         }
                     } else {
-                        addMessage("⚠️ AI Assistant: " + base.msg, false);
+                        aiThinking.setText("⚠️ AI Assistant: " + base.msg);
                     }
                 } else {
-                    addMessage("⚠️ AI Assistant: Server returned no data.", false);
+                    aiThinking.setText("⚠️ AI Assistant: Server returned no data.");
                 }
             }
 
             @Override
             public void onFailure(Call<BaseResponse> call, Throwable t) {
-                addMessage("❌ Connection failed: " + t.getMessage(), false);
+                aiThinking.setText("❌ Connection failed: " + t.getMessage());
             }
         });
     }
 
-    // ✅ 改进的 addMessage（自动换行 + 复制 + 左右对齐）
-    private void addMessage(String text, boolean isUser) {
+    private TextView addMessage(String text, boolean isUser) {
         TextView textView = new TextView(this);
         textView.setText(text);
         textView.setTextSize(16);
@@ -92,23 +108,62 @@ public class AIChatActivity extends AppCompatActivity {
         textView.setTextIsSelectable(true);
         textView.setEllipsize(null);
 
+
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
 
         if (isUser) {
             params.gravity = Gravity.END;
-            textView.setBackgroundColor(Color.parseColor("#3F51B5")); // 蓝色背景
             textView.setTextColor(Color.WHITE);
+            textView.setMaxWidth((int) (getResources().getDisplayMetrics().widthPixels * 0.90));
+            textView.setBackgroundResource(R.drawable.bg_user_message);
         } else {
             params.gravity = Gravity.START;
-            textView.setBackgroundColor(Color.parseColor("#EDEDED")); // 灰色背景
             textView.setTextColor(Color.BLACK);
+            textView.setMaxWidth((int) (getResources().getDisplayMetrics().widthPixels * 0.90));
+            textView.setBackgroundResource(R.drawable.bg_ai_message);
         }
 
         textView.setLayoutParams(params);
-        chatContainer.addView(textView);
 
+        chatContainer.addView(textView);
         chatScrollView.post(() -> chatScrollView.fullScroll(ScrollView.FOCUS_DOWN));
+        return textView;
     }
+
+    private void typewriterEffect(TextView textView, String fullText) {
+        textView.setText("");
+        final int[] index = {0};
+        final int delay = 5;
+
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (index[0] < fullText.length()) {
+                    textView.append(String.valueOf(fullText.charAt(index[0])));
+                    textView.requestLayout();
+                    textView.invalidate();
+
+
+                    chatScrollView.postDelayed(() ->
+                            chatScrollView.fullScroll(ScrollView.FOCUS_DOWN), 50);
+
+                    index[0]++;
+                    handler.postDelayed(this, delay);
+                } else {
+
+                    handler.postDelayed(() -> {
+                        markwon.setMarkdown(textView, fullText);
+                        chatScrollView.post(() ->
+                                chatScrollView.fullScroll(ScrollView.FOCUS_DOWN));
+                    }, 150);
+                }
+            }
+        }, delay);
+    }
+
+
+
 }
+

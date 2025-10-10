@@ -25,7 +25,6 @@ public class OpenAIService {
         body.put("model", "gpt-4.1-nano");
         body.put("input", question);
         body.put("temperature", 0.7);
-        body.put("max_output_tokens", 200);
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
