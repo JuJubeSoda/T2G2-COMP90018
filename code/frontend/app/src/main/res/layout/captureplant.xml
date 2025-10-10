@@ -16,16 +16,16 @@
         android:id="@+id/backButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="Back"
         android:minWidth="48dp"
         android:minHeight="48dp"
         android:padding="12dp"
         app:srcCompat="@drawable/quantum_ic_arrow_back_grey600_24"
-        app:tint="@android:color/white"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/camera_preview" />
+        app:layout_constraintBottom_toBottomOf="@+id/titleTextView" />
 
     <!-- TextView displaying the title of the screen, e.g., "Capture Plant".
          Positioned to the right of the back button and centered vertically with it. -->
@@ -38,10 +38,11 @@
         android:textColor="@android:color/white"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
         app:layout_constraintStart_toEndOf="@+id/backButton"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/backButton"
-        app:layout_constraintBottom_toBottomOf="@+id/backButton" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/camera_preview" />
 
     <!-- Camera Preview Area -->
     <!-- PreviewView from CameraX library, used to display the live camera feed.
@@ -53,7 +54,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:scaleType="fillCenter"
-        app:layout_constraintTop_toBottomOf="@+id/backButton"
+        app:layout_constraintTop_toBottomOf="@+id/titleTextView"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

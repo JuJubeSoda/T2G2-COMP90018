@@ -1,185 +1,214 @@
-// Specifies the package where this AddPlantFragment class resides.
-// Ensure this matches your project's structure for proper compilation and access.
 package com.example.myapplication.ui.myplants;
 
-// Android framework imports for core functionalities.
-import android.os.Bundle; // For passing data between components and saving instance state.
-import android.view.LayoutInflater; // For instantiating layout XML files into View objects.
-import android.view.View; // Base class for widgets, used to create interactive UI components.
-import android.view.ViewGroup; // Base class for layouts, containers that hold other Views or ViewGroups.
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.content.Context;
+import android.widget.Toast;
 
-// AndroidX (Jetpack) library imports for modern Android development.
-import androidx.annotation.NonNull; // Annotation indicating a parameter, field, or method return value can never be null.
-import androidx.annotation.Nullable; // Annotation indicating a parameter, field, or method return value can be null.
-import androidx.fragment.app.Fragment; // Base class for managing a piece of an application's UI or behavior.
-// Import for AppCompatActivity if you plan to interact with the ActionBar/Toolbar.
-// import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
-// View Binding class generated from the addplant.xml layout file.
-// The name of this binding class (AddplantBinding) should exactly match the XML file name
-// (addplant.xml) converted to PascalCase with "Binding" appended.
+import com.example.myapplication.R;
 import com.example.myapplication.databinding.AddplantBinding;
+import com.example.myapplication.ui.myplants.Plant;
 
-/**
- * AddPlantFragment provides the UI for users to add a new plant to their collection.
- * This fragment will typically contain input fields for plant details such as name,
- * scientific name, description, an option to add an image (perhaps by navigating to
- * a capture or gallery screen), and a save button.
- *
- * This is currently a skeleton fragment with TODOs indicating where to implement
- * the specific logic for view setup and user interactions.
- */
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class AddPlantFragment extends Fragment {
 
-    // TAG for logging, useful for debugging. Optional, but good practice.
-    // private static final String TAG = "AddPlantFragment";
-
-    // View Binding instance for the addplant.xml layout.
-    // This allows for type-safe access to views defined in the layout.
+    private static final String TAG = "AddPlantFragment";
     private AddplantBinding binding;
+    private NavController navController;
+    private SearchResultAdapter searchAdapter;
 
-    /**
-     * Factory method to create a new instance of this fragment.
-     * It's a good practice to use a factory method like this, especially if you
-     * need to pass arguments to the fragment in the future.
-     *
-     * @return A new instance of fragment AddPlantFragment.
-     */
-    public static AddPlantFragment newInstance() {
-        // You can add argument passing here if needed in the future:
-        // AddPlantFragment fragment = new AddPlantFragment();
-        // Bundle args = new Bundle();
-        // args.putString(ARG_PARAM1, param1);
-        // fragment.setArguments(args);
-        // return fragment;
-        return new AddPlantFragment();
-    }
+    // This will hold all possible plant names to search against.
+    private final List<String> allPlantNames = new ArrayList<>();
 
-    /**
-     * Called to have the fragment instantiate its user interface view.
-     * This is where the layout for the fragment is inflated using View Binding.
-     *
-     * @param inflater           The LayoutInflater object that can be used to inflate
-     *                           any views in the fragment.
-     * @param container          If non-null, this is the parent view that the fragment's
-     *                           UI should be attached to. The fragment should not add the view itself,
-     *                           but this can be used to generate the LayoutParams of the view.
-     * @param savedInstanceState If non-null, this fragment is being re-constructed
-     *                           from a previous saved state as given here.
-     * @return Return the View for the fragment's UI, or null.
-     */
+    // --- MODIFICATION 1: Field to hold the isFavouriteFlow flag ---
+    private boolean isFavouriteFlow = false;
+
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
-        // Inflate the layout for this fragment using the generated ViewBinding class.
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding = AddplantBinding.inflate(inflater, container, false);
-
-        // TODO: Setup initial states or properties of views from addplant.xml using the binding object.
-        // For example, if you have an EditText for the plant name:
-        // binding.editTextPlantName.setHint("Enter plant name");
-        // Or if you have a Button to save the plant:
-        // binding.buttonSavePlant.setText("Save Plant");
-
-        // Return the root view of the inflated layout.
         return binding.getRoot();
     }
 
-    /**
-     * Called immediately after {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}
-     * has returned, but before any saved state has been restored in to the view.
-     * This is where you should set up listeners for UI elements, load initial data
-     * into views, or perform other view-related initializations.
-     *
-     * @param view               The View returned by {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}.
-     * @param savedInstanceState If non-null, this fragment is being re-constructed
-     *                           from a previous saved state as given here.
-     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        navController = Navigation.findNavController(view);
 
-        // TODO: Set up listeners and logic for your Add Plant screen.
-        // This is where you would handle user interactions with the input fields and buttons.
-
-        // Example: Set up a click listener for a save button.
-        // Make sure you have a button with the ID 'buttonSavePlant' in your addplant.xml layout.
-        /*
-        if (binding.buttonSavePlant != null) {
-            binding.buttonSavePlant.setOnClickListener(v -> {
-                // 1. Get data from input fields using the binding object:
-                // String plantName = binding.editTextPlantName.getText().toString().trim();
-                // String scientificName = binding.editTextScientificName.getText().toString().trim();
-                // ... other fields ...
-
-                // 2. Validate the input data (e.g., check for empty fields).
-                // if (plantName.isEmpty()) {
-                //     binding.editTextPlantName.setError("Plant name is required");
-                //     return; // Stop further processing if validation fails.
-                // }
-
-                // 3. Create a new Plant object (assuming you have a Plant model class).
-                // Plant newPlant = new Plant(plantName, scientificName, ...);
-
-                // 4. Save the new plant (e.g., to a database, ViewModel, or other data source).
-                // Log.d(TAG, "Saving new plant: " + newPlant.getName());
-                // savePlantToRepository(newPlant); // Example method call
-
-                // 5. Navigate back to the previous screen or show a success message.
-                // NavController navController = Navigation.findNavController(v);
-                // navController.popBackStack();
-                // Toast.makeText(getContext(), "Plant added successfully!", Toast.LENGTH_SHORT).show();
-            });
+        // --- MODIFICATION 2: Receive the isFavouriteFlow argument ---
+        if (getArguments() != null) {
+            isFavouriteFlow = getArguments().getBoolean("isFavouriteFlow", false);
+            Log.d(TAG, "Received isFavouriteFlow: " + isFavouriteFlow);
         }
-        */
 
-        // Example: Set a toolbar title if this fragment is hosted by an AppCompatActivity
-        // and you have a Toolbar/ActionBar.
-        /*
-        if (getActivity() instanceof AppCompatActivity) {
-            ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-            if (actionBar != null) {
-                actionBar.setTitle("Add New Plant"); // Or use a string resource
-            }
-        }
-        */
-        // Or, if using a Toolbar view directly in your fragment's layout (e.g., with ID 'toolbarAddPlant'):
-        /*
-        if (binding.toolbarAddPlant != null) {
-            if (getActivity() instanceof AppCompatActivity) {
-                ((AppCompatActivity) getActivity()).setSupportActionBar(binding.toolbarAddPlant);
-                ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-                if (actionBar != null) {
-                    actionBar.setTitle("Add New Plant");
-                    // Enable up button if you want to navigate back via toolbar
-                    // actionBar.setDisplayHomeAsUpEnabled(true);
-                    // actionBar.setDisplayShowHomeEnabled(true);
-                }
-            }
-            // If not using AppCompatActivity's action bar, you can set title directly:
-            // binding.toolbarAddPlant.setTitle("Add New Plant");
-            // binding.toolbarAddPlant.setNavigationOnClickListener(v -> {
-            //    // Handle navigation icon click, e.g., popBackStack()
-            //    NavController navController = Navigation.findNavController(view);
-            //    navController.popBackStack();
-            // });
-        }
-        */
+        loadAllPlantNames();
+        setupRecyclerView();
+        setupSearchLogic();
+        setupBackButton();
+        setupNextButton();
     }
 
     /**
-     * Called when the view previously created by {@link #onCreateView} has been detached from the fragment.
-     * The next time the fragment needs to be displayed, a new view will be created.
-     * This is a crucial lifecycle method for cleaning up resources associated with the view,
-     * especially to prevent memory leaks by nullifying the ViewBinding instance.
+     * Loads the master list of all searchable plant names.
      */
+    private void loadAllPlantNames() {
+        // Placeholder: generating sample data
+        List<Plant> allPlants = generateAllSamplePlants();
+        allPlantNames.clear();
+        allPlantNames.addAll(
+                allPlants.stream()
+                        .map(Plant::getScientificName) // Search by scientific name now
+                        .distinct()
+                        .collect(Collectors.toList())
+        );
+        Log.d(TAG, "Loaded " + allPlantNames.size() + " unique plant names for searching.");
+    }
+
+    /**
+     * Initializes the RecyclerView and its adapter.
+     */
+    private void setupRecyclerView() {
+        searchAdapter = new SearchResultAdapter(scientificName -> {
+            Log.d(TAG, "User selected: " + scientificName);
+
+            binding.searchScientificNameEditText.setText(scientificName);
+            binding.searchScientificNameEditText.setSelection(scientificName.length());
+            binding.recyclerViewScientificNames.setVisibility(View.GONE);
+
+            InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(binding.searchScientificNameEditText.getWindowToken(), 0);
+        });
+
+        binding.recyclerViewScientificNames.setLayoutManager(new LinearLayoutManager(getContext()));
+        binding.recyclerViewScientificNames.setAdapter(searchAdapter);
+    }
+
+    /**
+     * Sets up the TextWatcher to listen for user input and trigger filtering.
+     */
+    private void setupSearchLogic() {
+        binding.textViewSearchStatus.setText("Search for a plant by its scientific name.");
+        binding.textViewSearchStatus.setVisibility(View.VISIBLE);
+        binding.recyclerViewScientificNames.setVisibility(View.GONE);
+
+        binding.searchScientificNameEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterPlantNames(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+    }
+
+    /**
+     * Filters the master list of plant names based on the user's query.
+     */
+    private void filterPlantNames(String query) {
+        if (query.isEmpty()) {
+            binding.recyclerViewScientificNames.setVisibility(View.GONE);
+            binding.textViewSearchStatus.setVisibility(View.VISIBLE);
+            searchAdapter.updateData(new ArrayList<>());
+            return;
+        }
+
+        List<String> filteredList = allPlantNames.stream()
+                .filter(name -> name.toLowerCase().contains(query.toLowerCase()))
+                .collect(Collectors.toList());
+
+        searchAdapter.updateData(filteredList);
+
+        if (filteredList.isEmpty()) {
+            binding.recyclerViewScientificNames.setVisibility(View.GONE);
+            binding.textViewSearchStatus.setText("No results found.");
+            binding.textViewSearchStatus.setVisibility(View.VISIBLE);
+        } else {
+            binding.recyclerViewScientificNames.setVisibility(View.VISIBLE);
+            binding.textViewSearchStatus.setVisibility(View.GONE);
+        }
+    }
+
+    /**
+     * --- MODIFICATION 3: Pass both scientificName and isFavouriteFlow ---
+     * This will navigate to the CaptureFragment, passing all necessary data.
+     */
+    private void setupNextButton() {
+        binding.imageView.setOnClickListener(v -> {
+            String scientificName = binding.searchScientificNameEditText.getText().toString().trim();
+
+            if (scientificName.isEmpty()) {
+                binding.searchScientificNameEditText.setError("Please enter or select a name");
+                return;
+            }
+
+            Log.d(TAG, "Navigating to CaptureFragment with scientific name: " + scientificName + " and isFavouriteFlow: " + isFavouriteFlow);
+
+            // Create a bundle to pass all necessary data
+            Bundle args = new Bundle();
+            args.putString("scientificName", scientificName);
+            args.putBoolean("isFavouriteFlow", isFavouriteFlow);
+
+            try {
+                // Navigate to the CaptureFragment with the arguments.
+                // Ensure this action exists in your navigation graph.
+                navController.navigate(R.id.navigation_upload, args);
+            } catch (IllegalArgumentException e) {
+                Log.e(TAG, "Navigation failed. Check action 'action_addPlantFragment_to_captureFragment' in your nav graph.", e);
+                Toast.makeText(getContext(), "Error: Cannot proceed.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void setupBackButton() {
+        binding.backButtonAddPlant.setOnClickListener(v -> {
+            if (navController.getPreviousBackStackEntry() != null) {
+                navController.popBackStack();
+            }
+        });
+    }
+
+    /**
+     * --- MODIFICATION 4: Update Plant constructor to match new fields ---
+     * This is a temporary method to provide data. Replace with your actual data source.
+     */
+    private List<Plant> generateAllSamplePlants() {
+        List<Plant> samplePlants = new ArrayList<>();
+        long now = System.currentTimeMillis();
+        long oneDay = 24 * 60 * 60 * 1000;
+
+        // Using the new Plant constructor
+        samplePlants.add(new Plant("p1", "Monstera", "Monstera deliciosa", "A popular houseplant with iconic leaves.", "Indoor", "Houseplant, Tropical", "UserA", now - 5 * oneDay, "url_monstera", false));
+        samplePlants.add(new Plant("p2", "Snake Plant", "Dracaena trifasciata", "A very hardy plant.", "Indoor", "Succulent, Hardy", "UserB", now - 2 * oneDay, "url_snakeplant", true));
+        samplePlants.add(new Plant("p3", "Spider Plant", "Chlorophytum comosum", "Produces small 'spiderettes'.", "Indoor", "Easy Care", "UserA", now - 10 * oneDay, "url_spiderplant", false));
+        samplePlants.add(new Plant("p4", "Peace Lily", "Spathiphyllum wallisii", "Features elegant white spathes.", "Indoor", "Flowering, Air Purifying", "UserC", now - 7 * oneDay, "url_peacelily", true));
+        samplePlants.add(new Plant("p5", "Fiddle Leaf Fig", "Ficus lyrata", "A popular but tricky indoor tree.", "Indoor", "Tree, Fussy", "UserB", now - 30 * oneDay, "url_fiddle", false));
+
+        return samplePlants;
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // Nullify the binding object when the view is destroyed.
-        // This is important for ViewBinding with Fragments to prevent memory leaks
-        // by releasing the reference to the view hierarchy, allowing it to be garbage collected.
         binding = null;
-        // Log.d(TAG, "onDestroyView: Binding set to null.");
     }
 }

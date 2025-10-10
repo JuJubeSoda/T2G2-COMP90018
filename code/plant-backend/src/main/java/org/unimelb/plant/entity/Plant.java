@@ -16,6 +16,8 @@ public class Plant implements Serializable {
 
     private Long userId;
 
+    private String name;
+
     private byte[] image;
 
     private String description;
@@ -24,7 +26,7 @@ public class Plant implements Serializable {
 
     private Double longitude;
 
-    private String plantCategory;
+    private String scientificName;
 
     private LocalDateTime createdAt;
 

@@ -38,7 +38,7 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
                 .eq(query.getUserId() != null, Plant::getUserId, query.getUserId())
                 .like(query.getImage() != null, Plant::getImage, query.getImage())
                 .like(StringUtils.hasText(query.getDescription()), Plant::getDescription, query.getDescription())
-                .eq(StringUtils.hasText(query.getPlantCategory()), Plant::getPlantCategory, query.getPlantCategory())
+                .eq(StringUtils.hasText(query.getScientificName()), Plant::getScientificName, query.getScientificName())
                 .eq(query.getLatitude() != null, Plant::getLatitude, query.getLatitude())
                 .eq(query.getLongitude() != null, Plant::getLongitude, query.getLongitude())
                 .orderByDesc(Plant::getCreatedAt);

@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.example.myapplication.auth;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,6 +11,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.myapplication.MainActivity;
+import com.example.myapplication.NewUserSetting1Activity;
+import com.example.myapplication.R;
 import com.example.myapplication.network.ApiClient;
 import com.example.myapplication.network.ApiService;
 import com.example.myapplication.network.BaseResponse;
@@ -20,7 +23,6 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import com.example.myapplication.auth.SignUpActivity;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;

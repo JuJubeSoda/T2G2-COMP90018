@@ -52,7 +52,6 @@
         <!-- <action
             android:id="@+id/action_navigation_home_to_mainActivity2"
             app:destination="@id/mainActivity2" /> -->
-
     </fragment>
 
     <!--
@@ -174,7 +173,18 @@
         android:id="@+id/navigation_plant_wiki"
         android:name="com.example.myapplication.ui.myplants.PlantWikiFragment"
         android:label="Plant Wiki"
-        tools:layout="@layout/mygardenlist" /> <!-- Suggests the layout for PlantWikiFragment. -->
+        tools:layout="@layout/plantwiki" /> <!-- Suggests the layout for PlantWikiFragment. -->
+
+    <!-- Define the new destination fragment for plant details -->
+    <fragment
+        android:id="@+id/plantDetailFragment"
+        android:name="com.example.myapplication.ui.myplants.PlantDetailFragment"
+        android:label="Plant Details"
+        tools:layout="@layout/plantdetail">
+        <argument
+            android:name="plant_object"
+            app:argType="com.example.myapplication.ui.myplants.Plant" />
+    </fragment>
 
     <!--
         AddPlantFragment Destination: Represents the screen where users can manually add

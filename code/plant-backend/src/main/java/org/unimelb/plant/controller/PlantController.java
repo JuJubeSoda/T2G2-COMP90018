@@ -25,7 +25,7 @@ public class PlantController {
     @GetMapping("/by-user")
     public Result<List<Plant>> listByUser() {
 
-        List<Plant> list= plantService.list();
+        List<Plant> list= plantService.listPlantsByUser();
 
         return Result.success(list);
     }
