@@ -35,9 +35,9 @@ public class GeoJsonActivity extends MapsActivity {
             getMap().moveCamera(CameraUpdateFactory.newLatLng(new LatLng(31.4118,-103.5355)));
         }
         // Download the GeoJSON file.
-        retrieveFileFromUrl();
+        //retrieveFileFromUrl();
         // Alternate approach of loading a local GeoJSON file.
-        //retrieveFileFromResource();
+        retrieveFileFromResource();
     }
 
     private void retrieveFileFromUrl(){
