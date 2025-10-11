@@ -7,6 +7,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.Query;
 
 /**
  * Defines the REST API endpoints for the application.
@@ -33,4 +34,8 @@ public interface ApiService {
      */
     @GET("/api/plants/by-user")
     Call<ApiResponse<List<PlantDto>>> getPlantsByUser();
+
+    @GET("api/ai_bot/ask")
+    Call<BaseResponse> askQuestion(@Query("q") String question);
+
 }

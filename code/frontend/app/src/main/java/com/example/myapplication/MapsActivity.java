@@ -1,6 +1,5 @@
 package com.example.myapplication;
 
-
 import android.os.AsyncTask;
 import android.os.Bundle;
 
@@ -63,7 +62,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
+public abstract class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final String TAG = MapsActivity.class.getSimpleName();
 
@@ -90,6 +89,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     // The geographical location where the device is currently located. That is, the last-known
     // location retrieved by the Fused Location Provider.
     private Location lastKnownLocation;
+
+    // Flag to indicate if this is a restore operation
+    private boolean mIsRestore = false;
 
     // Keys for storing activity state.
     // [START maps_current_place_state_keys]
@@ -126,9 +128,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(getLayoutId());
 
         // [START_EXCLUDE silent]
-        // Construct a PlacesClient
+        // Construct a PlacesClient - to show the nearby place
+        /*
         Places.initialize(getApplicationContext(), BuildConfig.PLACES_API_KEY);
         placesClient = Places.createClient(this);
+        */
 
         // Construct a FusedLocationProviderClient.
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
@@ -234,9 +238,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Get the current location of the device and set the position of the map.
         getDeviceLocation();
 
-        retrieveFileFromUrl();
+        startLayer(mIsRestore);
     }
     // [END maps_current_place_on_map_ready]
+
+    /**
+     * Run the specific layer
+     */
+    protected abstract void startLayer(boolean IsRestore);
+
+    protected GoogleMap getMap(){
+        return mMap;
+    }
 
     /**
      * Gets the current location of the device, and positions the map's camera.
@@ -459,80 +472,26 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 mMap.getUiSettings().setMyLocationButtonEnabled(true);
                 mMap.getUiSettings().setZoomGesturesEnabled(true);
                 mMap.getUiSettings().setAllGesturesEnabled(true);
-
-                // 按钮位置：右下角，距离边缘50px
-                mMap.setPadding(0, 0, 50, 50);
+                
+                // 启用缩放控制按钮
+                mMap.getUiSettings().setZoomControlsEnabled(true);
+                
+                // 设置地图内边距，为"我的位置"按钮留出空间，但保持缩放按钮正常显示
+                // 只设置右边距和底边距，避免影响缩放按钮
+                mMap.setPadding(0, 0, 20, 100);
 
             } else {
                 mMap.setMyLocationEnabled(false);
                 mMap.getUiSettings().setMyLocationButtonEnabled(false);
                 lastKnownLocation = null;
+                
+                // 即使没有位置权限，也启用缩放控制
+                mMap.getUiSettings().setZoomControlsEnabled(true);
             }
         } catch (SecurityException e)  {
             Log.e("Exception: %s", e.getMessage());
         }
     }
     // [END maps_current_place_update_location_ui]
-
-
-    private void retrieveFileFromUrl(){
-        new DownloadGeoJsonFile().execute(getString(R.string.geojson_url));
-    }
-
-    private class DownloadGeoJsonFile extends AsyncTask<String, Void, GeoJsonLayer> {
-
-        @Override
-        protected GeoJsonLayer doInBackground(String... urls) {
-            try {
-
-                // open a stream from the URL
-                InputStream stream = new URL(urls[0]).openStream();
-
-                String line;
-                StringBuilder result = new StringBuilder();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-
-                while ((line = reader.readLine()) != null) {
-                    result.append(line);
-                }
-
-                reader.close();
-                stream.close();
-
-                return new GeoJsonLayer(mMap, new JSONObject(result.toString()));
-            } catch (IOException e) {
-                Log.e("GeoJson Layer", "GeoJSON file could not be read");
-            } catch (JSONException e) {
-                Log.e("GeoJson Layer", "GeoJSON file could not be converted to a JSONObject");
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(GeoJsonLayer geoJsonLayer) {
-            if (geoJsonLayer != null) {
-                addGeoJsonLayer(geoJsonLayer);
-            }
-        }
-    }
-
-    private void addGeoJsonLayer(GeoJsonLayer geoJsonLayer) {
-        //customizeMapStyle(geoJsonLayer);
-
-        geoJsonLayer.addLayerToMap();
-
-        // Demostrate receiving features via GeoJsonLayer clicks.
-
-        geoJsonLayer.setOnFeatureClickListener(new GeoJsonLayer.OnFeatureClickListener() {
-            @Override
-            public void onFeatureClick(Feature feature) {
-
-            }
-        }
-        );
-    }
-
-
-
 
 }
