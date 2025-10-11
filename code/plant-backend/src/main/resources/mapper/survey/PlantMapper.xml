@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.unimelb.plant.mapper.PlantMapper">
+
+    <select id="selectNearBy" parameterType="map" resultType="org.unimelb.plant.entity.Plant">
+        SELECT g.*
+        FROM plant g
+        WHERE g.latitude IS NOT NULL
+          AND g.longitude IS NOT NULL
+          AND (
+                  2 * 6371000 * ASIN(
+                          SQRT(
+                                  POWER(SIN(RADIANS((#{latitude} - g.latitude) / 2)), 2) +
+                                  COS(RADIANS(#{latitude})) * COS(RADIANS(g.latitude)) *
+                                  POWER(SIN(RADIANS((#{longitude} - g.longitude) / 2)), 2)
+                          )
+                                )
+                  ) <![CDATA[ <= ]]> #{radius}
+        ORDER BY (
+                     2 * 6371000 * ASIN(
+                             SQRT(
+                                     POWER(SIN(RADIANS((#{latitude} - g.latitude) / 2)), 2) +
+                                     COS(RADIANS(#{latitude})) * COS(RADIANS(g.latitude)) *
+                                     POWER(SIN(RADIANS((#{longitude} - g.longitude) / 2)), 2)
+                             )
+                                   )
+                     ) ASC LIMIT 200
+    </select>
+
+</mapper>

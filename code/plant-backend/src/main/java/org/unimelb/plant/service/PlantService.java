@@ -3,6 +3,7 @@ package org.unimelb.plant.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.unimelb.common.vo.Result;
+import org.unimelb.garden.entity.Garden;
 import org.unimelb.plant.entity.Plant;
 import org.unimelb.plant.vo.PlantQuery;
 import org.unimelb.user.entity.User;
@@ -15,5 +16,7 @@ public interface PlantService extends IService<Plant> {
     List<Plant> listPlantsByUser();
 
     Plant addPlant(Plant plant);
+
+    List<Plant> getNearByPlants(Double latitude, Double longitude, int radius);
 
 }

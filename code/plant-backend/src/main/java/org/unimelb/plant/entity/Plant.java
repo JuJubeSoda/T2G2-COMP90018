@@ -33,4 +33,6 @@ public class Plant implements Serializable {
     private LocalDateTime updatedAt;
 
     private Long gardenId;
+
+    private boolean isFavourite;
 }

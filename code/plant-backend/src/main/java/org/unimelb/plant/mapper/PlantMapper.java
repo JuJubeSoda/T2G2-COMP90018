@@ -6,11 +6,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.unimelb.garden.entity.Garden;
 import org.unimelb.plant.entity.Plant;
 
 import java.util.List;
 
 @Mapper
 public interface PlantMapper extends BaseMapper<Plant> {
-
+    List<Plant> selectNearBy(@Param("latitude") Double latitude,
+                              @Param("longitude") Double longitude,
+                              @Param("radius") Integer radiusMeters);
 }

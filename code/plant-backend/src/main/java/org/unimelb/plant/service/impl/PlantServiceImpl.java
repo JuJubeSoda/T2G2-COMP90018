@@ -25,6 +25,8 @@ import java.util.List;
 public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements PlantService {
     @Autowired
     private JwtUtil jwtUtil;
+    @Autowired
+    private PlantMapper plantMapper;
 
     @Override
     public Page<Plant> pagePlants(PlantQuery query) {
@@ -68,6 +70,17 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
 
         boolean ok = this.save(plant);
         return ok ? plant : null;
+    }
+
+    @Override
+    public List<Plant> getNearByPlants(Double latitude, Double longitude, int radius) {
+        if (latitude == null || longitude == null) {
+            throw new IllegalArgumentException("latitude/longitude cannot be null");
+        }
+        if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+            throw new IllegalArgumentException("illegal longitude or latitude");
+        }
+        return plantMapper.selectNearBy(latitude, longitude, radius);
     }
 
 }
