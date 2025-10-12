@@ -1,6 +1,7 @@
 package com.example.myapplication.ui.myplants;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -33,8 +34,20 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.model.PlaceLikelihood;
+import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest;
+import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
+import com.google.android.libraries.places.api.net.PlacesClient;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
 
@@ -76,6 +89,17 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     // Current earthquake coordinates for navigation
     private double currentEarthquakeLat = 0.0;
     private double currentEarthquakeLng = 0.0;
+    
+    // Places API related fields
+    private PlacesClient placesClient;
+    private FloatingActionButton fabPlaces;
+    
+    // Used for selecting the current place
+    private static final int M_MAX_ENTRIES = 5;
+    private String[] likelyPlaceNames;
+    private String[] likelyPlaceAddresses;
+    private List[] likelyPlaceAttributions;
+    private LatLng[] likelyPlaceLatLngs;
 
     @Nullable
     @Override
@@ -89,12 +113,18 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
 
         // Construct a FusedLocationProviderClient
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity());
+        
+        // Initialize Places API
+        initializePlacesAPI();
 
         // Initialize bottom sheet components
         initializeBottomSheet(view);
         
         // Initialize refresh control buttons
         initializeRefreshControls(view);
+        
+        // Initialize places button
+        initializePlacesButton(view);
 
         // Initialize refresh handler
         initializeRefreshHandler();
@@ -183,6 +213,31 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
                 @Override
                 public void onClick(View v) {
                     openNavigationToEarthquake();
+                }
+            });
+        }
+    }
+
+    /**
+     * Initialize Places API
+     */
+    private void initializePlacesAPI() {
+        if (!Places.isInitialized()) {
+            Places.initialize(requireContext(), com.example.myapplication.BuildConfig.PLACES_API_KEY);
+        }
+        placesClient = Places.createClient(requireContext());
+    }
+
+    /**
+     * Initialize floating action button for places
+     */
+    private void initializePlacesButton(View view) {
+        fabPlaces = view.findViewById(R.id.fab_places);
+        if (fabPlaces != null) {
+            fabPlaces.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showCurrentPlace();
                 }
             });
         }
@@ -508,8 +563,110 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
         }
         updateAutoRefreshButtonText();
     }
-    
 
+    /**
+     * Show current place using Places API
+     */
+    private void showCurrentPlace() {
+        if (mMap == null) {
+            return;
+        }
+
+        if (locationPermissionGranted) {
+            // Use fields to define the data types to return.
+            List<Place.Field> placeFields = Arrays.asList(Place.Field.NAME, Place.Field.ADDRESS,
+                    Place.Field.LAT_LNG);
+
+            // Use the builder to create a FindCurrentPlaceRequest.
+            FindCurrentPlaceRequest request =
+                    FindCurrentPlaceRequest.newInstance(placeFields);
+
+            // Get the likely places - that is, the businesses and other points of interest that
+            // are the best match for the device's current location.
+            @SuppressWarnings("MissingPermission") final
+            Task<FindCurrentPlaceResponse> placeResult =
+                    placesClient.findCurrentPlace(request);
+            placeResult.addOnCompleteListener(new OnCompleteListener<FindCurrentPlaceResponse>() {
+                @Override
+                public void onComplete(@NonNull Task<FindCurrentPlaceResponse> task) {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        FindCurrentPlaceResponse likelyPlaces = task.getResult();
+
+                        // Set the count, handling cases where less than 5 entries are returned.
+                        int count;
+                        if (likelyPlaces.getPlaceLikelihoods().size() < M_MAX_ENTRIES) {
+                            count = likelyPlaces.getPlaceLikelihoods().size();
+                        } else {
+                            count = M_MAX_ENTRIES;
+                        }
+
+                        int i = 0;
+                        likelyPlaceNames = new String[count];
+                        likelyPlaceAddresses = new String[count];
+                        likelyPlaceAttributions = new List[count];
+                        likelyPlaceLatLngs = new LatLng[count];
+
+                        for (PlaceLikelihood placeLikelihood : likelyPlaces.getPlaceLikelihoods()) {
+                            // Build a list of likely places to show the user.
+                            likelyPlaceNames[i] = placeLikelihood.getPlace().getName();
+                            likelyPlaceAddresses[i] = placeLikelihood.getPlace().getAddress();
+                            likelyPlaceAttributions[i] = placeLikelihood.getPlace()
+                                    .getAttributions();
+                            likelyPlaceLatLngs[i] = placeLikelihood.getPlace().getLatLng();
+
+                            i++;
+                            if (i > (count - 1)) {
+                                break;
+                            }
+                        }
+
+                        // Show a dialog offering the user the list of likely places, and add a
+                        // marker at the selected place.
+                        openPlacesDialog();
+                    } else {
+                        Log.e(TAG, "Exception: %s", task.getException());
+                        Toast.makeText(getContext(), "无法获取附近地点信息", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        } else {
+            Toast.makeText(getContext(), "需要位置权限才能获取附近地点", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Open places dialog to let user select a place
+     */
+    private void openPlacesDialog() {
+        // Create a simple dialog to show the places
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(requireContext());
+        builder.setTitle("选择附近地点");
+
+        if (likelyPlaceNames != null && likelyPlaceNames.length > 0) {
+            builder.setItems(likelyPlaceNames, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    // Add marker for selected place
+                    if (likelyPlaceLatLngs[which] != null) {
+                        mMap.addMarker(new MarkerOptions()
+                                .position(likelyPlaceLatLngs[which])
+                                .title(likelyPlaceNames[which])
+                                .snippet(likelyPlaceAddresses[which]));
+                        
+                        // Move camera to the selected place
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(likelyPlaceLatLngs[which], 15));
+                        
+                        Toast.makeText(getContext(), "已添加地点标记: " + likelyPlaceNames[which], Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        } else {
+            builder.setMessage("未找到附近地点");
+        }
+
+        builder.setNegativeButton("取消", null);
+        builder.show();
+    }
     
     @Override
     public void onDestroyView() {

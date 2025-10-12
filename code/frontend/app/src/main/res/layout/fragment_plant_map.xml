@@ -54,6 +54,21 @@
 
     </LinearLayout>
 
+    <!-- Floating Action Button for Places -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_places"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
+        android:src="@drawable/ic_location_24"
+        android:contentDescription="获取附近地点"
+        android:backgroundTint="@color/white"
+        android:tint="@color/brand_teal"
+        android:elevation="4dp" />
+
     <!-- Bottom sheet container -->
     <LinearLayout
         android:id="@+id/bottom_sheet_container"

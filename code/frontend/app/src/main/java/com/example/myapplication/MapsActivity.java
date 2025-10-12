@@ -18,6 +18,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -104,6 +106,7 @@ public abstract class MapsActivity extends AppCompatActivity implements OnMapRea
     private TextView tvCoordinates;
     private Button btnClose;
     private Button btnMoreInfo;
+    
 
     // Keys for storing activity state.
     // [START maps_current_place_state_keys]
@@ -516,6 +519,7 @@ public abstract class MapsActivity extends AppCompatActivity implements OnMapRea
             });
         }
     }
+
 
     /**
      * Show bottom sheet with earthquake information
