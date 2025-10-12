@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require
+    url: jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require
     username: postgres.vatoalfojbqvbvqjxdcx
     password: "DAb1239df0#!sd"
     driver-class-name: org.postgresql.Driver
