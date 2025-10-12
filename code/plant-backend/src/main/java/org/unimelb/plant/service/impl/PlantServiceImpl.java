@@ -80,6 +80,16 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
     }
 
     @Override
+    public List<Plant> listPlantsByGarden(Long gardenId) {
+        List<Plant> list = this.list(
+                Wrappers.<Plant>lambdaQuery()
+                        .eq(Plant::getGardenId, gardenId)
+                        .orderByDesc(Plant::getCreatedAt)
+        );
+        return list;
+    }
+
+    @Override
     public Plant addPlant(Plant plant) {
         Long userId = UserContext.getCurrentUserId();
         plant.setUserId(userId);

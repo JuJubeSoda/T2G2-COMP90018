@@ -32,6 +32,15 @@ public class PlantController {
         return Result.success(list);
     }
 
+    @Operation(summary = "Search plants by Garden Id")
+    @GetMapping("/by-garden")
+    public Result<List<Plant>> listByGarden(@RequestParam Long gardenId) {
+        //TODO
+        List<Plant> list= plantService.listPlantsByGarden(gardenId);
+
+        return Result.success(list);
+    }
+
 
     @Operation(summary = "Get plants by id")
     @GetMapping("/{id}")

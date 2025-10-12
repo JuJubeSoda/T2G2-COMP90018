@@ -15,6 +15,8 @@ public interface PlantService extends IService<Plant> {
 
     List<Plant> listPlantsByUser();
 
+    List<Plant> listPlantsByGarden(Long gardenId);
+
     Plant addPlant(Plant plant);
 
     List<Plant> getNearByPlants(Double latitude, Double longitude, int radius);
