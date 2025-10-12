@@ -19,4 +19,10 @@ public interface PlantService extends IService<Plant> {
 
     List<Plant> getNearByPlants(Double latitude, Double longitude, int radius);
 
+    boolean isLiked(Long userId, Long plantId);
+
+    boolean like(Long userId, Long plantId);
+
+    boolean unlike(Long userId, Long plantId);
+
 }

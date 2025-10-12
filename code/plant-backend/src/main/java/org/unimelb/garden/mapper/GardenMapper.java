@@ -13,4 +13,7 @@ public interface GardenMapper extends BaseMapper<Garden> {
     List<Garden> selectNearBy(@Param("latitude") Double latitude,
                               @Param("longitude") Double longitude,
                               @Param("radius") Integer radiusMeters);
+
+
+    int insertBatch(@Param("list") List<Garden> gardens);
 }

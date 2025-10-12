@@ -27,6 +27,11 @@ public class GardenServiceImpl implements GardenService {
     }
 
     @Override
+    public Boolean batchAddGardens(List<Garden> gardenList) {
+        return gardenMapper.insertBatch(gardenList) > 0;
+    }
+
+    @Override
     public Boolean deleteGarden(Integer gardenId) {
         return null;
     }

@@ -25,12 +25,20 @@ public class GardenController {
     }
 
 
+    @Operation(summary = "Batch Add Gardens")
+    @PostMapping("/batch")
+    public Result<?> batchAddGardens(@RequestBody List<Garden> gardens) {
+        Boolean ok = gardenService.batchAddGardens(gardens);
+        return ok  ? Result.success("insert garden success") : Result.fail(500, "save failed");
+    }
+
     @Operation(summary = "Add New Garden")
     @PostMapping("/add")
     public Result<?> addPlant(@RequestBody Garden garden) {
         Boolean ok = gardenService.addGarden(garden);
         return ok  ? Result.success("insert garden success") : Result.fail(500, "save failed");
     }
+
 
 
     @Operation(summary = "Get nearby Gardens")

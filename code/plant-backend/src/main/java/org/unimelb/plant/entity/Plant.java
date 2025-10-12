@@ -1,5 +1,6 @@
 package org.unimelb.plant.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -34,5 +35,7 @@ public class Plant implements Serializable {
 
     private Long gardenId;
 
-    private boolean isFavourite;
+    @TableField(exist = false)
+    private Boolean isFavourite;
+
 }
