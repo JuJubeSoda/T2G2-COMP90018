@@ -152,11 +152,19 @@
             style="@style/Widget.Material3.Button.OutlinedButton" />
 
         <Button
+            android:id="@+id/btn_navigate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🗺️ Navigate"
+            android:layout_marginEnd="8dp"
+            style="@style/Widget.Material3.Button" />
+
+        <Button
             android:id="@+id/btn_more_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="More Info"
-            style="@style/Widget.Material3.Button" />
+            style="@style/Widget.Material3.Button.OutlinedButton" />
 
     </LinearLayout>
 

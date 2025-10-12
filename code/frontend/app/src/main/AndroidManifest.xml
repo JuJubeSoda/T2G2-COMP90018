@@ -70,11 +70,6 @@
             android:exported="true"
             android:label="@string/title_activity_maps" />
 
-        <activity
-            android:name=".GeoJsonActivity"
-            android:exported="true"
-            android:label="@string/title_activity_geojson" />
-
     </application>
 
 </manifest>
