@@ -53,7 +53,7 @@ public class DatabaseTestController {
             result.put("errorCode", e.getErrorCode());
             result.put("timestamp", LocalDateTime.now());
             
-            return Result.fail("数据库连接失败: " + e.getMessage(), result);
+            return Result.fail(500, "数据库连接失败: " + e.getMessage());
         }
     }
 
@@ -79,56 +79,12 @@ public class DatabaseTestController {
                     
                     return Result.success(result);
                 } else {
-                    result.put("status", "error");
-                    result.put("message", "查询结果为空");
-                    return Result.fail("查询失败", result);
+                    return Result.fail(500, "查询结果为空");
                 }
             }
             
         } catch (SQLException e) {
-            result.put("status", "error");
-            result.put("error", e.getMessage());
-            result.put("errorCode", e.getErrorCode());
-            result.put("timestamp", LocalDateTime.now());
-            
-            return Result.fail("数据库查询失败: " + e.getMessage(), result);
-        }
-    }
-
-    /**
-     * 测试用户表查询
-     */
-    @GetMapping("/db-users")
-    public Result<Map<String, Object>> testUserTable() {
-        Map<String, Object> result = new HashMap<>();
-        
-        try (Connection connection = dataSource.getConnection()) {
-            // 查询用户表
-            String sql = "SELECT COUNT(*) as user_count FROM user_table";
-            
-            try (PreparedStatement statement = connection.prepareStatement(sql);
-                 ResultSet resultSet = statement.executeQuery()) {
-                
-                if (resultSet.next()) {
-                    result.put("status", "success");
-                    result.put("userCount", resultSet.getInt("user_count"));
-                    result.put("timestamp", LocalDateTime.now());
-                    
-                    return Result.success(result);
-                } else {
-                    result.put("status", "error");
-                    result.put("message", "用户表查询结果为空");
-                    return Result.fail("查询失败", result);
-                }
-            }
-            
-        } catch (SQLException e) {
-            result.put("status", "error");
-            result.put("error", e.getMessage());
-            result.put("errorCode", e.getErrorCode());
-            result.put("timestamp", LocalDateTime.now());
-            
-            return Result.fail("用户表查询失败: " + e.getMessage(), result);
+            return Result.fail(500, "数据库查询失败: " + e.getMessage());
         }
     }
 
@@ -155,12 +111,7 @@ public class DatabaseTestController {
             return Result.success(result);
             
         } catch (SQLException e) {
-            result.put("status", "error");
-            result.put("error", e.getMessage());
-            result.put("errorCode", e.getErrorCode());
-            result.put("timestamp", LocalDateTime.now());
-            
-            return Result.fail("获取数据库信息失败: " + e.getMessage(), result);
+            return Result.fail(500, "获取数据库信息失败: " + e.getMessage());
         }
     }
 }
