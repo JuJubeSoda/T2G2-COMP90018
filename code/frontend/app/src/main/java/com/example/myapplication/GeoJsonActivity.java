@@ -4,6 +4,9 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -133,11 +136,52 @@ public class GeoJsonActivity extends MapsActivity {
         applyStylesToMarkers(geoJsonLayer);
         geoJsonLayer.addLayerToMap();
 
-        // Demostrate receiving features via GeoJsonLayer clicks.
+        // Handle feature clicks and show bottom sheet
         geoJsonLayer.setOnFeatureClickListener(new GeoJsonLayer.OnFeatureClickListener() {
             @Override
             public void onFeatureClick(Feature feature) {
-                Toast.makeText(GeoJsonActivity.this, "Feature clicked: " + feature.getProperty("title"), Toast.LENGTH_SHORT).show();
+                Log.d(mLogTag, "GeoJSON feature clicked!");
+                
+                // Extract earthquake information from the feature
+                String magnitude = feature.getProperty("mag");
+                String location = feature.getProperty("place");
+                String time = feature.getProperty("time");
+                String title = feature.getProperty("title");
+                
+                // Get coordinates from the geometry
+                double latitude = 0.0;
+                double longitude = 0.0;
+                
+                if (feature.getGeometry() != null && feature.getGeometry().getGeometryType().equals("Point")) {
+                    com.google.maps.android.data.geojson.GeoJsonPoint point = 
+                        (com.google.maps.android.data.geojson.GeoJsonPoint) feature.getGeometry();
+                    latitude = point.getCoordinates().latitude;
+                    longitude = point.getCoordinates().longitude;
+                }
+                
+                // Format the time if available
+                String formattedTime = "Unknown";
+                if (time != null) {
+                    try {
+                        long timestamp = Long.parseLong(time);
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        formattedTime = sdf.format(new Date(timestamp));
+                    } catch (NumberFormatException e) {
+                        formattedTime = time; // Use original time if parsing fails
+                    }
+                }
+                
+                // Show bottom sheet with earthquake information
+                Log.d(mLogTag, "Attempting to show bottom sheet...");
+                showEarthquakeBottomSheet(
+                    magnitude != null ? magnitude : "Unknown",
+                    location != null ? location : "Unknown location",
+                    formattedTime,
+                    latitude,
+                    longitude
+                );
+                
+                Log.d(mLogTag, "Earthquake clicked - Magnitude: " + magnitude + ", Location: " + location);
             }
         });
     }

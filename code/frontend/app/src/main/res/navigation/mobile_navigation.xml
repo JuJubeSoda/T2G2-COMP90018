@@ -156,13 +156,13 @@
 
     <!--
         Plant Map Destination: Represents the screen that displays a map, likely for showing plant locations.
-        This destination is defined as an <activity>, meaning it will launch GeoJsonActivity.
+        This destination is defined as a <fragment>, meaning it will be displayed within MainActivity.
     -->
-    <activity
+    <fragment
         android:id="@+id/navigation_plant_map"
-        android:name="com.example.myapplication.GeoJsonActivity"
+        android:name="com.example.myapplication.ui.myplants.PlantMapFragment"
         android:label="Plant Map"
-        tools:layout="@layout/activity_geojson" /> <!-- Specifies the layout for GeoJsonActivity for design preview. -->
+        tools:layout="@layout/fragment_plant_map" /> <!-- Specifies the layout for PlantMapFragment for design preview. -->
 
     <!--
         Plant Wiki Destination (PlantWikiFragment): Represents a screen for displaying informational

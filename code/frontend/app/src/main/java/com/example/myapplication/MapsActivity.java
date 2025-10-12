@@ -12,7 +12,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -93,6 +95,16 @@ public abstract class MapsActivity extends AppCompatActivity implements OnMapRea
     // Flag to indicate if this is a restore operation
     private boolean mIsRestore = false;
 
+    // Bottom sheet UI components
+    private LinearLayout bottomSheetContainer;
+    private TextView tvEarthquakeTitle;
+    private TextView tvMagnitude;
+    private TextView tvLocation;
+    private TextView tvTime;
+    private TextView tvCoordinates;
+    private Button btnClose;
+    private Button btnMoreInfo;
+
     // Keys for storing activity state.
     // [START maps_current_place_state_keys]
     private static final String KEY_CAMERA_POSITION = "camera_position";
@@ -141,6 +153,9 @@ public abstract class MapsActivity extends AppCompatActivity implements OnMapRea
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        // Initialize bottom sheet components
+        initializeBottomSheet();
     }
 
     /**
@@ -158,32 +173,6 @@ public abstract class MapsActivity extends AppCompatActivity implements OnMapRea
     // [END maps_current_place_on_save_instance_state]
 
     /**
-     * Sets up the options menu.
-     * @param menu The options menu.
-     * @return Boolean.
-     */
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.current_place_menu, menu);
-        return true;
-    }
-
-    /**
-     * Handles a click on the menu option to get a place.
-     * @param item The menu item to handle.
-     * @return Boolean.
-     */
-    // [START maps_current_place_on_options_item_selected]
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.option_get_place) {
-            showCurrentPlace();
-        }
-        return true;
-    }
-    // [END maps_current_place_on_options_item_selected]
-
-    /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
      */
@@ -196,36 +185,8 @@ public abstract class MapsActivity extends AppCompatActivity implements OnMapRea
         customizeMapStyle();
 
         // [START_EXCLUDE]
-        // [START map_current_place_set_info_window_adapter]
-        // Use a custom info window adapter to handle multiple lines of text in the
-        // info window contents.
-        this.mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
-
-            @Override
-            // Return null here, so that popup window uses default format
-            // getInfoContents() is called next.
-            // This info Window is for pop-up windows to show contents.
-            public View getInfoWindow(Marker arg0) {
-                return null;
-            }
-
-            @Override
-            // This method is responsible for rendering the contents of the Info Window.
-            // It is the info of marker
-            public View getInfoContents(Marker marker) {
-                // Inflate the layouts for the info window, title and snippet.
-                View infoWindow = getLayoutInflater().inflate(R.layout.custom_info_contents,
-                        (FrameLayout) findViewById(R.id.map), false);
-
-                TextView title = infoWindow.findViewById(R.id.title);
-                title.setText(marker.getTitle());
-
-                TextView snippet = infoWindow.findViewById(R.id.snippet);
-                snippet.setText(marker.getSnippet());
-
-                return infoWindow;
-            }
-        });
+        // InfoWindowAdapter removed to allow GeoJSON feature click events to work properly
+        // The bottom sheet will handle displaying earthquake information instead of info windows
         // [END map_current_place_set_info_window_adapter]
 
         // Prompt the user for permission.
@@ -334,6 +295,35 @@ public abstract class MapsActivity extends AppCompatActivity implements OnMapRea
     }
     // [END maps_current_place_on_request_permissions_result]
 
+    
+    /**
+     * Menu options
+     */
+    /**
+     * Sets up the options menu.
+     * @param menu The options menu.
+     * @return Boolean.
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.current_place_menu, menu);
+        return true;
+    }
+
+    /**
+     * Handles a click on the menu option to get a place.
+     * @param item The menu item to handle.
+     * @return Boolean.
+     */
+    // [START maps_current_place_on_options_item_selected]
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.option_get_place) {
+            showCurrentPlace();
+        }
+        return true;
+    }
+    // [END maps_current_place_on_options_item_selected]
     /**
      * Prompts the user to select the current place from a list of likely places, and shows the
      * current place on the map - provided the user has granted location permission.
@@ -493,5 +483,108 @@ public abstract class MapsActivity extends AppCompatActivity implements OnMapRea
         }
     }
     // [END maps_current_place_update_location_ui]
+
+    /**
+     * Initialize bottom sheet components and set up click listeners
+     */
+    private void initializeBottomSheet() {
+        bottomSheetContainer = findViewById(R.id.bottom_sheet_container);
+        tvEarthquakeTitle = findViewById(R.id.tv_earthquake_title);
+        tvMagnitude = findViewById(R.id.tv_magnitude);
+        tvLocation = findViewById(R.id.tv_location);
+        tvTime = findViewById(R.id.tv_time);
+        tvCoordinates = findViewById(R.id.tv_coordinates);
+        btnClose = findViewById(R.id.btn_close);
+        btnMoreInfo = findViewById(R.id.btn_more_info);
+
+        if (btnClose != null) {
+            btnClose.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    hideBottomSheet();
+                }
+            });
+        }
+
+        if (btnMoreInfo != null) {
+            btnMoreInfo.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Handle more info button click
+                    Toast.makeText(MapsActivity.this, "More info functionality", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
+
+    /**
+     * Show bottom sheet with earthquake information
+     * @param magnitude Earthquake magnitude
+     * @param location Earthquake location/place
+     * @param time Earthquake time
+     * @param latitude Latitude coordinate
+     * @param longitude Longitude coordinate
+     */
+    public void showEarthquakeBottomSheet(String magnitude, String location, String time, double latitude, double longitude) {
+        Log.d(TAG, "showEarthquakeBottomSheet called with: " + magnitude + ", " + location);
+        
+        if (bottomSheetContainer != null) {
+            Log.d(TAG, "Bottom sheet container found, updating content...");
+            
+            // Update the content
+            if (tvMagnitude != null) {
+                tvMagnitude.setText(magnitude);
+                Log.d(TAG, "Magnitude set to: " + magnitude);
+            }
+            if (tvLocation != null) {
+                tvLocation.setText(location);
+                Log.d(TAG, "Location set to: " + location);
+            }
+            if (tvTime != null) {
+                tvTime.setText(time);
+                Log.d(TAG, "Time set to: " + time);
+            }
+            if (tvCoordinates != null) {
+                tvCoordinates.setText(String.format("%.4f°N, %.4f°W", latitude, longitude));
+                Log.d(TAG, "Coordinates set to: " + String.format("%.4f°N, %.4f°W", latitude, longitude));
+            }
+
+            // Show the bottom sheet with animation
+            Log.d(TAG, "Showing bottom sheet with animation...");
+            bottomSheetContainer.setVisibility(View.VISIBLE);
+            bottomSheetContainer.animate()
+                    .translationY(0)
+                    .setDuration(300)
+                    .start();
+        } else {
+            Log.e(TAG, "Bottom sheet container is null!");
+        }
+    }
+
+    /**
+     * Hide bottom sheet with animation
+     */
+    public void hideBottomSheet() {
+        if (bottomSheetContainer != null && bottomSheetContainer.getVisibility() == View.VISIBLE) {
+            bottomSheetContainer.animate()
+                    .translationY(bottomSheetContainer.getHeight())
+                    .setDuration(300)
+                    .withEndAction(new Runnable() {
+                        @Override
+                        public void run() {
+                            bottomSheetContainer.setVisibility(View.GONE);
+                        }
+                    })
+                    .start();
+        }
+    }
+
+    /**
+     * Check if bottom sheet is currently visible
+     * @return true if bottom sheet is visible, false otherwise
+     */
+    public boolean isBottomSheetVisible() {
+        return bottomSheetContainer != null && bottomSheetContainer.getVisibility() == View.VISIBLE;
+    }
 
 }
