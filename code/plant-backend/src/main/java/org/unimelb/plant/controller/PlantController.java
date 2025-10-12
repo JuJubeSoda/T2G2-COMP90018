@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import jakarta.annotation.Resource;
 import org.unimelb.common.context.UserContext;
 import org.unimelb.common.vo.Result;
+import org.unimelb.garden.entity.Garden;
 import org.unimelb.plant.entity.Plant;
 import org.unimelb.plant.service.PlantService;
 
@@ -29,6 +30,23 @@ public class PlantController {
         List<Plant> list= plantService.listPlantsByUser();
 
         return Result.success(list);
+    }
+
+
+    @Operation(summary = "Get plants by id")
+    @GetMapping("/{id}")
+    public Result<Plant> getPlant(@PathVariable Long id) {
+        Optional<Plant> plant = plantService.getOptById(id);
+        return plant.map(Result::success).orElseGet(() -> Result.fail(500, "plant not found"));
+    }
+
+    @Operation(summary = "Get nearby plants")
+    @GetMapping("/nearby")
+    public Result<List<Plant>> getNearbyPlants(
+            @RequestParam("latitude") Double latitude,
+            @RequestParam("longitude") Double longitude,
+            @RequestParam(name = "radius", defaultValue = "1000") int radius) {
+        return Result.success(plantService.getNearByPlants(latitude, longitude, radius));
     }
 
     /**
