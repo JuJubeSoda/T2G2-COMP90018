@@ -9,7 +9,7 @@ import com.google.gson.annotations.SerializedName;
 public class PlantDto {
 
     @SerializedName("plantId")
-    private int plantId;
+    private Long plantId;
 
     @SerializedName("name")
     private String name;
@@ -24,7 +24,7 @@ public class PlantDto {
     private String scientificName;
 
     @SerializedName("gardenId")
-    private int gardenId;
+    private Long gardenId;
 
     /**
      * Converts this Data Transfer Object (DTO) to a domain model object (Plant).
@@ -34,11 +34,11 @@ public class PlantDto {
      */
     public Plant toPlant() {
         return new Plant(
-            String.valueOf(this.plantId),
+            this.plantId != null ? String.valueOf(this.plantId) : "",
             this.scientificName,
             this.name,
             this.description, // DTO's description maps to Plant's introduction
-            String.valueOf(this.gardenId), // DTO's gardenId maps to Plant's location
+            this.gardenId != null ? String.valueOf(this.gardenId) : "", // DTO's gardenId maps to Plant's location
             "", // searchTag - not provided by backend, set to empty
             null, // discoveredBy - not provided, set to null
             0L,   // discoveredOn - not provided, set to 0

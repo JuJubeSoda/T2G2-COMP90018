@@ -1,14 +1,8 @@
 package com.example.myapplication.ui.myplants;
 
-import android.Manifest;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,54 +14,30 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.myapplication.R;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import com.example.myapplication.model.Garden;
 import com.example.myapplication.model.Plant;
-import com.example.myapplication.network.ApiClient;
-import com.example.myapplication.network.ApiResponse;
-import com.example.myapplication.network.ApiService;
-import com.example.myapplication.utils.GardenMapManager;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import com.example.myapplication.map.PlantGardenMapManager;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
 
     private static final String TAG = "PlantMapFragment";
     private GoogleMap mMap;
-    private GardenMapManager gardenMapManager;
+    private PlantGardenMapManager plantGardenMapManager;
     
     
-    // Location-related fields
-    private FusedLocationProviderClient fusedLocationProviderClient;
-    private boolean locationPermissionGranted = false;
-    private Location lastKnownLocation;
-    
-    // Default location and zoom
-    private final LatLng defaultLocation = new LatLng(-33.8523341, 151.2106085);
-    private static final int DEFAULT_ZOOM = 15;
-    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     
     // Bottom sheet UI components
     private LinearLayout bottomSheetContainer;
@@ -92,20 +62,9 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     // Current plant for like functionality
     private Plant currentPlant = null;
     
-    // Garden API related fields
+    // UI related fields
     private FloatingActionButton fabPlaces;
-    private ApiService apiService;
     
-    // Data type toggle
-    private boolean isShowingPlants = true; // true = plants, false = gardens
-    
-    // Used for selecting nearby gardens
-    private static final int M_MAX_ENTRIES = 5; // Default max results
-    private static final int DEFAULT_SEARCH_RADIUS = 1000; // meters
-    private Garden[] nearbyGardens;
-    private String[] gardenNames;
-    private String[] gardenDescriptions;
-    private LatLng[] gardenLatLngs;
 
     @Nullable
     @Override
@@ -117,11 +76,6 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Construct a FusedLocationProviderClient
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity());
-        
-        // Initialize Garden API
-        initializeGardenAPI();
 
         // Initialize bottom sheet components
         initializeBottomSheet(view);
@@ -144,29 +98,54 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
         
-        // Initialize Garden Map Manager
-        gardenMapManager = new GardenMapManager(requireContext(), mMap);
-        gardenMapManager.setOnGardenClickListener(new GardenMapManager.OnGardenClickListener() {
-            @Override
-            public void onGardenClick(Garden garden) {
-                showGardenBottomSheet(garden);
-            }
-        });
-        gardenMapManager.setOnPlantClickListener(new GardenMapManager.OnPlantClickListener() {
+        // Initialize Plant Garden Map Manager
+        plantGardenMapManager = new PlantGardenMapManager(requireContext(), mMap);
+        plantGardenMapManager.setOnPlantGardenMapInteractionListener(new PlantGardenMapManager.OnPlantGardenMapInteractionListener() {
             @Override
             public void onPlantClick(Plant plant) {
                 showPlantBottomSheet(plant);
             }
+            
+            @Override
+            public void onGardenClick(Garden garden) {
+                showGardenBottomSheet(garden);
+            }
+            
+            @Override
+            public void onPlantsFound(List<Plant> plants) {
+                // 植物数据已由MapDisplayManager自动显示在地图上
+            }
+            
+            @Override
+            public void onGardensFound(List<Garden> gardens) {
+                // 花园数据已由MapDisplayManager自动显示在地图上
+            }
+            
+            @Override
+            public void onSearchError(String message) {
+                Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+            }
+            
+            @Override
+            public void onDataTypeChanged(boolean isShowingPlants) {
+                String message = isShowingPlants ? "Switched to Plants view" : "Switched to Gardens view";
+                Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+            }
+            
+            @Override
+            public void onPlantLiked(boolean liked) {
+                String message = liked ? "Plant liked! ❤️" : "Plant unliked";
+                Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+            }
+            
+            @Override
+            public void onPlantLikeError(String message) {
+                Toast.makeText(getContext(), "Failed to like plant: " + message, Toast.LENGTH_SHORT).show();
+            }
         });
         
-        // Request location permission
-        getLocationPermission();
-        
-        // Update location UI
-        updateLocationUI();
-        
-        // Get device location
-        getDeviceLocation();
+        // Initialize map with location services
+        plantGardenMapManager.initializeMap();
     }
 
     
@@ -224,12 +203,6 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
         }
     }
 
-    /**
-     * Initialize API Service
-     */
-    private void initializeGardenAPI() {
-        apiService = ApiClient.create(requireContext());
-    }
 
     /**
      * Initialize floating action button for places
@@ -258,7 +231,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
                 @Override
                 public void onClick(View v) {
                     // Refresh current data type
-                    if (locationPermissionGranted && lastKnownLocation != null) {
+                    if (plantGardenMapManager != null && plantGardenMapManager.hasLocationPermission()) {
                         showCurrentPlace();
                     } else {
                         Toast.makeText(getContext(), "Location permission required to refresh data", Toast.LENGTH_SHORT).show();
@@ -285,8 +258,8 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
      * Update the data type button text based on current state
      */
     private void updateDataTypeButtonText() {
-        if (btnToggleDataType != null) {
-            if (isShowingPlants) {
+        if (btnToggleDataType != null && plantGardenMapManager != null) {
+            if (plantGardenMapManager.isShowingPlants()) {
                 btnToggleDataType.setText("🌱 Plants");
                 btnToggleDataType.setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.holo_orange_light));
             } else {
@@ -300,16 +273,9 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
      * Toggle between plants and gardens data type
      */
     private void toggleDataType() {
-        isShowingPlants = !isShowingPlants;
-        
-        // Clear current display
-        if (gardenMapManager != null) {
-            gardenMapManager.clearCurrentDisplay();
+        if (plantGardenMapManager != null) {
+            plantGardenMapManager.toggleDataType();
         }
-        
-        // Show toast message
-        String message = isShowingPlants ? "Switched to Plants view" : "Switched to Gardens view";
-        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
     }
 
 
@@ -374,337 +340,40 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
         }
     }
 
-    /**
-     * Prompts the user for permission to use the device location.
-     */
-    private void getLocationPermission() {
-        if (ContextCompat.checkSelfPermission(requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            locationPermissionGranted = true;
-        } else {
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-        }
-    }
 
     /**
      * Handles the result of the request for location permissions.
      */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        locationPermissionGranted = false;
-        if (requestCode == PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                locationPermissionGranted = true;
-            }
-        } else {
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (plantGardenMapManager != null) {
+            plantGardenMapManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
-        updateLocationUI();
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
-    /**
-     * Gets the current location of the device, and positions the map's camera.
-     */
-    private void getDeviceLocation() {
-        try {
-            if (locationPermissionGranted) {
-                Task<Location> locationResult = fusedLocationProviderClient.getLastLocation();
-                locationResult.addOnCompleteListener(requireActivity(), new OnCompleteListener<Location>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Location> task) {
-                        if (task.isSuccessful()) {
-                            // Set the map's camera position to the current location of the device.
-                            lastKnownLocation = task.getResult();
-                            if (lastKnownLocation != null) {
-                                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                                        new LatLng(lastKnownLocation.getLatitude(),
-                                                lastKnownLocation.getLongitude()), DEFAULT_ZOOM));
-                            }
-                        } else {
-                            Log.d(TAG, "Current location is null. Using defaults.");
-                            Log.e(TAG, "Exception: %s", task.getException());
-                            mMap.moveCamera(CameraUpdateFactory
-                                    .newLatLngZoom(defaultLocation, DEFAULT_ZOOM));
-                            mMap.getUiSettings().setMyLocationButtonEnabled(false);
-                        }
-                    }
-                });
-            }
-        } catch (SecurityException e) {
-            Log.e("Exception: %s", e.getMessage(), e);
-        }
-    }
 
-    /**
-     * Updates the map's UI settings based on whether the user has granted location permission.
-     */
-    private void updateLocationUI() {
-        if (mMap == null) {
-            return;
-        }
-        try {
-            if (locationPermissionGranted) {
-                mMap.setMyLocationEnabled(true);
-                mMap.getUiSettings().setMyLocationButtonEnabled(true);
-                mMap.getUiSettings().setZoomGesturesEnabled(true);
-                mMap.getUiSettings().setAllGesturesEnabled(true);
-                
-                // Enable zoom controls
-                mMap.getUiSettings().setZoomControlsEnabled(true);
-                
-                // Disable Google Maps built-in navigation features
-                mMap.getUiSettings().setMapToolbarEnabled(false);  // Hide navigation toolbar
-                
-                // Set map padding for location button
-                mMap.setPadding(0, 0, 20, 100);
-            } else {
-                mMap.setMyLocationEnabled(false);
-                mMap.getUiSettings().setMyLocationButtonEnabled(false);
-                mMap.getUiSettings().setZoomControlsEnabled(true);
-                mMap.getUiSettings().setZoomGesturesEnabled(true);
-                
-                // Disable Google Maps built-in navigation features
-                mMap.getUiSettings().setMapToolbarEnabled(false);  // Hide navigation toolbar
-                
-                // Move to default location if no permission
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, DEFAULT_ZOOM));
-                
-                // Reset padding
-                mMap.setPadding(0, 0, 0, 0);
-            }
-        } catch (SecurityException e) {
-            Log.e("Exception: %s", e.getMessage(), e);
-        }
-    }
     
 
     /**
-     * Show nearby gardens using backend API
+     * Show nearby data using unified map manager
      */
     private void showCurrentPlace() {
-        if (mMap == null) {
+        if (plantGardenMapManager == null) {
             return;
         }
 
-        if (locationPermissionGranted && lastKnownLocation != null) {
-            // Show loading message based on current data type
-            String loadingMessage = isShowingPlants ? "Searching for nearby plants..." : "Searching for nearby gardens...";
-            Toast.makeText(getContext(), loadingMessage, Toast.LENGTH_SHORT).show();
-            
-            if (isShowingPlants) {
-                // Call backend API to get nearby plants
-                Call<ApiResponse<List<Plant>>> call = apiService.getNearbyPlants(
-                    lastKnownLocation.getLatitude(),
-                    lastKnownLocation.getLongitude(),
-                    DEFAULT_SEARCH_RADIUS
-                );
-                call.enqueue(new Callback<ApiResponse<List<Plant>>>() {
-                    @Override
-                    public void onResponse(Call<ApiResponse<List<Plant>>> call, Response<ApiResponse<List<Plant>>> response) {
-                        handlePlantResponse(response);
-                    }
-
-                    @Override
-                    public void onFailure(Call<ApiResponse<List<Plant>>> call, Throwable t) {
-                        Log.e(TAG, "Network call failed", t);
-                        Toast.makeText(getContext(), "Unable to connect to server", Toast.LENGTH_SHORT).show();
-                    }
-                });
-            } else {
-                // Call backend API to get nearby gardens
-                Call<ApiResponse<List<Garden>>> call = apiService.getNearbyGardens(
-                    lastKnownLocation.getLatitude(),
-                    lastKnownLocation.getLongitude(),
-                    DEFAULT_SEARCH_RADIUS
-                );
-                call.enqueue(new Callback<ApiResponse<List<Garden>>>() {
-                    @Override
-                    public void onResponse(Call<ApiResponse<List<Garden>>> call, Response<ApiResponse<List<Garden>>> response) {
-                        handleGardenResponse(response);
-                    }
-
-                    @Override
-                    public void onFailure(Call<ApiResponse<List<Garden>>> call, Throwable t) {
-                        Log.e(TAG, "Network call failed", t);
-                        Toast.makeText(getContext(), "Unable to connect to server", Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }
-        } else {
-            Toast.makeText(getContext(), "Location permission required to search nearby data", Toast.LENGTH_SHORT).show();
-        }
-    }
-    
-    /**
-     * Handle plant API response
-     */
-    private void handlePlantResponse(Response<ApiResponse<List<Plant>>> response) {
-        if (response.isSuccessful() && response.body() != null) {
-            ApiResponse<List<Plant>> apiResponse = response.body();
-            
-            if (apiResponse.isSuccessful() && apiResponse.getData() != null) {
-                List<Plant> plants = apiResponse.getData();
-                
-                if (plants.isEmpty()) {
-                    Toast.makeText(getContext(), "No plants found nearby", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                // Display plants on map
-                gardenMapManager.displayPlantsAsGeoJson(plants);
-            } else {
-                Log.e(TAG, "API call failed: " + apiResponse.getMessage());
-                Toast.makeText(getContext(), "Failed to load nearby plants", Toast.LENGTH_SHORT).show();
-            }
-        } else {
-            Log.e(TAG, "HTTP request failed: " + response.code() + " " + response.message());
-            Toast.makeText(getContext(), "Network error occurred", Toast.LENGTH_SHORT).show();
-        }
-    }
-    
-    /**
-     * Handle garden API response
-     */
-    private void handleGardenResponse(Response<ApiResponse<List<Garden>>> response) {
-        if (response.isSuccessful() && response.body() != null) {
-            ApiResponse<List<Garden>> apiResponse = response.body();
-            
-            if (apiResponse.isSuccessful() && apiResponse.getData() != null) {
-                List<Garden> gardens = apiResponse.getData();
-                
-                if (gardens.isEmpty()) {
-                    Toast.makeText(getContext(), "No gardens found nearby", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                // Display gardens on map
-                gardenMapManager.displayGardensAsGeoJson(gardens);
-            } else {
-                Log.e(TAG, "API call failed: " + apiResponse.getMessage());
-                Toast.makeText(getContext(), "Failed to load nearby gardens", Toast.LENGTH_SHORT).show();
-            }
-        } else {
-            Log.e(TAG, "HTTP request failed: " + response.code() + " " + response.message());
-            Toast.makeText(getContext(), "Network error occurred", Toast.LENGTH_SHORT).show();
-        }
-    }
-    
-    /**
-     * Legacy method for backward compatibility - now redirects to new logic
-     */
-    private void showCurrentPlaceLegacy() {
-        if (locationPermissionGranted && lastKnownLocation != null) {
-            // Show loading message
-            Toast.makeText(getContext(), "Searching for nearby gardens...", Toast.LENGTH_SHORT).show();
-            
-            // Call backend API to get nearby gardens
-            Call<ApiResponse<List<Garden>>> call = apiService.getNearbyGardens(
-                lastKnownLocation.getLatitude(),
-                lastKnownLocation.getLongitude(),
-                DEFAULT_SEARCH_RADIUS
-            );
-            
-            call.enqueue(new Callback<ApiResponse<List<Garden>>>() {
-                @Override
-                public void onResponse(Call<ApiResponse<List<Garden>>> call, Response<ApiResponse<List<Garden>>> response) {
-                    if (response.isSuccessful() && response.body() != null) {
-                        ApiResponse<List<Garden>> apiResponse = response.body();
-                        
-                        if (apiResponse.isSuccessful() && apiResponse.getData() != null) {
-                            List<Garden> gardens = apiResponse.getData();
-                            
-                            if (gardens.isEmpty()) {
-                                Toast.makeText(getContext(), "No gardens found nearby", Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-
-                            // 方法1：直接在地图上显示花园（推荐）
-                            // 使用GeoJSON图层显示，支持点击事件
-                            gardenMapManager.displayGardensAsGeoJson(gardens);
-                            
-                            // 方法2：使用标记显示（备选方案）
-                            // gardenMapManager.displayGardensAsMarkers(gardens);
-                            
-                            // 方法3：显示对话框让用户选择（保留原有功能）
-                            // 如果需要保留对话框选择功能，可以取消注释下面的代码
-                            // prepareGardenDialogData(gardens);
-                            // openGardensDialog();
-                        } else {
-                            Log.e(TAG, "API call failed: " + apiResponse.getMessage());
-                            Toast.makeText(getContext(), "Failed to load nearby gardens", Toast.LENGTH_SHORT).show();
-                        }
-                    } else {
-                        Log.e(TAG, "HTTP request failed: " + response.code() + " " + response.message());
-                        Toast.makeText(getContext(), "Network error occurred", Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<ApiResponse<List<Garden>>> call, Throwable t) {
-                    Log.e(TAG, "Network call failed", t);
-                    Toast.makeText(getContext(), "Unable to connect to server", Toast.LENGTH_SHORT).show();
-                }
-            });
-        } else {
-            Toast.makeText(getContext(), "Location permission required to search nearby gardens", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    /**
-     * Open gardens dialog to let user select a garden
-     */
-    private void openGardensDialog() {
-        // Create a dialog to show the nearby gardens
-        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(requireContext());
-        builder.setTitle("Select Nearby Gardens");
-
-        if (gardenNames != null && gardenNames.length > 0) {
-            builder.setItems(gardenNames, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    // Add marker for selected garden
-                    if (gardenLatLngs[which] != null) {
-                        mMap.addMarker(new MarkerOptions()
-                                .position(gardenLatLngs[which])
-                                .title(gardenNames[which])
-                                .snippet(gardenDescriptions[which]));
-                        
-                        // Move camera to the selected garden
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(gardenLatLngs[which], 15));
-                        
-                        Toast.makeText(getContext(), "Added garden marker: " + gardenNames[which], Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
-        } else {
-            builder.setMessage("No gardens found nearby");
-        }
-
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
-    }
-    
-    /**
-     * 准备花园对话框数据（保留原有对话框功能）
-     */
-    private void prepareGardenDialogData(List<Garden> gardens) {
-        int count = Math.min(gardens.size(), M_MAX_ENTRIES);
+        // Show loading message based on current data type
+        String loadingMessage = plantGardenMapManager.isShowingPlants() ? "Searching for nearby plants..." : "Searching for nearby gardens...";
+        Toast.makeText(getContext(), loadingMessage, Toast.LENGTH_SHORT).show();
         
-        nearbyGardens = new Garden[count];
-        gardenNames = new String[count];
-        gardenDescriptions = new String[count];
-        gardenLatLngs = new LatLng[count];
-
-        for (int i = 0; i < count; i++) {
-            Garden garden = gardens.get(i);
-            nearbyGardens[i] = garden;
-            gardenNames[i] = garden.getName() != null ? garden.getName() : "Unnamed Garden";
-            gardenDescriptions[i] = garden.getDescription() != null ? garden.getDescription() : "No description available";
-            gardenLatLngs[i] = new LatLng(garden.getLatitude(), garden.getLongitude());
-        }
+        // 使用统一的地图管理器搜索附近数据
+        plantGardenMapManager.searchNearbyData();
     }
+    
+    
+    
+
     
     /**
      * 显示植物信息底部弹窗
@@ -845,72 +514,28 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
      * Like a plant
      */
     private void likePlant(Long plantId) {
-        if (apiService == null) {
-            Toast.makeText(getContext(), "API service not available", Toast.LENGTH_SHORT).show();
-            return;
+        if (plantGardenMapManager != null) {
+            plantGardenMapManager.likePlant(plantId);
+            // Update UI immediately for better UX
+            currentPlant.setFavourite(true);
+            updateLikeButton();
+        } else {
+            Toast.makeText(getContext(), "Map manager not available", Toast.LENGTH_SHORT).show();
         }
-        
-        Call<ApiResponse<String>> call = apiService.likePlant(plantId);
-        call.enqueue(new Callback<ApiResponse<String>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<String> apiResponse = response.body();
-                    if (apiResponse.getCode() == 200) {
-                        // Update UI
-                        currentPlant.setFavourite(true);
-                        updateLikeButton();
-                        Toast.makeText(getContext(), "Plant liked! ❤️", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(getContext(), "Failed to like plant: " + apiResponse.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Toast.makeText(getContext(), "Failed to like plant", Toast.LENGTH_SHORT).show();
-                }
-            }
-            
-            @Override
-            public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
-                Log.e(TAG, "Like plant failed", t);
-                Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
     }
     
     /**
      * Unlike a plant
      */
     private void unlikePlant(Long plantId) {
-        if (apiService == null) {
-            Toast.makeText(getContext(), "API service not available", Toast.LENGTH_SHORT).show();
-            return;
+        if (plantGardenMapManager != null) {
+            plantGardenMapManager.unlikePlant(plantId);
+            // Update UI immediately for better UX
+            currentPlant.setFavourite(false);
+            updateLikeButton();
+        } else {
+            Toast.makeText(getContext(), "Map manager not available", Toast.LENGTH_SHORT).show();
         }
-        
-        Call<ApiResponse<String>> call = apiService.unlikePlant(plantId);
-        call.enqueue(new Callback<ApiResponse<String>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<String> apiResponse = response.body();
-                    if (apiResponse.getCode() == 200) {
-                        // Update UI
-                        currentPlant.setFavourite(false);
-                        updateLikeButton();
-                        Toast.makeText(getContext(), "Plant unliked", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(getContext(), "Failed to unlike plant: " + apiResponse.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Toast.makeText(getContext(), "Failed to unlike plant", Toast.LENGTH_SHORT).show();
-                }
-            }
-            
-            @Override
-            public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
-                Log.e(TAG, "Unlike plant failed", t);
-                Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
     }
     
     /**
@@ -934,10 +559,10 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     public void onDestroyView() {
         super.onDestroyView();
         
-        // Clean up GardenMapManager
-        if (gardenMapManager != null) {
-            gardenMapManager.destroy();
-            gardenMapManager = null;
+        // Clean up PlantGardenMapManager
+        if (plantGardenMapManager != null) {
+            plantGardenMapManager.destroy();
+            plantGardenMapManager = null;
         }
     }
 }
