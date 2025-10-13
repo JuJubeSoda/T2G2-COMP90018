@@ -11,8 +11,14 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 
 public class ApiClient {
-    //private static final String BASE_URL = "http://192.168.1.210:9999/";
-    private static final String BASE_URL = "http://10.0.2.2:9999/";
+    // Base URL for the backend API - for Android emulator, use 10.0.2.2
+    // For real device, use your computer's IP address (e.g., "http://192.168.1.100:8080/")
+    private static final String BASE_URL = "http://10.0.2.2:8080/";
+    
+    // Network timeouts
+    private static final long CONNECT_TIMEOUT_SECONDS = 30;
+    private static final long READ_TIMEOUT_SECONDS = 30;
+    private static final long WRITE_TIMEOUT_SECONDS = 30;
 
     public static ApiService create(Context context) {
 
@@ -23,8 +29,9 @@ public class ApiClient {
         OkHttpClient client = new OkHttpClient.Builder()
                 .addInterceptor(new AuthInterceptor(context))
                 .addInterceptor(logging)
-                .connectTimeout(15, TimeUnit.SECONDS)
-                .readTimeout(15, TimeUnit.SECONDS)
+                .connectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .readTimeout(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .writeTimeout(WRITE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .build();
 
         Retrofit retrofit = new Retrofit.Builder()

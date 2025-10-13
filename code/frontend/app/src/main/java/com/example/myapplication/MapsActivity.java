@@ -184,7 +184,7 @@ public abstract class MapsActivity extends AppCompatActivity implements OnMapRea
     public void onMapReady(GoogleMap map) {
         this.mMap = map;
 
-        // 添加地图风格定制
+        // Add map style customization
         customizeMapStyle();
 
         // [START_EXCLUDE]
@@ -466,11 +466,11 @@ public abstract class MapsActivity extends AppCompatActivity implements OnMapRea
                 mMap.getUiSettings().setZoomGesturesEnabled(true);
                 mMap.getUiSettings().setAllGesturesEnabled(true);
                 
-                // 启用缩放控制按钮
+                // Enable zoom control buttons
                 mMap.getUiSettings().setZoomControlsEnabled(true);
                 
-                // 设置地图内边距，为"我的位置"按钮留出空间，但保持缩放按钮正常显示
-                // 只设置右边距和底边距，避免影响缩放按钮
+                // Set map padding to make space for "My Location" button while keeping zoom buttons visible
+                // Only set right and bottom margins to avoid affecting zoom buttons
                 mMap.setPadding(0, 0, 20, 100);
 
             } else {
@@ -478,7 +478,7 @@ public abstract class MapsActivity extends AppCompatActivity implements OnMapRea
                 mMap.getUiSettings().setMyLocationButtonEnabled(false);
                 lastKnownLocation = null;
                 
-                // 即使没有位置权限，也启用缩放控制
+                // Enable zoom control even without location permission
                 mMap.getUiSettings().setZoomControlsEnabled(true);
             }
         } catch (SecurityException e)  {

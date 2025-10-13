@@ -2,6 +2,8 @@ package com.example.myapplication.network;
 
 import com.example.myapplication.auth.model.LoginRequest;
 import com.example.myapplication.auth.model.RegisterRequest;
+import com.example.myapplication.model.Garden;
+import com.example.myapplication.model.Plant;
 import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -37,5 +39,38 @@ public interface ApiService {
 
     @GET("api/ai_bot/ask")
     Call<BaseResponse> askQuestion(@Query("q") String question);
+
+    // --- Garden Data Endpoints ---
+
+    /**
+     * Get all gardens
+     * GET /api/garden/all
+     */
+    @GET("api/garden/all")
+    Call<ApiResponse<List<Garden>>> getAllGardens();
+
+    /**
+     * Get nearby gardens based on location and radius
+     * GET /api/garden/nearby?latitude={lat}&longitude={lng}&radius={radius}
+     */
+    @GET("api/garden/nearby")
+    Call<ApiResponse<List<Garden>>> getNearbyGardens(
+        @Query("latitude") double latitude,
+        @Query("longitude") double longitude,
+        @Query("radius") int radius
+    );
+
+    // --- Plant Data Endpoints (Enhanced) ---
+
+    /**
+     * Get nearby plants based on location and radius
+     * GET /api/plants/nearby?latitude={lat}&longitude={lng}&radius={radius}
+     */
+    @GET("api/plants/nearby")
+    Call<ApiResponse<List<Plant>>> getNearbyPlants(
+        @Query("latitude") double latitude,
+        @Query("longitude") double longitude,
+        @Query("radius") int radius
+    );
 
 }

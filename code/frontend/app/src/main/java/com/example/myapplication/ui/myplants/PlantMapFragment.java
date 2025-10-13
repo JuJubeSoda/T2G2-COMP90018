@@ -25,7 +25,6 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.myapplication.R;
-import com.example.myapplication.utils.GeoJsonManager;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -38,13 +37,17 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
-import com.google.android.libraries.places.api.Places;
-import com.google.android.libraries.places.api.model.Place;
-import com.google.android.libraries.places.api.model.PlaceLikelihood;
-import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest;
-import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
-import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import com.example.myapplication.model.Garden;
+import com.example.myapplication.model.Plant;
+import com.example.myapplication.network.ApiClient;
+import com.example.myapplication.network.ApiResponse;
+import com.example.myapplication.network.ApiService;
+import com.example.myapplication.utils.GardenMapManager;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import java.util.Arrays;
 import java.util.List;
@@ -53,13 +56,8 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
 
     private static final String TAG = "PlantMapFragment";
     private GoogleMap mMap;
-    private GeoJsonManager geoJsonManager;
+    private GardenMapManager gardenMapManager;
     
-    // Auto-refresh related fields
-    private Handler refreshHandler;
-    private Runnable refreshRunnable;
-    private static final long REFRESH_INTERVAL = 300000; // 5 minutes in milliseconds
-    private boolean isAutoRefreshEnabled = true;
     
     // Location-related fields
     private FusedLocationProviderClient fusedLocationProviderClient;
@@ -73,9 +71,9 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     
     // Bottom sheet UI components
     private LinearLayout bottomSheetContainer;
-    private TextView tvEarthquakeTitle;
-    private TextView tvMagnitude;
-    private TextView tvLocation;
+    private TextView tvTitle;
+    private TextView tvName;
+    private TextView tvDescription;
     private TextView tvTime;
     private TextView tvCoordinates;
     private Button btnClose;
@@ -84,22 +82,26 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     
     // Refresh control buttons
     private Button btnRefreshData;
-    private Button btnToggleAutoRefresh;
+    private Button btnToggleDataType;
     
-    // Current earthquake coordinates for navigation
-    private double currentEarthquakeLat = 0.0;
-    private double currentEarthquakeLng = 0.0;
+    // Current coordinates for navigation
+    private double currentLat = 0.0;
+    private double currentLng = 0.0;
     
-    // Places API related fields
-    private PlacesClient placesClient;
+    // Garden API related fields
     private FloatingActionButton fabPlaces;
+    private ApiService apiService;
     
-    // Used for selecting the current place
-    private static final int M_MAX_ENTRIES = 5;
-    private String[] likelyPlaceNames;
-    private String[] likelyPlaceAddresses;
-    private List[] likelyPlaceAttributions;
-    private LatLng[] likelyPlaceLatLngs;
+    // Data type toggle
+    private boolean isShowingPlants = true; // true = plants, false = gardens
+    
+    // Used for selecting nearby gardens
+    private static final int M_MAX_ENTRIES = 5; // Default max results
+    private static final int DEFAULT_SEARCH_RADIUS = 1000; // meters
+    private Garden[] nearbyGardens;
+    private String[] gardenNames;
+    private String[] gardenDescriptions;
+    private LatLng[] gardenLatLngs;
 
     @Nullable
     @Override
@@ -114,8 +116,8 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
         // Construct a FusedLocationProviderClient
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity());
         
-        // Initialize Places API
-        initializePlacesAPI();
+        // Initialize Garden API
+        initializeGardenAPI();
 
         // Initialize bottom sheet components
         initializeBottomSheet(view);
@@ -125,9 +127,6 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
         
         // Initialize places button
         initializePlacesButton(view);
-
-        // Initialize refresh handler
-        initializeRefreshHandler();
 
         // Initialize map fragment
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
@@ -141,13 +140,18 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
         
-        // Initialize GeoJSON manager
-        geoJsonManager = new GeoJsonManager(requireContext(), mMap);
-        geoJsonManager.setOnFeatureClickListener(new GeoJsonManager.OnFeatureClickListener() {
+        // Initialize Garden Map Manager
+        gardenMapManager = new GardenMapManager(requireContext(), mMap);
+        gardenMapManager.setOnGardenClickListener(new GardenMapManager.OnGardenClickListener() {
             @Override
-            public void onFeatureClick(String magnitude, String location, String time, 
-                                     double latitude, double longitude) {
-                showEarthquakeBottomSheet(magnitude, location, time, latitude, longitude);
+            public void onGardenClick(Garden garden) {
+                showGardenBottomSheet(garden);
+            }
+        });
+        gardenMapManager.setOnPlantClickListener(new GardenMapManager.OnPlantClickListener() {
+            @Override
+            public void onPlantClick(Plant plant) {
+                showPlantBottomSheet(plant);
             }
         });
         
@@ -159,20 +163,8 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
         
         // Get device location
         getDeviceLocation();
-        
-        // Load GeoJSON data (try remote first, fallback to local)
-        loadGeoJsonData();
-        
-        // Start auto-refresh if enabled
-        startAutoRefresh();
     }
 
-    private void loadGeoJsonData() {
-        // Use GeoJsonManager to load data with caching and fallback
-        String remoteUrl = getString(R.string.geojson_url);
-        int localResourceId = R.raw.earthquakes_with_usa;
-        geoJsonManager.loadGeoJsonData(remoteUrl, localResourceId);
-    }
     
 
     /**
@@ -180,9 +172,9 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
      */
     private void initializeBottomSheet(View view) {
         bottomSheetContainer = view.findViewById(R.id.bottom_sheet_container);
-        tvEarthquakeTitle = view.findViewById(R.id.tv_earthquake_title);
-        tvMagnitude = view.findViewById(R.id.tv_magnitude);
-        tvLocation = view.findViewById(R.id.tv_location);
+        tvTitle = view.findViewById(R.id.tv_earthquake_title);
+        tvName = view.findViewById(R.id.tv_magnitude);
+        tvDescription = view.findViewById(R.id.tv_location);
         tvTime = view.findViewById(R.id.tv_time);
         tvCoordinates = view.findViewById(R.id.tv_coordinates);
         btnClose = view.findViewById(R.id.btn_close);
@@ -212,20 +204,17 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
             btnNavigate.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    openNavigationToEarthquake();
+                    openNavigationToLocation();
                 }
             });
         }
     }
 
     /**
-     * Initialize Places API
+     * Initialize API Service
      */
-    private void initializePlacesAPI() {
-        if (!Places.isInitialized()) {
-            Places.initialize(requireContext(), com.example.myapplication.BuildConfig.PLACES_API_KEY);
-        }
-        placesClient = Places.createClient(requireContext());
+    private void initializeGardenAPI() {
+        apiService = ApiClient.create(requireContext());
     }
 
     /**
@@ -248,90 +237,67 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
      */
     private void initializeRefreshControls(View view) {
         btnRefreshData = view.findViewById(R.id.btn_refresh_data);
-        btnToggleAutoRefresh = view.findViewById(R.id.btn_toggle_auto_refresh);
+        btnToggleDataType = view.findViewById(R.id.btn_toggle_data_type);
         
         if (btnRefreshData != null) {
             btnRefreshData.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    // Clear cache to force fresh data load
-                    if (geoJsonManager != null) {
-                        geoJsonManager.clearCache();
-                        refreshGeoJsonData();
+                    // Refresh current data type
+                    if (locationPermissionGranted && lastKnownLocation != null) {
+                        showCurrentPlace();
+                    } else {
+                        Toast.makeText(getContext(), "Location permission required to refresh data", Toast.LENGTH_SHORT).show();
                     }
                 }
             });
         }
         
-        if (btnToggleAutoRefresh != null) {
-            btnToggleAutoRefresh.setOnClickListener(new View.OnClickListener() {
+        
+        if (btnToggleDataType != null) {
+            btnToggleDataType.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    toggleAutoRefresh();
-                    updateAutoRefreshButtonText();
+                    toggleDataType();
+                    updateDataTypeButtonText();
                 }
             });
-            updateAutoRefreshButtonText();
+            updateDataTypeButtonText();
+        }
+    }
+    
+    
+    /**
+     * Update the data type button text based on current state
+     */
+    private void updateDataTypeButtonText() {
+        if (btnToggleDataType != null) {
+            if (isShowingPlants) {
+                btnToggleDataType.setText("🌱 Plants");
+                btnToggleDataType.setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.holo_orange_light));
+            } else {
+                btnToggleDataType.setText("🌿 Gardens");
+                btnToggleDataType.setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.holo_blue_light));
+            }
         }
     }
     
     /**
-     * Update the auto-refresh button text based on current state
+     * Toggle between plants and gardens data type
      */
-    private void updateAutoRefreshButtonText() {
-        if (btnToggleAutoRefresh != null) {
-            if (isAutoRefreshEnabled) {
-                btnToggleAutoRefresh.setText("Auto: ON");
-                btnToggleAutoRefresh.setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.holo_green_light));
-            } else {
-                btnToggleAutoRefresh.setText("Auto: OFF");
-                btnToggleAutoRefresh.setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.holo_red_light));
-            }
+    private void toggleDataType() {
+        isShowingPlants = !isShowingPlants;
+        
+        // Clear current display
+        if (gardenMapManager != null) {
+            gardenMapManager.clearCurrentDisplay();
         }
+        
+        // Show toast message
+        String message = isShowingPlants ? "Switched to Plants view" : "Switched to Gardens view";
+        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
     }
 
-    /**
-     * Show the earthquake information bottom sheet
-     */
-    private void showEarthquakeBottomSheet(String magnitude, String location, String time, double latitude, double longitude) {
-        Log.d(TAG, "showEarthquakeBottomSheet called with: " + magnitude + ", " + location);
-
-        // Store coordinates for navigation
-        currentEarthquakeLat = latitude;
-        currentEarthquakeLng = longitude;
-
-        if (bottomSheetContainer != null) {
-            Log.d(TAG, "Bottom sheet container found, updating content...");
-
-            // Update the content
-            if (tvMagnitude != null) {
-                tvMagnitude.setText(magnitude);
-                Log.d(TAG, "Magnitude set to: " + magnitude);
-            }
-            if (tvLocation != null) {
-                tvLocation.setText(location);
-                Log.d(TAG, "Location set to: " + location);
-            }
-            if (tvTime != null) {
-                tvTime.setText(time);
-                Log.d(TAG, "Time set to: " + time);
-            }
-            if (tvCoordinates != null) {
-                tvCoordinates.setText(String.format("%.4f°N, %.4f°W", latitude, longitude));
-                Log.d(TAG, "Coordinates set to: " + String.format("%.4f°N, %.4f°W", latitude, longitude));
-            }
-
-            // Show the bottom sheet with animation
-            Log.d(TAG, "Showing bottom sheet with animation...");
-            bottomSheetContainer.setVisibility(View.VISIBLE);
-            bottomSheetContainer.animate()
-                    .translationY(0)
-                    .setDuration(300)
-                    .start();
-        } else {
-            Log.e(TAG, "Bottom sheet container is null!");
-        }
-    }
 
     /**
      * Hide the bottom sheet
@@ -359,18 +325,18 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     }
 
     /**
-     * Open navigation to the current earthquake location
+     * Open navigation to the current location
      */
-    private void openNavigationToEarthquake() {
-        if (currentEarthquakeLat == 0.0 && currentEarthquakeLng == 0.0) {
-            Toast.makeText(getContext(), "No earthquake location available", Toast.LENGTH_SHORT).show();
+    private void openNavigationToLocation() {
+        if (currentLat == 0.0 && currentLng == 0.0) {
+            Toast.makeText(getContext(), "No location available", Toast.LENGTH_SHORT).show();
             return;
         }
 
         try {
             // Create navigation intent
             String navigationUri = String.format("google.navigation:q=%f,%f&mode=driving", 
-                currentEarthquakeLat, currentEarthquakeLng);
+                currentLat, currentLng);
             
             Intent navigationIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(navigationUri));
             navigationIntent.setPackage("com.google.android.apps.maps");
@@ -378,15 +344,15 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
             // Check if Google Maps is available
             if (navigationIntent.resolveActivity(requireActivity().getPackageManager()) != null) {
                 startActivity(navigationIntent);
-                Log.d(TAG, "Opening Google Maps navigation to: " + currentEarthquakeLat + ", " + currentEarthquakeLng);
+                Log.d(TAG, "Opening Google Maps navigation to: " + currentLat + ", " + currentLng);
             } else {
                 // Fallback to web-based navigation
                 String webNavigationUri = String.format("https://www.google.com/maps/dir/?api=1&destination=%f,%f", 
-                    currentEarthquakeLat, currentEarthquakeLng);
+                    currentLat, currentLng);
                 
                 Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(webNavigationUri));
                 startActivity(webIntent);
-                Log.d(TAG, "Opening web-based navigation to: " + currentEarthquakeLat + ", " + currentEarthquakeLng);
+                Log.d(TAG, "Opening web-based navigation to: " + currentLat + ", " + currentLng);
             }
         } catch (Exception e) {
             Log.e(TAG, "Failed to open navigation", e);
@@ -475,7 +441,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
                 mMap.getUiSettings().setZoomControlsEnabled(true);
                 
                 // Disable Google Maps built-in navigation features
-                mMap.getUiSettings().setMapToolbarEnabled(false);  // 隐藏导航工具栏
+                mMap.getUiSettings().setMapToolbarEnabled(false);  // Hide navigation toolbar
                 
                 // Set map padding for location button
                 mMap.setPadding(0, 0, 20, 100);
@@ -486,7 +452,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
                 mMap.getUiSettings().setZoomGesturesEnabled(true);
                 
                 // Disable Google Maps built-in navigation features
-                mMap.getUiSettings().setMapToolbarEnabled(false);  // 隐藏导航工具栏
+                mMap.getUiSettings().setMapToolbarEnabled(false);  // Hide navigation toolbar
                 
                 // Move to default location if no permission
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, DEFAULT_ZOOM));
@@ -499,185 +465,342 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
         }
     }
     
-    /**
-     * Initialize the refresh handler for auto-refresh functionality
-     */
-    private void initializeRefreshHandler() {
-        refreshHandler = new Handler(Looper.getMainLooper());
-        refreshRunnable = new Runnable() {
-            @Override
-            public void run() {
-                if (isAutoRefreshEnabled && mMap != null) {
-                    Log.d(TAG, "Auto-refreshing GeoJSON data...");
-                    refreshGeoJsonData();
-                    // Schedule next refresh
-                    refreshHandler.postDelayed(this, REFRESH_INTERVAL);
-                }
-            }
-        };
-    }
-    
-    /**
-     * Start the auto-refresh mechanism
-     */
-    private void startAutoRefresh() {
-        if (isAutoRefreshEnabled && refreshHandler != null && refreshRunnable != null) {
-            Log.d(TAG, "Starting auto-refresh with interval: " + REFRESH_INTERVAL + "ms");
-            refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL);
-        }
-    }
-    
-    /**
-     * Stop the auto-refresh mechanism
-     */
-    private void stopAutoRefresh() {
-        if (refreshHandler != null && refreshRunnable != null) {
-            refreshHandler.removeCallbacks(refreshRunnable);
-            Log.d(TAG, "Auto-refresh stopped");
-        }
-    }
-    
-    /**
-     * Refresh GeoJSON data from remote source
-     */
-    public void refreshGeoJsonData() {
-        Log.d(TAG, "Manually refreshing GeoJSON data...");
-        if (geoJsonManager != null) {
-            String remoteUrl = getString(R.string.geojson_url);
-            int localResourceId = R.raw.earthquakes_with_usa;
-            geoJsonManager.loadFromRemoteUrl(remoteUrl, localResourceId);
-        }
-    }
-    
-    /**
-     * Toggle auto-refresh on/off
-     */
-    public void toggleAutoRefresh() {
-        isAutoRefreshEnabled = !isAutoRefreshEnabled;
-        if (isAutoRefreshEnabled) {
-            startAutoRefresh();
-            Toast.makeText(getContext(), "Auto-refresh enabled", Toast.LENGTH_SHORT).show();
-        } else {
-            stopAutoRefresh();
-            Toast.makeText(getContext(), "Auto-refresh disabled", Toast.LENGTH_SHORT).show();
-        }
-        updateAutoRefreshButtonText();
-    }
 
     /**
-     * Show current place using Places API
+     * Show nearby gardens using backend API
      */
     private void showCurrentPlace() {
         if (mMap == null) {
             return;
         }
 
-        if (locationPermissionGranted) {
-            // Use fields to define the data types to return.
-            List<Place.Field> placeFields = Arrays.asList(Place.Field.NAME, Place.Field.ADDRESS,
-                    Place.Field.LAT_LNG);
-
-            // Use the builder to create a FindCurrentPlaceRequest.
-            FindCurrentPlaceRequest request =
-                    FindCurrentPlaceRequest.newInstance(placeFields);
-
-            // Get the likely places - that is, the businesses and other points of interest that
-            // are the best match for the device's current location.
-            @SuppressWarnings("MissingPermission") final
-            Task<FindCurrentPlaceResponse> placeResult =
-                    placesClient.findCurrentPlace(request);
-            placeResult.addOnCompleteListener(new OnCompleteListener<FindCurrentPlaceResponse>() {
-                @Override
-                public void onComplete(@NonNull Task<FindCurrentPlaceResponse> task) {
-                    if (task.isSuccessful() && task.getResult() != null) {
-                        FindCurrentPlaceResponse likelyPlaces = task.getResult();
-
-                        // Set the count, handling cases where less than 5 entries are returned.
-                        int count;
-                        if (likelyPlaces.getPlaceLikelihoods().size() < M_MAX_ENTRIES) {
-                            count = likelyPlaces.getPlaceLikelihoods().size();
-                        } else {
-                            count = M_MAX_ENTRIES;
-                        }
-
-                        int i = 0;
-                        likelyPlaceNames = new String[count];
-                        likelyPlaceAddresses = new String[count];
-                        likelyPlaceAttributions = new List[count];
-                        likelyPlaceLatLngs = new LatLng[count];
-
-                        for (PlaceLikelihood placeLikelihood : likelyPlaces.getPlaceLikelihoods()) {
-                            // Build a list of likely places to show the user.
-                            likelyPlaceNames[i] = placeLikelihood.getPlace().getName();
-                            likelyPlaceAddresses[i] = placeLikelihood.getPlace().getAddress();
-                            likelyPlaceAttributions[i] = placeLikelihood.getPlace()
-                                    .getAttributions();
-                            likelyPlaceLatLngs[i] = placeLikelihood.getPlace().getLatLng();
-
-                            i++;
-                            if (i > (count - 1)) {
-                                break;
-                            }
-                        }
-
-                        // Show a dialog offering the user the list of likely places, and add a
-                        // marker at the selected place.
-                        openPlacesDialog();
-                    } else {
-                        Log.e(TAG, "Exception: %s", task.getException());
-                        Toast.makeText(getContext(), "无法获取附近地点信息", Toast.LENGTH_SHORT).show();
+        if (locationPermissionGranted && lastKnownLocation != null) {
+            // Show loading message based on current data type
+            String loadingMessage = isShowingPlants ? "Searching for nearby plants..." : "Searching for nearby gardens...";
+            Toast.makeText(getContext(), loadingMessage, Toast.LENGTH_SHORT).show();
+            
+            if (isShowingPlants) {
+                // Call backend API to get nearby plants
+                Call<ApiResponse<List<Plant>>> call = apiService.getNearbyPlants(
+                    lastKnownLocation.getLatitude(),
+                    lastKnownLocation.getLongitude(),
+                    DEFAULT_SEARCH_RADIUS
+                );
+                call.enqueue(new Callback<ApiResponse<List<Plant>>>() {
+                    @Override
+                    public void onResponse(Call<ApiResponse<List<Plant>>> call, Response<ApiResponse<List<Plant>>> response) {
+                        handlePlantResponse(response);
                     }
+
+                    @Override
+                    public void onFailure(Call<ApiResponse<List<Plant>>> call, Throwable t) {
+                        Log.e(TAG, "Network call failed", t);
+                        Toast.makeText(getContext(), "Unable to connect to server", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } else {
+                // Call backend API to get nearby gardens
+                Call<ApiResponse<List<Garden>>> call = apiService.getNearbyGardens(
+                    lastKnownLocation.getLatitude(),
+                    lastKnownLocation.getLongitude(),
+                    DEFAULT_SEARCH_RADIUS
+                );
+                call.enqueue(new Callback<ApiResponse<List<Garden>>>() {
+                    @Override
+                    public void onResponse(Call<ApiResponse<List<Garden>>> call, Response<ApiResponse<List<Garden>>> response) {
+                        handleGardenResponse(response);
+                    }
+
+                    @Override
+                    public void onFailure(Call<ApiResponse<List<Garden>>> call, Throwable t) {
+                        Log.e(TAG, "Network call failed", t);
+                        Toast.makeText(getContext(), "Unable to connect to server", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        } else {
+            Toast.makeText(getContext(), "Location permission required to search nearby data", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    /**
+     * Handle plant API response
+     */
+    private void handlePlantResponse(Response<ApiResponse<List<Plant>>> response) {
+        if (response.isSuccessful() && response.body() != null) {
+            ApiResponse<List<Plant>> apiResponse = response.body();
+            
+            if (apiResponse.isSuccessful() && apiResponse.getData() != null) {
+                List<Plant> plants = apiResponse.getData();
+                
+                if (plants.isEmpty()) {
+                    Toast.makeText(getContext(), "No plants found nearby", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Display plants on map
+                gardenMapManager.displayPlantsAsGeoJson(plants);
+            } else {
+                Log.e(TAG, "API call failed: " + apiResponse.getMessage());
+                Toast.makeText(getContext(), "Failed to load nearby plants", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Log.e(TAG, "HTTP request failed: " + response.code() + " " + response.message());
+            Toast.makeText(getContext(), "Network error occurred", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    /**
+     * Handle garden API response
+     */
+    private void handleGardenResponse(Response<ApiResponse<List<Garden>>> response) {
+        if (response.isSuccessful() && response.body() != null) {
+            ApiResponse<List<Garden>> apiResponse = response.body();
+            
+            if (apiResponse.isSuccessful() && apiResponse.getData() != null) {
+                List<Garden> gardens = apiResponse.getData();
+                
+                if (gardens.isEmpty()) {
+                    Toast.makeText(getContext(), "No gardens found nearby", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Display gardens on map
+                gardenMapManager.displayGardensAsGeoJson(gardens);
+            } else {
+                Log.e(TAG, "API call failed: " + apiResponse.getMessage());
+                Toast.makeText(getContext(), "Failed to load nearby gardens", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Log.e(TAG, "HTTP request failed: " + response.code() + " " + response.message());
+            Toast.makeText(getContext(), "Network error occurred", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    /**
+     * Legacy method for backward compatibility - now redirects to new logic
+     */
+    private void showCurrentPlaceLegacy() {
+        if (locationPermissionGranted && lastKnownLocation != null) {
+            // Show loading message
+            Toast.makeText(getContext(), "Searching for nearby gardens...", Toast.LENGTH_SHORT).show();
+            
+            // Call backend API to get nearby gardens
+            Call<ApiResponse<List<Garden>>> call = apiService.getNearbyGardens(
+                lastKnownLocation.getLatitude(),
+                lastKnownLocation.getLongitude(),
+                DEFAULT_SEARCH_RADIUS
+            );
+            
+            call.enqueue(new Callback<ApiResponse<List<Garden>>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<List<Garden>>> call, Response<ApiResponse<List<Garden>>> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        ApiResponse<List<Garden>> apiResponse = response.body();
+                        
+                        if (apiResponse.isSuccessful() && apiResponse.getData() != null) {
+                            List<Garden> gardens = apiResponse.getData();
+                            
+                            if (gardens.isEmpty()) {
+                                Toast.makeText(getContext(), "No gardens found nearby", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
+                            // 方法1：直接在地图上显示花园（推荐）
+                            // 使用GeoJSON图层显示，支持点击事件
+                            gardenMapManager.displayGardensAsGeoJson(gardens);
+                            
+                            // 方法2：使用标记显示（备选方案）
+                            // gardenMapManager.displayGardensAsMarkers(gardens);
+                            
+                            // 方法3：显示对话框让用户选择（保留原有功能）
+                            // 如果需要保留对话框选择功能，可以取消注释下面的代码
+                            // prepareGardenDialogData(gardens);
+                            // openGardensDialog();
+                        } else {
+                            Log.e(TAG, "API call failed: " + apiResponse.getMessage());
+                            Toast.makeText(getContext(), "Failed to load nearby gardens", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Log.e(TAG, "HTTP request failed: " + response.code() + " " + response.message());
+                        Toast.makeText(getContext(), "Network error occurred", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ApiResponse<List<Garden>>> call, Throwable t) {
+                    Log.e(TAG, "Network call failed", t);
+                    Toast.makeText(getContext(), "Unable to connect to server", Toast.LENGTH_SHORT).show();
                 }
             });
         } else {
-            Toast.makeText(getContext(), "需要位置权限才能获取附近地点", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Location permission required to search nearby gardens", Toast.LENGTH_SHORT).show();
         }
     }
 
     /**
-     * Open places dialog to let user select a place
+     * Open gardens dialog to let user select a garden
      */
-    private void openPlacesDialog() {
-        // Create a simple dialog to show the places
+    private void openGardensDialog() {
+        // Create a dialog to show the nearby gardens
         androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(requireContext());
-        builder.setTitle("选择附近地点");
+        builder.setTitle("Select Nearby Gardens");
 
-        if (likelyPlaceNames != null && likelyPlaceNames.length > 0) {
-            builder.setItems(likelyPlaceNames, new DialogInterface.OnClickListener() {
+        if (gardenNames != null && gardenNames.length > 0) {
+            builder.setItems(gardenNames, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    // Add marker for selected place
-                    if (likelyPlaceLatLngs[which] != null) {
+                    // Add marker for selected garden
+                    if (gardenLatLngs[which] != null) {
                         mMap.addMarker(new MarkerOptions()
-                                .position(likelyPlaceLatLngs[which])
-                                .title(likelyPlaceNames[which])
-                                .snippet(likelyPlaceAddresses[which]));
+                                .position(gardenLatLngs[which])
+                                .title(gardenNames[which])
+                                .snippet(gardenDescriptions[which]));
                         
-                        // Move camera to the selected place
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(likelyPlaceLatLngs[which], 15));
+                        // Move camera to the selected garden
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(gardenLatLngs[which], 15));
                         
-                        Toast.makeText(getContext(), "已添加地点标记: " + likelyPlaceNames[which], Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Added garden marker: " + gardenNames[which], Toast.LENGTH_SHORT).show();
                     }
                 }
             });
         } else {
-            builder.setMessage("未找到附近地点");
+            builder.setMessage("No gardens found nearby");
         }
 
-        builder.setNegativeButton("取消", null);
+        builder.setNegativeButton("Cancel", null);
         builder.show();
+    }
+    
+    /**
+     * 准备花园对话框数据（保留原有对话框功能）
+     */
+    private void prepareGardenDialogData(List<Garden> gardens) {
+        int count = Math.min(gardens.size(), M_MAX_ENTRIES);
+        
+        nearbyGardens = new Garden[count];
+        gardenNames = new String[count];
+        gardenDescriptions = new String[count];
+        gardenLatLngs = new LatLng[count];
+
+        for (int i = 0; i < count; i++) {
+            Garden garden = gardens.get(i);
+            nearbyGardens[i] = garden;
+            gardenNames[i] = garden.getName() != null ? garden.getName() : "Unnamed Garden";
+            gardenDescriptions[i] = garden.getDescription() != null ? garden.getDescription() : "No description available";
+            gardenLatLngs[i] = new LatLng(garden.getLatitude(), garden.getLongitude());
+        }
+    }
+    
+    /**
+     * 显示植物信息底部弹窗
+     */
+    private void showPlantBottomSheet(Plant plant) {
+        Log.d(TAG, "showPlantBottomSheet called with: " + plant.getName());
+
+        if (bottomSheetContainer != null) {
+            Log.d(TAG, "Bottom sheet container found, updating content...");
+
+            // Update the content for plant information
+            if (tvTitle != null) {
+                tvTitle.setText("Plant Information");
+            }
+            if (tvName != null) {
+                tvName.setText(plant.getName() != null ? plant.getName() : "Unnamed Plant");
+            }
+            if (tvDescription != null) {
+                String description = plant.getDescription() != null ? plant.getDescription() : "No description available";
+                if (plant.getScientificName() != null) {
+                    description += "\nScientific Name: " + plant.getScientificName();
+                }
+                tvDescription.setText(description);
+            }
+            if (tvTime != null) {
+                tvTime.setText(plant.getCreatedAt() != null ? plant.getCreatedAt() : "Unknown");
+            }
+            if (tvCoordinates != null) {
+                tvCoordinates.setText(String.format("%.4f°N, %.4f°E", 
+                    plant.getLatitude(), plant.getLongitude()));
+            }
+            
+            // Store coordinates for navigation
+            currentLat = plant.getLatitude();
+            currentLng = plant.getLongitude();
+
+            // Show navigation button for plants
+            if (btnNavigate != null) {
+                btnNavigate.setVisibility(View.VISIBLE);
+            }
+
+            // Show the bottom sheet with animation
+            Log.d(TAG, "Showing plant bottom sheet with animation...");
+            bottomSheetContainer.setVisibility(View.VISIBLE);
+            bottomSheetContainer.animate()
+                    .translationY(0)
+                    .setDuration(300)
+                    .start();
+        } else {
+            Log.e(TAG, "Bottom sheet container is null!");
+        }
+    }
+    
+    /**
+     * 显示花园信息底部弹窗
+     */
+    private void showGardenBottomSheet(Garden garden) {
+        Log.d(TAG, "showGardenBottomSheet called with: " + garden.getName());
+
+        if (bottomSheetContainer != null) {
+            Log.d(TAG, "Bottom sheet container found, updating content...");
+
+            // Update the content for garden information
+            if (tvTitle != null) {
+                tvTitle.setText("Garden Information");
+            }
+            if (tvName != null) {
+                tvName.setText(garden.getName() != null ? garden.getName() : "Unnamed Garden");
+            }
+            if (tvDescription != null) {
+                tvDescription.setText(garden.getDescription() != null ? garden.getDescription() : "No description available");
+            }
+            if (tvTime != null) {
+                tvTime.setText(garden.getCreatedAt() != null ? garden.getCreatedAt() : "Unknown");
+            }
+            if (tvCoordinates != null) {
+                tvCoordinates.setText(String.format("%.4f°N, %.4f°E", 
+                    garden.getLatitude(), garden.getLongitude()));
+            }
+            
+            // Store coordinates for navigation
+            currentLat = garden.getLatitude();
+            currentLng = garden.getLongitude();
+
+            // Hide navigation button for gardens (optional)
+            if (btnNavigate != null) {
+                btnNavigate.setVisibility(View.VISIBLE); // Keep visible for navigation to garden
+            }
+
+            // Show the bottom sheet with animation
+            Log.d(TAG, "Showing garden bottom sheet with animation...");
+            bottomSheetContainer.setVisibility(View.VISIBLE);
+            bottomSheetContainer.animate()
+                    .translationY(0)
+                    .setDuration(300)
+                    .start();
+        } else {
+            Log.e(TAG, "Bottom sheet container is null!");
+        }
     }
     
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // Stop auto-refresh when fragment is destroyed
-        stopAutoRefresh();
         
-        // Clean up GeoJsonManager
-        if (geoJsonManager != null) {
-            geoJsonManager.removeCurrentLayer();
-            geoJsonManager = null;
+        // Clean up GardenMapManager
+        if (gardenMapManager != null) {
+            gardenMapManager.destroy();
+            gardenMapManager = null;
         }
     }
 }
+
