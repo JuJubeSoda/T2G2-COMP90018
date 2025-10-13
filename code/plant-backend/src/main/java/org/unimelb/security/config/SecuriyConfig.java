@@ -53,6 +53,8 @@ public class SecuriyConfig {
                             "/swagger-resources/**",
                             "/v3/**",
                             "/test/**",
+                            "/health/**",
+                            "/actuator/**",
                             "/sms/**").anonymous()
                     .anyRequest().authenticated(); // 其余请求都需认证
         });

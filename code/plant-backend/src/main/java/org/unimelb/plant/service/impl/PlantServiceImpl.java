@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.unimelb.common.constant.ResultConstant;
@@ -13,7 +14,9 @@ import org.unimelb.common.context.UserContext;
 import org.unimelb.common.utils.JwtUtil;
 import org.unimelb.common.vo.Result;
 import org.unimelb.plant.entity.Plant;
+import org.unimelb.plant.entity.UserPlantLike;
 import org.unimelb.plant.mapper.PlantMapper;
+import org.unimelb.plant.mapper.UserPlantLikeMapper;
 import org.unimelb.plant.service.PlantService;
 import org.unimelb.plant.vo.PlantQuery;
 import org.unimelb.user.entity.User;
@@ -23,10 +26,15 @@ import java.util.List;
 
 @Service
 public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements PlantService {
+
     @Autowired
     private JwtUtil jwtUtil;
+
     @Autowired
     private PlantMapper plantMapper;
+
+    @Autowired
+    private UserPlantLikeMapper userPlantLikeMapper;
 
     @Override
     public Page<Plant> pagePlants(PlantQuery query) {
@@ -54,9 +62,28 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
     public List<Plant> listPlantsByUser() {
 
         Long userId = UserContext.getCurrentUserId();
+
         List<Plant> list = this.list(
                 Wrappers.<Plant>lambdaQuery()
                         .eq(Plant::getUserId, userId)
+                        .orderByDesc(Plant::getCreatedAt)
+        );
+
+        List<Long> likedIds = userPlantLikeMapper.selectList(
+                Wrappers.<UserPlantLike>lambdaQuery().eq(UserPlantLike::getUserId, userId)
+        ).stream().map(UserPlantLike::getPlantId).toList();
+
+        // 拼接 isFavourite 字段
+        list.forEach(p -> p.setIsFavourite(likedIds.contains(p.getPlantId())));
+
+        return list;
+    }
+
+    @Override
+    public List<Plant> listPlantsByGarden(Long gardenId) {
+        List<Plant> list = this.list(
+                Wrappers.<Plant>lambdaQuery()
+                        .eq(Plant::getGardenId, gardenId)
                         .orderByDesc(Plant::getCreatedAt)
         );
         return list;
@@ -81,6 +108,45 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
             throw new IllegalArgumentException("illegal longitude or latitude");
         }
         return plantMapper.selectNearBy(latitude, longitude, radius);
+    }
+
+
+
+    @Override
+    public boolean isLiked(Long userId, Long plantId) {
+        Long count = userPlantLikeMapper.selectCount(
+                Wrappers.<UserPlantLike>lambdaQuery()
+                        .eq(UserPlantLike::getUserId, userId)
+                        .eq(UserPlantLike::getPlantId, plantId)
+        );
+        return count != null && count > 0;
+    }
+    @Override
+    public boolean like(Long userId, Long plantId) {
+        // 幂等：已存在就视为成功
+        if (isLiked(userId, plantId)) {
+            return true;
+        }
+        UserPlantLike like = new UserPlantLike();
+        like.setUserId(userId);
+        like.setPlantId(plantId);
+        try {
+            return userPlantLikeMapper.insert(like) > 0;
+        } catch (DuplicateKeyException e) {
+            // 兜底：并发下命中唯一约束也当成功
+            return true;
+        }
+    }
+
+    @Override
+    public boolean unlike(Long userId, Long plantId) {
+        int rows = userPlantLikeMapper.delete(
+                Wrappers.<UserPlantLike>lambdaQuery()
+                        .eq(UserPlantLike::getUserId, userId)
+                        .eq(UserPlantLike::getPlantId, plantId)
+        );
+        // 幂等：不存在也返回成功
+        return rows >= 0;
     }
 
 }

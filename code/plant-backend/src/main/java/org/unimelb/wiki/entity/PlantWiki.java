@@ -14,26 +14,19 @@ public class PlantWiki {
 
     private String scientificName;
 
-
     private byte[] image;
 
     private String description;
 
-
     private String features;
-
 
     private String careGuide;
 
-
     private String waterNeeds;
-
 
     private String lightNeeds;
 
-
     private String difficulty;
-
 
     private String GrowthHeight;
 }

@@ -35,6 +35,26 @@ public class Garden implements Serializable {
     private String description;
 
     /**
+     * postcode
+     */
+    private String postcode;
+
+    /**
+     * address
+     */
+    private String address;
+
+    /**
+     * suburb
+     */
+    private String suburb;
+
+    /**
+     * area
+     */
+    private Double area;
+
+    /**
      * created at
      */
     private LocalDateTime createdAt;

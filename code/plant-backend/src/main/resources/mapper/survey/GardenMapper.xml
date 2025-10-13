@@ -30,4 +30,14 @@
                      ) ASC LIMIT 200
     </select>
 
+    <insert id="insertBatch">
+        INSERT INTO garden (name, latitude, longitude, postcode, address, suburb, area, created_at, updated_at)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.name}, #{item.latitude}, #{item.longitude},
+            #{item.postcode}, #{item.address}, #{item.suburb}, #{item.area},
+            NOW(), NOW())
+        </foreach>
+    </insert>
+
 </mapper>

@@ -22,6 +22,14 @@ public interface GardenService {
      */
     Boolean addGarden(Garden garden);
 
+
+    /**
+     * batchAddGardens
+     * @param gardenList
+     * @return Result<Garden>
+     */
+    Boolean batchAddGardens(List<Garden> gardenList);
+
     /**
      * deleteGarden
      * @param gardenId

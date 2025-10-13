@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./code/plant-backend
+      dockerfile: Dockerfile
+    container_name: plant-world-backend
+    ports:
+      - "9999:9999"
+    restart: unless-stopped
