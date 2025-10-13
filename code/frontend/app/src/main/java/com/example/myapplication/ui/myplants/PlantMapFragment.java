@@ -79,6 +79,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     private Button btnClose;
     private Button btnMoreInfo;
     private Button btnNavigate;
+    private Button btnLike;
     
     // Refresh control buttons
     private Button btnRefreshData;
@@ -87,6 +88,9 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     // Current coordinates for navigation
     private double currentLat = 0.0;
     private double currentLng = 0.0;
+    
+    // Current plant for like functionality
+    private Plant currentPlant = null;
     
     // Garden API related fields
     private FloatingActionButton fabPlaces;
@@ -180,6 +184,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
         btnClose = view.findViewById(R.id.btn_close);
         btnMoreInfo = view.findViewById(R.id.btn_more_info);
         btnNavigate = view.findViewById(R.id.btn_navigate);
+        btnLike = view.findViewById(R.id.btn_like);
 
         if (btnClose != null) {
             btnClose.setOnClickListener(new View.OnClickListener() {
@@ -205,6 +210,15 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
                 @Override
                 public void onClick(View v) {
                     openNavigationToLocation();
+                }
+            });
+        }
+
+        if (btnLike != null) {
+            btnLike.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    handleLikeButtonClick();
                 }
             });
         }
@@ -726,10 +740,19 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
             // Store coordinates for navigation
             currentLat = plant.getLatitude();
             currentLng = plant.getLongitude();
+            
+            // Store current plant for like functionality
+            currentPlant = plant;
 
             // Show navigation button for plants
             if (btnNavigate != null) {
                 btnNavigate.setVisibility(View.VISIBLE);
+            }
+            
+            // Show and update like button for plants
+            if (btnLike != null) {
+                btnLike.setVisibility(View.VISIBLE);
+                updateLikeButton();
             }
 
             // Show the bottom sheet with animation
@@ -775,9 +798,17 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
             currentLat = garden.getLatitude();
             currentLng = garden.getLongitude();
 
+            // Clear current plant (gardens don't have like functionality)
+            currentPlant = null;
+            
             // Hide navigation button for gardens (optional)
             if (btnNavigate != null) {
                 btnNavigate.setVisibility(View.VISIBLE); // Keep visible for navigation to garden
+            }
+            
+            // Hide like button for gardens
+            if (btnLike != null) {
+                btnLike.setVisibility(View.GONE);
             }
 
             // Show the bottom sheet with animation
@@ -789,6 +820,113 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
                     .start();
         } else {
             Log.e(TAG, "Bottom sheet container is null!");
+        }
+    }
+    
+    /**
+     * Handle like button click
+     */
+    private void handleLikeButtonClick() {
+        if (currentPlant == null) {
+            Toast.makeText(getContext(), "No plant selected", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        if (currentPlant.isFavourite()) {
+            // Unlike the plant
+            unlikePlant(currentPlant.getPlantId());
+        } else {
+            // Like the plant
+            likePlant(currentPlant.getPlantId());
+        }
+    }
+    
+    /**
+     * Like a plant
+     */
+    private void likePlant(Long plantId) {
+        if (apiService == null) {
+            Toast.makeText(getContext(), "API service not available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        Call<ApiResponse<String>> call = apiService.likePlant(plantId);
+        call.enqueue(new Callback<ApiResponse<String>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse<String> apiResponse = response.body();
+                    if (apiResponse.getCode() == 200) {
+                        // Update UI
+                        currentPlant.setFavourite(true);
+                        updateLikeButton();
+                        Toast.makeText(getContext(), "Plant liked! ❤️", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), "Failed to like plant: " + apiResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(getContext(), "Failed to like plant", Toast.LENGTH_SHORT).show();
+                }
+            }
+            
+            @Override
+            public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
+                Log.e(TAG, "Like plant failed", t);
+                Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    
+    /**
+     * Unlike a plant
+     */
+    private void unlikePlant(Long plantId) {
+        if (apiService == null) {
+            Toast.makeText(getContext(), "API service not available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        Call<ApiResponse<String>> call = apiService.unlikePlant(plantId);
+        call.enqueue(new Callback<ApiResponse<String>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse<String> apiResponse = response.body();
+                    if (apiResponse.getCode() == 200) {
+                        // Update UI
+                        currentPlant.setFavourite(false);
+                        updateLikeButton();
+                        Toast.makeText(getContext(), "Plant unliked", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), "Failed to unlike plant: " + apiResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(getContext(), "Failed to unlike plant", Toast.LENGTH_SHORT).show();
+                }
+            }
+            
+            @Override
+            public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
+                Log.e(TAG, "Unlike plant failed", t);
+                Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    
+    /**
+     * Update like button appearance based on current state
+     */
+    private void updateLikeButton() {
+        if (btnLike != null && currentPlant != null) {
+            if (currentPlant.isFavourite()) {
+                btnLike.setText("❤️ Liked");
+                btnLike.setBackgroundColor(getResources().getColor(android.R.color.holo_red_light));
+                btnLike.setTextColor(getResources().getColor(android.R.color.white));
+            } else {
+                btnLike.setText("❤️ Like");
+                btnLike.setBackgroundColor(getResources().getColor(android.R.color.transparent));
+                btnLike.setTextColor(getResources().getColor(android.R.color.black));
+            }
         }
     }
     

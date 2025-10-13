@@ -73,4 +73,18 @@ public interface ApiService {
         @Query("radius") int radius
     );
 
+    /**
+     * Like a plant
+     * POST /api/plants/like?plantId={id}
+     */
+    @POST("api/plants/like")
+    Call<ApiResponse<String>> likePlant(@Query("plantId") Long plantId);
+
+    /**
+     * Unlike a plant
+     * POST /api/plants/unlike?plantId={id}
+     */
+    @POST("api/plants/unlike")
+    Call<ApiResponse<String>> unlikePlant(@Query("plantId") Long plantId);
+
 }
