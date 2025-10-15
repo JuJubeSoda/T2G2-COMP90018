@@ -14,7 +14,7 @@
     <ImageView
         android:id="@+id/landingimage"
         android:layout_width="match_parent"
-        android:layout_height="250dp"
+        android:layout_height="150dp"
         android:scaleType="centerCrop"
         tools:src="@tools:sample/backgrounds/scenic"
         android:contentDescription="Image of the plant" />
