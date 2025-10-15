@@ -1,118 +1,85 @@
-
 package com.example.myapplication.ui.myplants;
 
 import android.os.Bundle;
-import android.util.Base64;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.navigation.Navigation;
 
-import com.bumptech.glide.Glide;
-import com.example.myapplication.R;
-import com.example.myapplication.databinding.PlantdetailBinding;
+// FIX: Use the binding for "plantwiki_maintab.xml"
+import com.example.myapplication.databinding.PlantwikiMaintabBinding;
+import com.google.android.material.tabs.TabLayoutMediator;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+// You'll need an image loading library like Glide or Picasso
+// import com.bumptech.glide.Glide;
 
 public class PlantDetailFragment extends Fragment {
 
-    private static final String TAG = "PlantDetailFragment";
-    public static final String ARG_PLANT = "plant_object";
+    public static final String ARG_PLANT = "plant_argument";
 
-    private PlantdetailBinding binding;
-    private Plant currentPlant;
+    // FIX: Use the correct binding class
+    private PlantwikiMaintabBinding binding;
+    private Plant plant;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            plant = getArguments().getParcelable(ARG_PLANT);
+        }
+    }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = PlantdetailBinding.inflate(inflater, container, false);
+        // FIX: Inflate your existing, modified layout
+        binding = PlantwikiMaintabBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        if (plant == null) return;
 
-        binding.backButtonDetail.setOnClickListener(v -> {
-            Navigation.findNavController(v).popBackStack();
-        });
-
-        if (getArguments() != null) {
-            currentPlant = getArguments().getParcelable(ARG_PLANT);
-            if (currentPlant != null) {
-                populateUI(currentPlant);
-            } else {
-                Log.e(TAG, "Plant object received from arguments is null.");
-            }
-        }
+        // This code will now work because all the views exist in the inflated layout
+        populateHeaderData();
+        setupViewPagerAndTabs();
     }
 
-    private void populateUI(Plant plant) {
-        Log.d(TAG, "Populating UI for plant: " + plant.getName());
+    private void populateHeaderData() {
+        // This code populates the views we added to the top of the XML
+        binding.plantNameText.setText(plant.getName());
 
-        binding.textViewPageTitle.setText(plant.getName());
-        binding.textViewScientificName.setText(plant.getScientificName());
-        binding.textViewIntroduction.setText(plant.getIntroduction());
-        binding.textViewLocation.setText(plant.getLocation());
-        binding.textViewSearchTag.setText(plant.getSearchTag());
-        binding.textViewDiscoveredBy.setText(plant.getDiscoveredBy());
+        // FIX: DO NOT call getScientificName() as it is null.
+        // Let's use an empty string or some other placeholder for now.
+        binding.plantNicknameText.setText(""); // Or you could use plant.getName() again
 
-        if (plant.getDiscoveredOn() > 0) {
-            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
-            String formattedDate = sdf.format(new Date(plant.getDiscoveredOn()));
-            binding.textViewDiscoveredOn.setText(formattedDate);
-        } else {
-            binding.textViewDiscoveredOn.setText("N/A");
-        }
-
-        // --- MODIFICATION: Handle Base64 image string for the detail view --- //
-        String base64Image = plant.getImageUrl();
-        try {
-            if (base64Image != null && !base64Image.isEmpty()) {
-                byte[] imageBytes = Base64.decode(base64Image, Base64.DEFAULT);
-                Glide.with(this)
-                        .load(imageBytes)
-                        .placeholder(R.drawable.plantbulb_foreground)
-                        .error(R.drawable.plantbulb_foreground)
-                        .into(binding.imageViewPlantPreview);
-            } else {
-                Glide.with(this)
-                        .load(R.drawable.plantbulb_foreground)
-                        .into(binding.imageViewPlantPreview);
-            }
-        } catch (IllegalArgumentException e) {
-            Log.e(TAG, "Failed to decode Base64 string for plant detail view: " + plant.getName(), e);
-            Glide.with(this)
-                    .load(R.drawable.plantbulb_foreground)
-                    .into(binding.imageViewPlantPreview);
-        }
-
-        // TODO: Favourite button logic remains unchanged.
-        /*
-        updateFavouriteIcon(plant.isFavourite());
-        binding.favouriteButton.setOnClickListener(v -> {
-            plant.setFavourite(!plant.isFavourite());
-            updateFavouriteIcon(plant.isFavourite());
-            Log.d(TAG, "Favourite status changed to: " + plant.isFavourite());
-        });
-        */
+        // TODO: Load image into binding.plantImage using Glide or Picasso
+        // Glide.with(this).load(plant.getImageUrl()).into(binding.plantImage);
     }
 
-    private void updateFavouriteIcon(boolean isFavourite) {
-        /*
-        if (isFavourite) {
-            binding.favouriteButton.setImageResource(R.drawable.ic_favourite_selected);
-        } else {
-            binding.favouriteButton.setImageResource(R.drawable.ic_favourite_unselected);
-        }
-        */
+    private void setupViewPagerAndTabs() {
+        // FIX: Use requireActivity().getSupportFragmentManager() instead of getChildFragmentManager()
+        TabsPagerAdapter pagerAdapter = new TabsPagerAdapter(requireActivity().getSupportFragmentManager(), getLifecycle(), plant);
+        binding.viewPager.setAdapter(pagerAdapter);
+
+        // Link the TabLayout and ViewPager
+        new TabLayoutMediator(binding.tabLayout, binding.viewPager, (tab, position) -> {
+            switch (position) {
+                case 0:
+                    tab.setText("Overview");
+                    break;
+                case 1:
+                    tab.setText("Features");
+                    break;
+                case 2:
+                    tab.setText("Care Guide");
+                    break;
+            }
+        }).attach();
     }
 
     @Override
