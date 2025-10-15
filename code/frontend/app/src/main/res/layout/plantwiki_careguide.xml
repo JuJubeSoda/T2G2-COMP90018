@@ -23,6 +23,7 @@
             android:gravity="top"
             android:layout_marginBottom="24dp">
 
+            <!-- FIX: Corrected ImageView tag and assigned a 'water' icon -->
             <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
@@ -64,6 +65,7 @@
             android:gravity="top"
             android:layout_marginBottom="24dp">
 
+            <!-- FIX: Assigned a 'light' icon -->
             <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
@@ -105,6 +107,7 @@
             android:gravity="top"
             android:layout_marginBottom="24dp">
 
+            <!-- FIX: Assigned a 'soil' icon -->
             <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
@@ -146,6 +149,7 @@
             android:gravity="top"
             android:layout_marginBottom="24dp">
 
+            <!-- FIX: Assigned a 'fertilizer' icon -->
             <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"

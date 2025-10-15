@@ -23,6 +23,7 @@
             android:gravity="center_vertical"
             android:layout_marginBottom="20dp">
 
+            <!-- FIX: Removed <caret> from the end of the drawable name -->
             <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
