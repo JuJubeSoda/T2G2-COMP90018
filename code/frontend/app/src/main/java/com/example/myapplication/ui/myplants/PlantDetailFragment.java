@@ -12,6 +12,8 @@ import androidx.fragment.app.Fragment;
 import com.example.myapplication.databinding.PlantwikiMaintabBinding;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+import java.util.Objects;
+
 // You'll need an image loading library like Glide or Picasso
 // import com.bumptech.glide.Glide;
 
@@ -80,6 +82,17 @@ public class PlantDetailFragment extends Fragment {
                     break;
             }
         }).attach();
+    }
+
+    /**
+     * Switches the ViewPager2 to a specific tab index.
+     *
+     * @param tabIndex The index of the tab to switch to (0-based).
+     */
+    public void switchToTab(int tabIndex) {
+        if (binding != null && tabIndex < Objects.requireNonNull(binding.viewPager.getAdapter()).getItemCount()) {
+            binding.viewPager.setCurrentItem(tabIndex, true); // true for smooth scroll
+        }
     }
 
     @Override

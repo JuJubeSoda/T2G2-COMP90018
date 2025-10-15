@@ -112,4 +112,20 @@ public class Plant implements Parcelable {
         dest.writeString(imageUrl);
         dest.writeByte((byte) (isFavourite ? 1 : 0)); // Write boolean as a byte
     }
+
+    public int getLightRequirement() {
+        return 50;
+    }
+
+    public int getWaterRequirement() {
+        return 10;
+    }
+
+    public int getTemperatureRequirement() {
+        return 30;
+    }
+
+    public int getHumidityRequirement() {
+        return 20;
+    }
 }
