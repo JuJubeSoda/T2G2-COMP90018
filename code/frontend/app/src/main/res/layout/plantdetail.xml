@@ -89,9 +89,9 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            app:layout_constraintBaseline_toBaselineOf="@id/labelScientificName"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
-            app:layout_constraintTop_toTopOf="@+id/labelScientificName"
             tools:text="Quercus robur" />
 
         <!-- Row 2: Introduction -->
@@ -133,34 +133,16 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            app:layout_constraintBaseline_toBaselineOf="@id/labelLocation"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
-            app:layout_constraintTop_toTopOf="@+id/labelLocation"
             tools:text="Royal Botanic Gardens" />
 
-        <!-- Row 4: Search Tags -->
-        <TextView
-            android:id="@+id/labelSearchTag"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Search Tags:"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@+id/guidelineLabelEnd"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textViewLocation" />
+        <!-- Row 4: Search Tags (REMOVED) -->
+        <!-- TextView android:id="@+id/labelSearchTag" ... -->
+        <!-- TextView android:id="@+id/textViewSearchTag" ... -->
 
-        <TextView
-            android:id="@+id/textViewSearchTag"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
-            app:layout_constraintTop_toTopOf="@+id/labelSearchTag"
-            tools:text="Tree, Oak, Deciduous" />
-
-        <!-- Row 5: Discovered By -->
+        <!-- Row 5: Discovered By - FIX: Top constraint now connects to labelLocation -->
         <TextView
             android:id="@+id/labelDiscoveredBy"
             android:layout_width="0dp"
@@ -170,19 +152,19 @@
             android:textStyle="bold"
             app:layout_constraintEnd_toStartOf="@+id/guidelineLabelEnd"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textViewSearchTag" />
+            app:layout_constraintTop_toBottomOf="@+id/textViewLocation" />
 
         <TextView
             android:id="@+id/textViewDiscoveredBy"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            app:layout_constraintBaseline_toBaselineOf="@id/labelDiscoveredBy"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
-            app:layout_constraintTop_toTopOf="@+id/labelDiscoveredBy"
             tools:text="User 1" />
 
-        <!-- Row 6: Discovered On -->
+        <!-- Row 6: Discovered On - FIX: Top constraint now connects to labelDiscoveredBy -->
         <TextView
             android:id="@+id/labelDiscoveredOn"
             android:layout_width="0dp"
@@ -199,9 +181,9 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            app:layout_constraintBaseline_toBaselineOf="@id/labelDiscoveredOn"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
-            app:layout_constraintTop_toTopOf="@+id/labelDiscoveredOn"
             tools:text="31/12/2024" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

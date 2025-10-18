@@ -106,7 +106,7 @@ public class PlantDetailFragment extends Fragment {
             if (plantTags != null && !plantTags.isEmpty()) {
                 tags = plantTags.stream().collect(Collectors.joining(", "));
             }
-            binding.textViewSearchTag.setText(tags);
+//            binding.textViewSearchTag.setText(tags);
 
             // Set the discovered by user, with a null check.
             String discoveredBy = plant.getDiscoveredBy() != null ? plant.getDiscoveredBy() : "Unknown";
