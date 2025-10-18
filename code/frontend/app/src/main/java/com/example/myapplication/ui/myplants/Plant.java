@@ -2,130 +2,149 @@ package com.example.myapplication.ui.myplants;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import androidx.annotation.NonNull;
+import com.google.gson.annotations.SerializedName;
+import java.util.List;
 
-/**
- * Represents a plant object. This class is Parcelable to allow it
- * to be passed between Android components like Fragments.
- */
 public class Plant implements Parcelable {
 
-    // --- Fields based on your requirements ---
-    private String plantId;        // Unique ID for the plant
-    private String name;           // Common name, e.g., "Oak Tree"
-    private String scientificName; // e.g., "Quercus robur"
-    private String introduction;   // Description of the plant
-    private String location;       // Where it was found
-    private String searchTag;      // User-defined tags for searching
-    private String discoveredBy;   // User who discovered it
-    private long discoveredOn;     // Timestamp of discovery
-    private String imageUrl;       // URL for the plant's image
-    private boolean isFavourite;   // If it's marked as a favourite
+    // All fields from your backend API response, correctly typed
+    @SerializedName("plantId")
+    private int plantId;
+    @SerializedName("userId")
+    private int userId;
+    @SerializedName("name")
+    private String name;
+    @SerializedName("image")
+    private String imageUrl;
+    @SerializedName("description")
+    private String description;
+    @SerializedName("latitude")
+    private Double latitude;
+    @SerializedName("longitude")
+    private Double longitude;
+    @SerializedName("scientificName")
+    private String scientificName;
+    @SerializedName("gardenId")
+    private int gardenId;
+    @SerializedName("isFavourite")
+    private boolean isFavourite;
+    @SerializedName("createdAt")
+    private String createdAt;
+    @SerializedName("updatedAt")
+    private String updatedAt;
 
-    /**
-     * Full constructor for creating a new Plant object.
-     */
-    public Plant(String plantId, String scientificName, String name, String introduction,
-                 String location, String searchTag, String discoveredBy, long discoveredOn,
-                 String imageUrl, boolean isFavourite) {
+    // --- We will assume these are also part of your full Plant object based on previous errors ---
+    // If they are not, they can be safely removed, but it's better to have them.
+    @SerializedName("tags")
+    private List<String> tags;
+    @SerializedName("discoveredBy")
+    private String discoveredBy;
+    @SerializedName("lightRequirement")
+    private String lightRequirement;
+    @SerializedName("waterRequirement")
+    private String waterRequirement;
+    @SerializedName("temperatureRequirement")
+    private String temperatureRequirement;
+    @SerializedName("humidityRequirement")
+    private String humidityRequirement;
+
+    // --- FIX: A public constructor for the DTO to use for conversion ---
+    public Plant(int plantId, int userId, String name, String imageUrl, String description,
+                 Double latitude, Double longitude, String scientificName, int gardenId,
+                 boolean isFavourite, String createdAt, String updatedAt, List<String> tags,
+                 String discoveredBy, String lightRequirement, String waterRequirement,
+                 String temperatureRequirement, String humidityRequirement) {
         this.plantId = plantId;
+        this.userId = userId;
         this.name = name;
-        this.scientificName = scientificName;
-        this.introduction = introduction;
-        this.location = location;
-        this.searchTag = searchTag;
-        this.discoveredBy = discoveredBy;
-        this.discoveredOn = discoveredOn;
         this.imageUrl = imageUrl;
+        this.description = description;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.scientificName = scientificName;
+        this.gardenId = gardenId;
         this.isFavourite = isFavourite;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.tags = tags;
+        this.discoveredBy = discoveredBy;
+        this.lightRequirement = lightRequirement;
+        this.waterRequirement = waterRequirement;
+        this.temperatureRequirement = temperatureRequirement;
+        this.humidityRequirement = humidityRequirement;
     }
 
-    // --- Getters ---
-    public String getPlantId() { return plantId; }
-    public String getName() { return name; }
-    public String getScientificName() { return scientificName; }
-    public String getIntroduction() { return introduction; }
-    public String getLocation() { return location; }
-    public String getSearchTag() { return searchTag; }
-    public String getDiscoveredBy() { return discoveredBy; }
-    public long getDiscoveredOn() { return discoveredOn; }
-    public String getImageUrl() { return imageUrl; }
-    public boolean isFavourite() { return isFavourite; }
-
-    // --- Setters ---
-    public void setFavourite(boolean favourite) { isFavourite = favourite; }
-
-
-    // --- PARCELABLE IMPLEMENTATION ---
-
-    /**
-     * Constructor to create a Plant object from a Parcel.
-     * The order of reads MUST match the order of writes in writeToParcel().
-     */
+    // --- Parcelable implementation (handles passing object between fragments) ---
     protected Plant(Parcel in) {
-        plantId = in.readString();
+        plantId = in.readInt();
+        userId = in.readInt();
         name = in.readString();
-        scientificName = in.readString();
-        introduction = in.readString();
-        location = in.readString();
-        searchTag = in.readString();
-        discoveredBy = in.readString();
-        discoveredOn = in.readLong();
         imageUrl = in.readString();
-        isFavourite = in.readByte() != 0; // readByte returns 1 for true, 0 for false
+        description = in.readString();
+        if (in.readByte() == 0) { latitude = null; } else { latitude = in.readDouble(); }
+        if (in.readByte() == 0) { longitude = null; } else { longitude = in.readDouble(); }
+        scientificName = in.readString();
+        gardenId = in.readInt();
+        isFavourite = in.readByte() != 0;
+        createdAt = in.readString();
+        updatedAt = in.readString();
+        tags = in.createStringArrayList();
+        discoveredBy = in.readString();
+        lightRequirement = in.readString();
+        waterRequirement = in.readString();
+        temperatureRequirement = in.readString();
+        humidityRequirement = in.readString();
     }
 
-    /**
-     * Required Creator for generating instances of your Parcelable class from a Parcel.
-     */
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(plantId);
+        dest.writeInt(userId);
+        dest.writeString(name);
+        dest.writeString(imageUrl);
+        dest.writeString(description);
+        if (latitude == null) { dest.writeByte((byte) 0); } else { dest.writeByte((byte) 1); dest.writeDouble(latitude); }
+        if (longitude == null) { dest.writeByte((byte) 0); } else { dest.writeByte((byte) 1); dest.writeDouble(longitude); }
+        dest.writeString(scientificName);
+        dest.writeInt(gardenId);
+        dest.writeByte((byte) (isFavourite ? 1 : 0));
+        dest.writeString(createdAt);
+        dest.writeString(updatedAt);
+        dest.writeStringList(tags);
+        dest.writeString(discoveredBy);
+        dest.writeString(lightRequirement);
+        dest.writeString(waterRequirement);
+        dest.writeString(temperatureRequirement);
+        dest.writeString(humidityRequirement);
+    }
+
+    @Override
+    public int describeContents() { return 0; }
+
     public static final Creator<Plant> CREATOR = new Creator<Plant>() {
         @Override
-        public Plant createFromParcel(Parcel in) {
-            return new Plant(in);
-        }
-
+        public Plant createFromParcel(Parcel in) { return new Plant(in); }
         @Override
-        public Plant[] newArray(int size) {
-            return new Plant[size];
-        }
+        public Plant[] newArray(int size) { return new Plant[size]; }
     };
 
-    @Override
-    public int describeContents() {
-        return 0; // Default implementation
-    }
-
-    /**
-     * Flattens this object into a Parcel.
-     * The order of writes MUST match the order of reads in the constructor.
-     */
-    @Override
-    public void writeToParcel(@NonNull Parcel dest, int flags) {
-        dest.writeString(plantId);
-        dest.writeString(name);
-        dest.writeString(scientificName);
-        dest.writeString(introduction);
-        dest.writeString(location);
-        dest.writeString(searchTag);
-        dest.writeString(discoveredBy);
-        dest.writeLong(discoveredOn);
-        dest.writeString(imageUrl);
-        dest.writeByte((byte) (isFavourite ? 1 : 0)); // Write boolean as a byte
-    }
-
-    public int getLightRequirement() {
-        return 50;
-    }
-
-    public int getWaterRequirement() {
-        return 10;
-    }
-
-    public int getTemperatureRequirement() {
-        return 30;
-    }
-
-    public int getHumidityRequirement() {
-        return 20;
-    }
+    // --- Getters for all fields ---
+    public int getPlantId() { return plantId; }
+    public int getUserId() { return userId; }
+    public String getName() { return name; }
+    public String getImageUrl() { return imageUrl; }
+    public String getDescription() { return description; }
+    public Double getLatitude() { return latitude; }
+    public Double getLongitude() { return longitude; }
+    public String getScientificName() { return scientificName; }
+    public int getGardenId() { return gardenId; }
+    public boolean isFavourite() { return isFavourite; }
+    public String getCreatedAt() { return createdAt; }
+    public String getUpdatedAt() { return updatedAt; }
+    public List<String> getTags() { return tags; }
+    public String getDiscoveredBy() { return discoveredBy; }
+    public String getLightRequirement() { return lightRequirement; }
+    public String getWaterRequirement() { return waterRequirement; }
+    public String getTemperatureRequirement() { return temperatureRequirement; }
+    public String getHumidityRequirement() { return humidityRequirement; }
 }

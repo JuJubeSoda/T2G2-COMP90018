@@ -76,7 +76,7 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
         super.onViewCreated(view, savedInstanceState);
 
         if (plant != null) {
-            binding.overviewIntroText.setText(plant.getIntroduction());
+            binding.overviewIntroText.setText(plant.getDescription());
             binding.lightSubtitle.setText(plant.getLightRequirement());
             binding.waterSubtitle.setText(plant.getWaterRequirement());
             binding.temperatureSubtitle.setText(plant.getTemperatureRequirement());

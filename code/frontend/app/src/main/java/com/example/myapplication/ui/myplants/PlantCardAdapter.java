@@ -110,7 +110,7 @@ public class PlantCardAdapter extends RecyclerView.Adapter<PlantCardAdapter.Plan
         if (currentViewType == VIEW_TYPE_LIST_WITH_DATE) {
             holder.textViewPlantDate.setVisibility(View.VISIBLE);
             SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
-            String formattedDate = sdf.format(new Date(plant.getDiscoveredOn()));
+            String formattedDate = sdf.format(plant.getCreatedAt());
             holder.textViewPlantDate.setText(context.getString(R.string.plant_added_on_date_format, formattedDate));
 
             constraintSet.constrainWidth(R.id.imageViewPlant, dpToPx(60));
