@@ -114,11 +114,18 @@ public class CaptureFragment extends Fragment {
     }
 
     private boolean checkAndRequestPermissions() {
-        // (This method's implementation is correct and requires no changes)
         List<String> permissionsToRequest = new ArrayList<>();
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             permissionsToRequest.add(Manifest.permission.CAMERA);
         }
+
+        // --- FIX: Also check for write permission on older devices ---
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) { // P is API 28
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            }
+        }
+
         if (!permissionsToRequest.isEmpty()) {
             requestPermissionsLauncher.launch(permissionsToRequest.toArray(new String[0]));
             return false;
@@ -150,6 +157,10 @@ public class CaptureFragment extends Fragment {
             return;
         }
 
+        // --- FIX 1: Disable the button immediately to prevent multiple clicks ---
+        binding.imageCaptureButton.setEnabled(false);
+        Toast.makeText(getContext(), "Capturing...", Toast.LENGTH_SHORT).show();
+
         String name = new SimpleDateFormat(FILENAME_FORMAT, Locale.US).format(System.currentTimeMillis()) + ".jpg";
         ContentValues contentValues = new ContentValues();
         contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
@@ -171,39 +182,44 @@ public class CaptureFragment extends Fragment {
                         Uri savedUri = outputFileResults.getSavedUri();
                         if (savedUri == null) {
                             Log.e(TAG, "onImageSaved: Saved URI is null.");
+                            Toast.makeText(getContext(), "Failed to save image.", Toast.LENGTH_SHORT).show();
+                            // --- FIX 2: Re-enable the button on failure ---
+                            binding.imageCaptureButton.setEnabled(true);
                             return;
                         }
 
                         Log.d(TAG, "Photo capture succeeded: " + savedUri);
 
-                        // --- MODIFICATION 3: Add all data to the bundle for UploadFragment ---
                         Bundle args = new Bundle();
                         args.putString(UploadFragment.ARG_IMAGE_URI, savedUri.toString());
 
-                        // Add the scientific name if it was passed
                         if (scientificNameToPass != null) {
                             args.putString(UploadFragment.ARG_SCIENTIFIC_NAME, scientificNameToPass);
                         }
-                        // Add the isFavouriteFlow boolean
                         args.putBoolean(UploadFragment.ARG_IS_FAVOURITE_FLOW, isFavouriteFlowToPass);
 
                         try {
-                            // Use a valid action ID from your navigation graph that goes from Capture to Upload
-                            // Assuming this action is named `action_captureFragment_to_uploadFragment`
                             navController.navigate(R.id.navigation_upload_plant, args);
-                            Log.d(TAG, "Navigating to UploadFragment with URI, name, and favorite status.");
-                        } catch (IllegalArgumentException e) {
-                            Log.e(TAG, "Navigation failed. Check action ID.", e);
+                            Log.d(TAG, "Navigating to UploadFragment...");
+                        } catch (Exception e) { // Catch any navigation exception
+                            Log.e(TAG, "Navigation to UploadFragment failed!", e);
+                            Toast.makeText(getContext(), "Error: Could not open upload screen.", Toast.LENGTH_LONG).show();
+                            // --- FIX 3: Re-enable the button if navigation fails ---
+                            binding.imageCaptureButton.setEnabled(true);
                         }
                     }
 
                     @Override
                     public void onError(@NonNull ImageCaptureException exception) {
                         Log.e(TAG, "Photo capture failed: " + exception.getMessage(), exception);
+                        Toast.makeText(getContext(), "Photo capture failed.", Toast.LENGTH_SHORT).show();
+                        // --- FIX 4: CRUCIAL - Also re-enable the button on capture error ---
+                        binding.imageCaptureButton.setEnabled(true);
                     }
                 }
         );
     }
+
 
     @Override
     public void onDestroyView() {
