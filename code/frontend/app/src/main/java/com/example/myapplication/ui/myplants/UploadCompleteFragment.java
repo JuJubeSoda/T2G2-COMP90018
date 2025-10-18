@@ -237,7 +237,8 @@ public class UploadCompleteFragment extends Fragment {
         // Currently, this is a placeholder functionality.
         binding.buttonGatherMoreInfo.setOnClickListener(v -> {
             Log.d(TAG, "Gather More Information button clicked");
-            Toast.makeText(getContext(), "Functionality to gather more info coming soon!", Toast.LENGTH_LONG).show();
+            navController.navigate(R.id.navigation_plant_wiki);
+//            Toast.makeText(getContext(), "Functionality to gather more info coming soon!", Toast.LENGTH_LONG).show();
         });
     }
 
