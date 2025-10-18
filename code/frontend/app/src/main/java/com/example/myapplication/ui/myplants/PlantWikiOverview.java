@@ -1,6 +1,6 @@
+// /app/src/main/java/com/example/myapplication/ui/myplants/PlantWikiOverview.java
 package com.example.myapplication.ui.myplants;
 
-// --- FIX: Add required imports ---
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.hardware.Sensor;
@@ -12,28 +12,24 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast; // Import Toast
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
-import com.example.myapplication.R; // Import R class for layouts
+import com.example.myapplication.R;
+// --- FIX 1: Use the correct binding class for this fragment's layout ---
 import com.example.myapplication.databinding.PlantwikiOverviewtabBinding;
-import com.example.myapplication.ui.myplants.Plant; // Assuming you have this model
 
 import java.io.Serializable;
 
-/**
- * A fragment that displays the overview tab for a specific plant in the Plant Wiki.
- * It shows a brief description and a grid of key care requirements.
- */
-// --- FIX: Implement the SensorEventListener interface ---
 public class PlantWikiOverview extends Fragment implements SensorEventListener {
 
     private static final String ARG_PLANT = "plant_object";
 
+    // --- FIX 2: The binding variable must match this fragment's layout ---
     private PlantwikiOverviewtabBinding binding;
     private Plant plant;
     private SensorManager sensorManager;
@@ -55,15 +51,12 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            // It's safer to check the type before casting
             Serializable serializable = getArguments().getSerializable(ARG_PLANT);
             if (serializable instanceof Plant) {
                 plant = (Plant) serializable;
             }
         }
 
-        // Initialize the SensorManager and sensors
-        // --- FIX: Use the correct Context class ---
         sensorManager = (SensorManager) requireActivity().getSystemService(Context.SENSOR_SERVICE);
         lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         tempSensor = sensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
@@ -73,6 +66,7 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // --- FIX 3: Inflate the correct binding ---
         binding = PlantwikiOverviewtabBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
@@ -93,8 +87,9 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
     }
 
     private void setupClickListeners() {
-        binding.viewFullCareGuideButton.setOnClickListener(v -> switchToCareGuideTab(null));
-        binding.waterCard.setOnClickListener(v -> switchToCareGuideTab("water"));
+        // This button click now correctly calls a method to find its PARENT
+        binding.viewFullCareGuideButton.setOnClickListener(v -> switchToCareGuideTab());
+        binding.waterCard.setOnClickListener(v -> switchToCareGuideTab());
 
         binding.lightCard.setOnClickListener(v -> {
             if (lightSensor != null) {
@@ -124,19 +119,16 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
     @SuppressLint("MissingInflatedId")
     private void showSensorDialog(String title, String unit, Sensor sensorToRegister) {
         LayoutInflater inflater = requireActivity().getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.dialog_sensor_reading, null); // Use R class here
-        dialogValueView = dialogView.findViewById(R.id.sensor_value_text); // Use R class here
+        View dialogView = inflater.inflate(R.layout.dialog_sensor_reading, null);
+        dialogValueView = dialogView.findViewById(R.id.sensor_value_text);
         dialogValueView.setText("Waiting for sensor data...");
 
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle(title)
                 .setView(dialogView)
-                .setNegativeButton("Close", (dialog, id) -> {
-                    // Dialog will be dismissed, and the listener will handle the cleanup
-                });
+                .setNegativeButton("Close", (dialog, id) -> { /* Listener handles cleanup */ });
 
         sensorDialog = builder.create();
-
         sensorDialog.setOnDismissListener(dialog -> {
             sensorManager.unregisterListener(this);
             dialogValueView = null;
@@ -146,10 +138,12 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
         sensorDialog.show();
     }
 
-    private void switchToCareGuideTab(String anchor) {
-        if (getParentFragment() instanceof PlantDetailFragment) {
-            PlantDetailFragment parent = (PlantDetailFragment) getParentFragment();
-            parent.switchToTab(2);
+    // --- FIX 4: This method now correctly finds the parent and calls ITS switchToTab method ---
+    private void switchToCareGuideTab() {
+        Fragment parent = getParentFragment();
+        if (parent instanceof PlantWikiMainTabFragment) {
+            // Call the public method on the parent fragment
+            ((PlantWikiMainTabFragment) parent).switchToTab(2); // 2 is the index for "Care Guide"
         }
     }
 
@@ -159,10 +153,9 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
         binding = null;
     }
 
-    // --- FIX: Add the two required methods for SensorEventListener ---
     @Override
     public final void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // Can be ignored for this use case.
+        // Can be ignored.
     }
 
     @Override
@@ -171,14 +164,16 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
 
         float value = event.values[0];
         String unit = "";
-        int sensorType = event.sensor.getType();
-
-        if (sensorType == Sensor.TYPE_LIGHT) {
-            unit = " lx";
-        } else if (sensorType == Sensor.TYPE_AMBIENT_TEMPERATURE) {
-            unit = " °C";
-        } else if (sensorType == Sensor.TYPE_RELATIVE_HUMIDITY) {
-            unit = " %";
+        switch (event.sensor.getType()) {
+            case Sensor.TYPE_LIGHT:
+                unit = " lx";
+                break;
+            case Sensor.TYPE_AMBIENT_TEMPERATURE:
+                unit = " °C";
+                break;
+            case Sensor.TYPE_RELATIVE_HUMIDITY:
+                unit = " %";
+                break;
         }
 
         dialogValueView.setText(String.format("%.1f%s", value, unit));
