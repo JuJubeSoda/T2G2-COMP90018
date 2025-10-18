@@ -38,4 +38,7 @@ public interface ApiService {
     @GET("api/ai_bot/ask")
     Call<BaseResponse> askQuestion(@Query("q") String question);
 
+    @POST("/api/plants/add")
+    Call<ApiResponse> addPlant(@Body PlantRequest plantRequest);
+
 }

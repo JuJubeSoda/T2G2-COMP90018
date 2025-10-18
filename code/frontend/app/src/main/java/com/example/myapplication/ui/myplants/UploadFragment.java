@@ -23,6 +23,14 @@ import androidx.navigation.Navigation;
 // Application-specific and library imports...
 import com.example.myapplication.R;
 import com.example.myapplication.databinding.UploadplantBinding;
+import com.example.myapplication.network.ApiClient;
+import com.example.myapplication.network.ApiResponse;
+import com.example.myapplication.network.ApiService;
+import com.example.myapplication.network.PlantRequest;
+import com.example.myapplication.utils.ImageUtils;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class UploadFragment extends Fragment {
 
@@ -107,15 +115,91 @@ public class UploadFragment extends Fragment {
                 return;
             }
 
-            Log.i(TAG, "UPLOAD REQUESTED (Simulated):");
+            Log.i(TAG, "UPLOAD REQUESTED:");
             Log.i(TAG, "Image URI: " + receivedImageUriString);
             Log.i(TAG, "Scientific Name: " + scientificName);
             Log.i(TAG, "Location: " + location);
-            Log.i(TAG, "Is Favourite on Upload: " + receivedIsFavouriteFlow); // Log the favourite status
+            Log.i(TAG, "Is Favourite on Upload: " + receivedIsFavouriteFlow);
 
-            Toast.makeText(getContext(), "Simulating upload...", Toast.LENGTH_SHORT).show();
-            new Handler(Looper.getMainLooper()).postDelayed(this::showSuccessOverlay, 1500);
+            // Show loading state
+            binding.uploadButton.setEnabled(false);
+            binding.uploadButton.setText("Uploading...");
+            Toast.makeText(getContext(), "Uploading plant data...", Toast.LENGTH_SHORT).show();
+            
+            // Upload to backend
+            uploadPlantToBackend(scientificName, location, introduction);
         });
+    }
+
+    /**
+     * Uploads plant data to the backend API.
+     */
+    private void uploadPlantToBackend(String scientificName, String location, String introduction) {
+        if (getContext() == null) {
+            Log.e(TAG, "Context is null, cannot upload");
+            resetUploadButton();
+            return;
+        }
+        
+        // Convert image to base64
+        String base64Image = null;
+        if (receivedImageUriString != null && !receivedImageUriString.isEmpty()) {
+            base64Image = ImageUtils.convertImageToBase64(getContext(), Uri.parse(receivedImageUriString));
+            if (base64Image == null) {
+                Log.e(TAG, "Failed to convert image to base64");
+                Toast.makeText(getContext(), "Failed to process image", Toast.LENGTH_SHORT).show();
+                resetUploadButton();
+                return;
+            }
+        }
+        
+        // Create plant request
+        PlantRequest plantRequest = new PlantRequest(
+            scientificName, // Use scientific name as the plant name
+            base64Image,
+            introduction,
+            null, // latitude - could be added later with location services
+            null, // longitude - could be added later with location services
+            scientificName,
+            null, // gardenId - could be added later
+            receivedIsFavouriteFlow
+        );
+        
+        // Make API call
+        ApiService apiService = ApiClient.create(getContext());
+        Call<ApiResponse> call = apiService.addPlant(plantRequest);
+        
+        call.enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Log.i(TAG, "Plant uploaded successfully: " + response.body().getMessage());
+                    Toast.makeText(getContext(), "Plant uploaded successfully!", Toast.LENGTH_SHORT).show();
+                    showSuccessOverlay();
+                } else {
+                    Log.e(TAG, "Upload failed: " + response.code() + " - " + response.message());
+                    Toast.makeText(getContext(), "Upload failed: " + response.message(), Toast.LENGTH_SHORT).show();
+                    resetUploadButton();
+                }
+            }
+            
+            @Override
+            public void onFailure(Call<ApiResponse> call, Throwable t) {
+                Log.e(TAG, "Upload failed with exception", t);
+                Toast.makeText(getContext(), "Upload failed: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                resetUploadButton();
+            }
+        });
+    }
+    
+    /**
+     * Resets the upload button to its original state.
+     */
+    private void resetUploadButton() {
+        if (binding != null) {
+            binding.uploadButton.setEnabled(true);
+            binding.uploadButton.setText("Upload");
+        }
     }
 
     /**
