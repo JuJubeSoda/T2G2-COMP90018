@@ -47,8 +47,9 @@ public interface ApiService {
     /**
      * Fetches all wiki plants from the database.
      * This endpoint corresponds to the wiki-controller/getAllWikis endpoint.
+     * Returns PlantWikiDto objects with richer plant information.
      */
     @GET("/api/wiki/all")
-    Call<ApiResponse<List<PlantDto>>> getAllWikis();
+    Call<ApiResponse<List<PlantWikiDto>>> getAllWikis();
 
 }

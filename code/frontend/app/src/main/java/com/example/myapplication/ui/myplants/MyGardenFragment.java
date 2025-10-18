@@ -94,8 +94,6 @@ public class MyGardenFragment extends Fragment {
         Log.d(TAG, "Fetching plants from server...");
         // Make the ProgressBar visible and hide the RecyclerView
         binding.progressBar.setVisibility(View.VISIBLE);
-
-        // FIX: Use the correct ID for the RecyclerView
         binding.recyclerViewMyGardenPlants.setVisibility(View.GONE);
 
         ApiService apiService = ApiClient.create(requireContext());
@@ -103,30 +101,48 @@ public class MyGardenFragment extends Fragment {
 
         call.enqueue(new Callback<ApiResponse<List<PlantDto>>>() {
             @Override
-            public void onResponse(Call<ApiResponse<List<PlantDto>>> call, Response<ApiResponse<List<PlantDto>>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<List<PlantDto>>> call, @NonNull Response<ApiResponse<List<PlantDto>>> response) {
+                // --- THIS IS THE FIX ---
+                // If the binding is null, the view has been destroyed. Do nothing.
+                if (binding == null) {
+                    Log.w(TAG, "onResponse called after view was destroyed. Aborting update.");
+                    return;
+                }
+
                 // Hide the progress bar as soon as we get a response
                 binding.progressBar.setVisibility(View.GONE);
 
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
                     Log.d(TAG, "API call successful. Received " + response.body().getData().size() + " plants.");
                     masterPlantList.clear();
-                    for (PlantDto dto : response.body().getData()) {
-                        masterPlantList.add(dto.toPlant());
-                    }
+                    masterPlantList = response.body().getData().stream()
+                            .map(PlantDto::toPlant)
+                            .collect(Collectors.toList());
                     displayPlants(); // This method should handle showing the RecyclerView
                 } else {
                     Log.e(TAG, "API call failed or returned empty data. Code: " + response.code());
-                    Toast.makeText(getContext(), "Failed to load plants: " + response.message(), Toast.LENGTH_SHORT).show();
+                    // Add a null context check for the Toast as well for extra safety
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), "Failed to load plants: " + response.message(), Toast.LENGTH_SHORT).show();
+                    }
                     updateEmptyViewVisibility(true); // Show empty view
                 }
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<List<PlantDto>>> call, Throwable t) {
+            public void onFailure(@NonNull Call<ApiResponse<List<PlantDto>>> call, @NonNull Throwable t) {
+                // --- THIS IS THE FIX (also applied here for safety) ---
+                if (binding == null) {
+                    Log.w(TAG, "onFailure called after view was destroyed. Aborting update.");
+                    return;
+                }
+
                 // Also hide the progress bar on failure
                 binding.progressBar.setVisibility(View.GONE);
                 Log.e(TAG, "API call failed due to network error.", t);
-                Toast.makeText(getContext(), "Network error. Please check your connection.", Toast.LENGTH_LONG).show();
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "Network error. Please check your connection.", Toast.LENGTH_LONG).show();
+                }
                 updateEmptyViewVisibility(true); // Show empty view
             }
         });

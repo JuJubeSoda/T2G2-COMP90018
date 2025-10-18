@@ -26,7 +26,7 @@ import com.example.myapplication.databinding.PlantwikiBinding;
 import com.example.myapplication.network.ApiClient;
 import com.example.myapplication.network.ApiResponse;
 import com.example.myapplication.network.ApiService;
-import com.example.myapplication.network.PlantDto;
+import com.example.myapplication.network.PlantWikiDto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -142,20 +142,26 @@ public class PlantWikiFragment extends Fragment {
 
         ApiService apiService = ApiClient.create(requireContext());
         // Use the getAllWikis endpoint as specified in the Swagger documentation
-        Call<ApiResponse<List<PlantDto>>> call = apiService.getAllWikis();
+        Call<ApiResponse<List<PlantWikiDto>>> call = apiService.getAllWikis();
 
-        call.enqueue(new Callback<ApiResponse<List<PlantDto>>>() {
+        call.enqueue(new Callback<ApiResponse<List<PlantWikiDto>>>() {
             @Override
-            public void onResponse(@NonNull Call<ApiResponse<List<PlantDto>>> call, @NonNull Response<ApiResponse<List<PlantDto>>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<List<PlantWikiDto>>> call, @NonNull Response<ApiResponse<List<PlantWikiDto>>> response) {
                 if (binding == null) return;
                 binding.progressBarWiki.setVisibility(View.GONE);
 
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
                     masterWikiList.clear();
-                    for (PlantDto dto : response.body().getData()) {
+                    for (PlantWikiDto dto : response.body().getData()) {
                         Plant plant = dto.toPlant();
                         masterWikiList.add(plant);
                         Log.d(TAG, "Added wiki plant: " + plant.getName() + " (Scientific: " + plant.getScientificName() + ")");
+                        Log.d(TAG, "Plant features: " + dto.getFeatures());
+                        Log.d(TAG, "Care guide: " + dto.getCareGuide());
+                        Log.d(TAG, "Water needs: " + dto.getWaterNeeds());
+                        Log.d(TAG, "Light needs: " + dto.getLightNeeds());
+                        Log.d(TAG, "Difficulty: " + dto.getDifficulty());
+                        Log.d(TAG, "Growth height: " + dto.getGrowthHeight());
                     }
                     Log.d(TAG, "Successfully fetched " + masterWikiList.size() + " plants for wiki from database.");
                     displayWikiPlants();
@@ -166,7 +172,7 @@ public class PlantWikiFragment extends Fragment {
             }
 
             @Override
-            public void onFailure(@NonNull Call<ApiResponse<List<PlantDto>>> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<ApiResponse<List<PlantWikiDto>>> call, @NonNull Throwable t) {
                 if (binding == null) return;
                 binding.progressBarWiki.setVisibility(View.GONE);
                 Log.e(TAG, "Network error fetching wiki plants from database.", t);

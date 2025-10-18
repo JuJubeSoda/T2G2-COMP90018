@@ -24,6 +24,7 @@ import com.example.myapplication.network.ApiClient;
 import com.example.myapplication.network.ApiResponse;
 import com.example.myapplication.network.ApiService;
 import com.example.myapplication.network.PlantDto;
+import com.example.myapplication.network.PlantWikiDto;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -70,15 +71,23 @@ public class AddPlantFragment extends Fragment {
     private void fetchAllPlantNamesFromServer() {
         Log.d(TAG, "Fetching all plant names from server...");
         ApiService apiService = ApiClient.create(requireContext());
-        Call<ApiResponse<List<PlantDto>>> call = apiService.getAllWikis();
 
-        call.enqueue(new Callback<ApiResponse<List<PlantDto>>>() {
+        // This part is correct: the API call is for a list of PlantWikiDto
+        Call<ApiResponse<List<PlantWikiDto>>> call = apiService.getAllWikis();
+
+        // --- FIX 1: Correct the type in the Callback to match the call ---
+        // The callback must expect the same type: ApiResponse<List<PlantWikiDto>>
+        call.enqueue(new Callback<ApiResponse<List<PlantWikiDto>>>() {
             @Override
-            public void onResponse(@NonNull Call<ApiResponse<List<PlantDto>>> call, @NonNull Response<ApiResponse<List<PlantDto>>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<List<PlantWikiDto>>> call, @NonNull Response<ApiResponse<List<PlantWikiDto>>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
                     allPlantCommonNames.clear();
+
+                    // --- FIX 2: Map the 'name' from PlantWikiDto ---
+                    // Use PlantWikiDto::getName to get the common plant name for the dropdown.
                     List<String> fetchedNames = response.body().getData().stream()
-                            .map(PlantDto::getScientificName)
+                            .map(PlantWikiDto::getName) // Use getName from PlantWikiDto
+                            .filter(name -> name != null && !name.isEmpty()) // Optional: Filter out any null or empty names
                             .distinct()
                             .collect(Collectors.toList());
 
@@ -93,7 +102,7 @@ public class AddPlantFragment extends Fragment {
             }
 
             @Override
-            public void onFailure(@NonNull Call<ApiResponse<List<PlantDto>>> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<ApiResponse<List<PlantWikiDto>>> call, @NonNull Throwable t) {
                 Log.e(TAG, "Network error fetching plant names.", t);
                 if (getContext() != null) {
                     Toast.makeText(getContext(), "Network error. Please check connection.", Toast.LENGTH_SHORT).show();
@@ -184,7 +193,7 @@ public class AddPlantFragment extends Fragment {
                 // The navigation action ID seems incorrect based on the class name.
                 // Assuming you want to navigate from AddPlantFragment to UploadFragment.
                 // Please verify this ID in your mobile_navigation.xml
-                navController.navigate(R.id.navigation_upload_plant, args);
+                navController.navigate(R.id.navigation_upload, args);
             } catch (Exception e) {
                 Log.e(TAG, "Navigation failed. Check the action ID in your navigation graph.", e);
                 if(getContext() != null) {

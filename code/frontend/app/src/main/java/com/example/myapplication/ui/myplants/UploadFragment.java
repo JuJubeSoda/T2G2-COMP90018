@@ -47,6 +47,7 @@ import java.util.TimeZone;
 public class UploadFragment extends Fragment {
 
     private static final String TAG = "UploadFragment_Details";
+    private static final String KEY_IMAGE_URI = "key_image_uri";
     private UploadplantBinding binding;
     private NavController navController;
 
@@ -58,13 +59,13 @@ public class UploadFragment extends Fragment {
     private FusedLocationProviderClient fusedLocationClient;
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
-                if (isGranted) {
+                if (isGranted) { // This is the success path
                     Log.d(TAG, "Location permission granted. Proceeding with upload.");
-                    getCurrentLocationAndUpload(); // Retry getting location now that permission is granted
-                } else {
+                    getCurrentLocationAndUpload(); // <-- FIX: Retry getting location now
+                } else { // This is the denial path
                     Log.w(TAG, "Location permission denied by user.");
                     Toast.makeText(getContext(), "Location denied. Uploading without location data.", Toast.LENGTH_LONG).show();
-                    uploadPlantToBackend(null); // Proceed without location
+                    uploadPlantToBackend(null); // <-- FIX: Proceed with the upload but with null location
                 }
             });
 
@@ -75,13 +76,32 @@ public class UploadFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
+
+        // --- FIX: Restore from savedInstanceState if it exists ---
+        if (savedInstanceState != null) {
+            receivedImageUriString = savedInstanceState.getString(KEY_IMAGE_URI);
+            Log.d(TAG, "Restored image URI from saved state: " + receivedImageUriString);
+        }
+
+        // If not restored, get from arguments (only on first creation)
+        if (getArguments() != null && receivedImageUriString == null) {
             receivedImageUriString = getArguments().getString(ARG_IMAGE_URI);
             receivedScientificName = getArguments().getString(ARG_SCIENTIFIC_NAME);
             receivedIsFavouriteFlow = getArguments().getBoolean(ARG_IS_FAVOURITE_FLOW, false);
+            Log.d(TAG, "Received image URI from arguments: " + receivedImageUriString);
         }
         // Initialize the location client
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
+    }
+
+    // --- FIX: Implement onSaveInstanceState to save the URI ---
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (receivedImageUriString != null) {
+            outState.putString(KEY_IMAGE_URI, receivedImageUriString);
+            Log.d(TAG, "Saving image URI to instance state: " + receivedImageUriString);
+        }
     }
 
     @Nullable
@@ -159,6 +179,14 @@ public class UploadFragment extends Fragment {
      * --- MODIFICATION: This method now takes a Location object and handles timestamps. ---
      */
     private void uploadPlantToBackend(@Nullable Location location) {
+        // --- FIX: Final safety check to prevent crash ---
+        if (receivedImageUriString == null) {
+            Log.e(TAG, "Cannot upload, image URI string is null.");
+            Toast.makeText(getContext(), "Error: Image data was lost. Please try again.", Toast.LENGTH_LONG).show();
+            resetUploadButton();
+            return;
+        }
+
         if (getContext() == null) {
             resetUploadButton();
             return;
