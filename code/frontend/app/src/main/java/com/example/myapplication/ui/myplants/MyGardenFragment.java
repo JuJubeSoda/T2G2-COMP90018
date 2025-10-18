@@ -195,26 +195,60 @@ public class MyGardenFragment extends Fragment {
     }
 
     private void switchToListView() {
-        binding.recyclerViewMyGardenPlants.setLayoutManager(new LinearLayoutManager(getContext()));
-        plantCardAdapter.setViewType(PlantCardAdapter.VIEW_TYPE_LIST_WITH_DATE);
-        isCurrentlyListView = true;
-        updateToggleButtonsVisualState();
+        try {
+            if (binding.recyclerViewMyGardenPlants == null) {
+                Log.e(TAG, "RecyclerView is null, cannot switch to list view");
+                return;
+            }
+            if (plantCardAdapter == null) {
+                Log.e(TAG, "PlantCardAdapter is null, cannot switch to list view");
+                return;
+            }
+            
+            binding.recyclerViewMyGardenPlants.setLayoutManager(new LinearLayoutManager(getContext()));
+            plantCardAdapter.setViewType(PlantCardAdapter.VIEW_TYPE_LIST_WITH_DATE);
+            isCurrentlyListView = true;
+            updateToggleButtonsVisualState();
+            Log.d(TAG, "Successfully switched to list view");
+        } catch (Exception e) {
+            Log.e(TAG, "Error switching to list view", e);
+            Toast.makeText(getContext(), "Error switching to list view", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void switchToGridView() {
-        binding.recyclerViewMyGardenPlants.setLayoutManager(new GridLayoutManager(getContext(), 2));
-        plantCardAdapter.setViewType(PlantCardAdapter.VIEW_TYPE_GRID);
-        isCurrentlyListView = false;
-        updateToggleButtonsVisualState();
+        try {
+            if (binding.recyclerViewMyGardenPlants == null) {
+                Log.e(TAG, "RecyclerView is null, cannot switch to grid view");
+                return;
+            }
+            if (plantCardAdapter == null) {
+                Log.e(TAG, "PlantCardAdapter is null, cannot switch to grid view");
+                return;
+            }
+            
+            binding.recyclerViewMyGardenPlants.setLayoutManager(new GridLayoutManager(getContext(), 2));
+            plantCardAdapter.setViewType(PlantCardAdapter.VIEW_TYPE_GRID);
+            isCurrentlyListView = false;
+            updateToggleButtonsVisualState();
+            Log.d(TAG, "Successfully switched to grid view");
+        } catch (Exception e) {
+            Log.e(TAG, "Error switching to grid view", e);
+            Toast.makeText(getContext(), "Error switching to grid view", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void updateToggleButtonsVisualState() {
-        if (isCurrentlyListView) {
-            binding.imageButton.setImageResource(R.drawable.list_select_foreground);
-            binding.imageButton2.setImageResource(R.drawable.grid_unselect_foreground);
-        } else {
-            binding.imageButton.setImageResource(R.drawable.list_unselect_foreground);
-            binding.imageButton2.setImageResource(R.drawable.grid_select_foreground);
+        try {
+            if (isCurrentlyListView) {
+                binding.imageButton.setImageResource(R.drawable.list_select_foreground);
+                binding.imageButton2.setImageResource(R.drawable.grid_unselect_foreground);
+            } else {
+                binding.imageButton.setImageResource(R.drawable.list_unselect_foreground);
+                binding.imageButton2.setImageResource(R.drawable.grid_select_foreground);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error updating toggle buttons visual state", e);
         }
     }
 

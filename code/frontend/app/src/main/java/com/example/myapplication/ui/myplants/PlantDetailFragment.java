@@ -66,8 +66,17 @@ public class PlantDetailFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Show progress bar while loading
+        binding.progressBar.setVisibility(View.VISIBLE);
+
         if (plant != null) {
             populateUi();
+            // Hide progress bar after populating UI
+            binding.progressBar.setVisibility(View.GONE);
+        } else {
+            // Hide progress bar and show error
+            binding.progressBar.setVisibility(View.GONE);
+            Toast.makeText(getContext(), "Error: Could not load plant data.", Toast.LENGTH_LONG).show();
         }
 
         binding.backButtonDetail.setOnClickListener(v ->
@@ -79,67 +88,87 @@ public class PlantDetailFragment extends Fragment {
      * Populates the views in the layout with data from the 'plant' object.
      */
     private void populateUi() {
-        // --- Use correct and safe method calls based on the updated Plant model ---
-        binding.textViewScientificName.setText(plant.getScientificName());
-        binding.textViewIntroduction.setText(plant.getDescription()); // Use getDescription()
-
-        // Construct a location string from latitude and longitude, with null checks.
-        String locationString = "Location not available";
-        // This now correctly uses getLatitude() and getLongitude()
-        if (plant.getLatitude() != null && plant.getLongitude() != null) {
-            locationString = String.format(Locale.getDefault(), "(%.4f, %.4f)", plant.getLatitude(), plant.getLongitude());
-        }
-        binding.textViewLocation.setText(locationString);
-
-        // Correctly handle the list of tags
-        String tags = "No tags";
-        List<String> plantTags = plant.getTags(); // getTags() returns a List<String>
-        if (plantTags != null && !plantTags.isEmpty()) {
-            tags = plantTags.stream().collect(Collectors.joining(", "));
-        }
-        binding.textViewSearchTag.setText(tags);
-
-        // Set the discovered by user, with a null check.
-        String discoveredBy = plant.getDiscoveredBy() != null ? plant.getDiscoveredBy() : "Unknown";
-        binding.textViewDiscoveredBy.setText(discoveredBy);
-
-        // --- FIX: Correctly parse the ISO 8601 UTC date string from the backend ---
         try {
-            // This line is now corrected to call the right method.
-            String createdAt = plant.getCreatedAt(); // Use getCreatedAt()
+            // --- Use correct and safe method calls based on the updated Plant model ---
+            binding.textViewScientificName.setText(plant.getScientificName() != null ? plant.getScientificName() : "Not available");
+            binding.textViewIntroduction.setText(plant.getDescription() != null ? plant.getDescription() : "No description available");
 
-            if (createdAt == null || createdAt.isEmpty()) {
-                throw new ParseException("Date string is null or empty", 0);
+            // Construct a location string from latitude and longitude, with null checks.
+            String locationString = "Location not available";
+            if (plant.getLatitude() != null && plant.getLongitude() != null) {
+                locationString = String.format(Locale.getDefault(), "(%.4f, %.4f)", plant.getLatitude(), plant.getLongitude());
             }
-            // Input format from backend (ISO 8601 UTC)
-            SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
-            isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-            Date date = isoFormat.parse(createdAt);
+            binding.textViewLocation.setText(locationString);
 
-            // Desired output format for display
-            SimpleDateFormat displayFormat = new SimpleDateFormat("dd MMMM yyyy", Locale.getDefault());
-            String formattedDate = displayFormat.format(date);
-            binding.textViewDiscoveredOn.setText(formattedDate);
-        } catch (ParseException e) {
-            Log.e(TAG, "Failed to parse or format discovery date.", e);
+            // Correctly handle the list of tags
+            String tags = "No tags";
+            List<String> plantTags = plant.getTags();
+            if (plantTags != null && !plantTags.isEmpty()) {
+                tags = plantTags.stream().collect(Collectors.joining(", "));
+            }
+            binding.textViewSearchTag.setText(tags);
+
+            // Set the discovered by user, with a null check.
+            String discoveredBy = plant.getDiscoveredBy() != null ? plant.getDiscoveredBy() : "Unknown";
+            binding.textViewDiscoveredBy.setText(discoveredBy);
+        } catch (Exception e) {
+            Log.e(TAG, "Error populating UI with plant data", e);
+            Toast.makeText(getContext(), "Error displaying plant information", Toast.LENGTH_SHORT).show();
+        }
+
+        // --- FIX: Handle the date string from the backend ---
+        try {
+            String createdAt = plant.getCreatedAt();
+            
+            if (createdAt == null || createdAt.isEmpty()) {
+                binding.textViewDiscoveredOn.setText("Date not available");
+            } else {
+                // Try to parse the date string - handle different possible formats
+                SimpleDateFormat displayFormat = new SimpleDateFormat("dd MMMM yyyy", Locale.getDefault());
+                String formattedDate;
+                
+                try {
+                    // Try ISO 8601 format first
+                    SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+                    isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+                    Date date = isoFormat.parse(createdAt);
+                    formattedDate = displayFormat.format(date);
+                } catch (ParseException e1) {
+                    try {
+                        // Try simpler ISO format
+                        SimpleDateFormat simpleIsoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
+                        simpleIsoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+                        Date date = simpleIsoFormat.parse(createdAt);
+                        formattedDate = displayFormat.format(date);
+                    } catch (ParseException e2) {
+                        // If all parsing fails, just display the raw string
+                        formattedDate = createdAt;
+                    }
+                }
+                
+                binding.textViewDiscoveredOn.setText(formattedDate);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to handle discovery date.", e);
             binding.textViewDiscoveredOn.setText("Date not available");
         }
 
 
         // Load the plant image using Glide with added null safety.
-        String base64Image = plant.getImageUrl();
         try {
+            String base64Image = plant.getImageUrl();
             if (base64Image == null || base64Image.isEmpty()) {
-                throw new IllegalArgumentException("Base64 image string is null or empty.");
+                binding.imageViewPlantPreview.setImageResource(R.drawable.plantbulb_foreground);
+            } else {
+                byte[] imageBytes = Base64.decode(base64Image, Base64.DEFAULT);
+                Glide.with(this)
+                        .load(imageBytes)
+                        .placeholder(R.drawable.plantbulb_foreground)
+                        .error(R.drawable.plantbulb_foreground)
+                        .into(binding.imageViewPlantPreview);
             }
-            byte[] imageBytes = Base64.decode(base64Image, Base64.DEFAULT);
-            Glide.with(this)
-                    .load(imageBytes)
-                    .placeholder(R.drawable.plantbulb_foreground)
-                    .error(R.drawable.plantbulb_foreground)
-                    .into(binding.imageViewPlantPreview);
         } catch (Exception e) {
-            Log.e(TAG, "Failed to decode or load image for plant: " + plant.getName(), e);
+            Log.e(TAG, "Failed to decode or load image for plant: " + (plant.getName() != null ? plant.getName() : "Unknown"), e);
             binding.imageViewPlantPreview.setImageResource(R.drawable.plantbulb_foreground);
         }
     }
