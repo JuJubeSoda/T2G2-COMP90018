@@ -41,4 +41,7 @@ public interface ApiService {
     @POST("/api/plants/add")
     Call<ApiResponse> addPlant(@Body PlantRequest plantRequest);
 
+    @GET("/api/wiki/all")
+    Call<ApiResponse<List<PlantDto>>> getAllPlants();
+
 }
