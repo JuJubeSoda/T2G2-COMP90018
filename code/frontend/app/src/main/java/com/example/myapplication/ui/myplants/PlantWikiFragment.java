@@ -141,23 +141,27 @@ public class PlantWikiFragment extends Fragment {
         binding.recyclerViewPlants.setVisibility(View.GONE);
 
         ApiService apiService = ApiClient.create(requireContext());
-        Call<ApiResponse<List<PlantDto>>> call = apiService.getAllPlants();
+        // Use the getAllWikis endpoint as specified in the Swagger documentation
+        Call<ApiResponse<List<PlantDto>>> call = apiService.getAllWikis();
 
         call.enqueue(new Callback<ApiResponse<List<PlantDto>>>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse<List<PlantDto>>> call, @NonNull Response<ApiResponse<List<PlantDto>>> response) {
                 if (binding == null) return;
                 binding.progressBarWiki.setVisibility(View.GONE);
+
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
                     masterWikiList.clear();
                     for (PlantDto dto : response.body().getData()) {
-                        masterWikiList.add(dto.toPlant());
+                        Plant plant = dto.toPlant();
+                        masterWikiList.add(plant);
+                        Log.d(TAG, "Added wiki plant: " + plant.getName() + " (Scientific: " + plant.getScientificName() + ")");
                     }
-                    Log.d(TAG, "Successfully fetched " + masterWikiList.size() + " plants for wiki.");
+                    Log.d(TAG, "Successfully fetched " + masterWikiList.size() + " plants for wiki from database.");
                     displayWikiPlants();
                 } else {
-                    Log.e(TAG, "Failed to fetch wiki plants. Code: " + response.code());
-                    Toast.makeText(getContext(), "Failed to load wiki.", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Failed to fetch wiki plants. Code: " + response.code() + ", Message: " + response.message());
+                    Toast.makeText(getContext(), "Failed to load wiki from database. Code: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -165,7 +169,7 @@ public class PlantWikiFragment extends Fragment {
             public void onFailure(@NonNull Call<ApiResponse<List<PlantDto>>> call, @NonNull Throwable t) {
                 if (binding == null) return;
                 binding.progressBarWiki.setVisibility(View.GONE);
-                Log.e(TAG, "Network error fetching wiki plants.", t);
+                Log.e(TAG, "Network error fetching wiki plants from database.", t);
                 Toast.makeText(getContext(), "Network error. Please check connection.", Toast.LENGTH_SHORT).show();
             }
         });
