@@ -57,7 +57,7 @@
                         android:id="@+id/light_icon"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:src="@drawable/plantbulb_foreground"
+                        android:src="@drawable/ic_sun"
                         app:tint="?attr/colorPrimary"
                         tools:ignore="ContentDescription" />
 
@@ -102,7 +102,7 @@
                         android:id="@+id/water_icon"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:src="@drawable/plantbulb_foreground"
+                        android:src="@drawable/ic_water"
                         app:tint="?attr/colorPrimary"
                         tools:ignore="ContentDescription" />
 
@@ -147,7 +147,7 @@
                         android:id="@+id/temperature_icon"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:src="@drawable/plantbulb_foreground"
+                        android:src="@drawable/ic_thermometer"
                         app:tint="?attr/colorPrimary"
                         tools:ignore="ContentDescription" />
 
@@ -192,7 +192,7 @@
                         android:id="@+id/humidity_icon"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:src="@drawable/plantbulb_foreground"
+                        android:src="@drawable/ic_humidity"
                         app:tint="?attr/colorPrimary"
                         tools:ignore="ContentDescription" />
 

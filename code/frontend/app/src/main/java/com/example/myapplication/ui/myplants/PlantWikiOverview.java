@@ -20,7 +20,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import com.example.myapplication.R;
-// --- FIX 1: Use the correct binding class for this fragment's layout ---
 import com.example.myapplication.databinding.PlantwikiOverviewtabBinding;
 
 import java.io.Serializable;
@@ -29,7 +28,6 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
 
     private static final String ARG_PLANT = "plant_object";
 
-    // --- FIX 2: The binding variable must match this fragment's layout ---
     private PlantwikiOverviewtabBinding binding;
     private Plant plant;
     private SensorManager sensorManager;
@@ -66,7 +64,6 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // --- FIX 3: Inflate the correct binding ---
         binding = PlantwikiOverviewtabBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
@@ -76,18 +73,36 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
         super.onViewCreated(view, savedInstanceState);
 
         if (plant != null) {
-            binding.overviewIntroText.setText(plant.getDescription());
-            binding.lightSubtitle.setText(plant.getLightRequirement());
-            binding.waterSubtitle.setText(plant.getWaterRequirement());
-            binding.temperatureSubtitle.setText(plant.getTemperatureRequirement());
-            binding.humiditySubtitle.setText(plant.getHumidityRequirement());
+            // --- THIS IS THE FIX ---
+            // Use a helper function or ternary operator to set "N/A" for null or empty strings.
+
+            String description = plant.getDescription();
+            binding.overviewIntroText.setText(description != null && !description.isEmpty() ? description : "No description available.");
+
+            String lightReq = plant.getLightRequirement();
+            binding.lightSubtitle.setText(lightReq != null && !lightReq.isEmpty() ? lightReq : "N/A");
+
+            String waterReq = plant.getWaterRequirement();
+            binding.waterSubtitle.setText(waterReq != null && !waterReq.isEmpty() ? waterReq : "N/A");
+
+            String tempReq = plant.getTemperatureRequirement();
+            binding.temperatureSubtitle.setText(tempReq != null && !tempReq.isEmpty() ? tempReq : "N/A");
+
+            String humidityReq = plant.getHumidityRequirement();
+            binding.humiditySubtitle.setText(humidityReq != null && !humidityReq.isEmpty() ? humidityReq : "N/A");
+        } else {
+            // Handle case where the entire plant object is null
+            binding.overviewIntroText.setText("Plant data to be updated!");
+            binding.lightSubtitle.setText("N/A");
+            binding.waterSubtitle.setText("N/A");
+            binding.temperatureSubtitle.setText("N/A");
+            binding.humiditySubtitle.setText("N/A");
         }
 
         setupClickListeners();
     }
 
     private void setupClickListeners() {
-        // This button click now correctly calls a method to find its PARENT
         binding.viewFullCareGuideButton.setOnClickListener(v -> switchToCareGuideTab());
         binding.waterCard.setOnClickListener(v -> switchToCareGuideTab());
 
@@ -138,11 +153,9 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
         sensorDialog.show();
     }
 
-    // --- FIX 4: This method now correctly finds the parent and calls ITS switchToTab method ---
     private void switchToCareGuideTab() {
         Fragment parent = getParentFragment();
         if (parent instanceof PlantWikiMainTabFragment) {
-            // Call the public method on the parent fragment
             ((PlantWikiMainTabFragment) parent).switchToTab(2); // 2 is the index for "Care Guide"
         }
     }
