@@ -2,6 +2,7 @@
 package com.example.myapplication.ui.myplants;
 
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -65,17 +66,31 @@ public class PlantWikiMainTabFragment extends Fragment {
         binding.plantNicknameText.setText(plant.getScientificName());
 
         String base64Image = plant.getImageUrl();
-        try {
-            byte[] imageBytes = Base64.decode(base64Image, Base64.DEFAULT);
+
+        // --- THIS IS THE FIX ---
+        // Check if the base64Image string is null or empty before trying to use it.
+        if (TextUtils.isEmpty(base64Image)) {
+            // If there's no image, load the default placeholder directly.
+            Log.w(TAG, "Image data is missing for " + plant.getName() + ". Loading default placeholder.");
             Glide.with(this)
-                    .load(imageBytes)
-                    .placeholder(R.drawable.plantbulb_foreground)
-                    .error(R.drawable.plantbulb_foreground)
-                    // --- FIX: Use the correct ID from your plantwiki_maintab.xml file. ---
-                    // Replace 'imageViewPlantPreview' with the actual ID if it is different.
+                    .load(R.drawable.plantbulb_foreground) // Load placeholder resource
                     .into(binding.landingimage);
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to load image for " + plant.getName(), e);
+        } else {
+            // If there is image data, try to decode and load it.
+            try {
+                byte[] imageBytes = Base64.decode(base64Image, Base64.DEFAULT);
+                Glide.with(this)
+                        .load(imageBytes)
+                        .placeholder(R.drawable.plantbulb_foreground) // Show while loading
+                        .error(R.drawable.plantbulb_foreground)     // Show on decode error
+                        .into(binding.landingimage);
+            } catch (Exception e) {
+                // If decoding fails, log the error and load the placeholder.
+                Log.e(TAG, "Failed to decode or load Base64 image for " + plant.getName(), e);
+                Glide.with(this)
+                        .load(R.drawable.plantbulb_foreground)
+                        .into(binding.landingimage);
+            }
         }
     }
 
