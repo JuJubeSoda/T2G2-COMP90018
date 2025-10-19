@@ -55,6 +55,10 @@ public class Plant implements Parcelable {
     private String toxicity;
     @SerializedName("airPurifying")
     private String airPurifying;
+    @SerializedName("soilGuide")
+    private String soilGuide;
+    @SerializedName("fertilizerGuide")
+    private String fertilizerGuide;
 
     // --- FIX: A public constructor for the DTO to use for conversion ---
     public Plant(int plantId, int userId, String name, String imageUrl, String description,
@@ -171,4 +175,6 @@ public class Plant implements Parcelable {
     public String getAirPurifying() {
         return airPurifying;
     }
+    public String getSoilGuide() { return soilGuide; }
+    public String getFertilizerGuide() { return fertilizerGuide; }
 }
