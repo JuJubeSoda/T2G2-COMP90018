@@ -23,16 +23,15 @@ import com.example.myapplication.databinding.AddplantBinding;
 import com.example.myapplication.network.ApiClient;
 import com.example.myapplication.network.ApiResponse;
 import com.example.myapplication.network.ApiService;
-import com.example.myapplication.network.PlantDto;
 import com.example.myapplication.network.PlantWikiDto;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class AddPlantFragment extends Fragment {
 
@@ -41,7 +40,6 @@ public class AddPlantFragment extends Fragment {
     private NavController navController;
     private SearchResultAdapter searchAdapter;
 
-    // This will now hold the common names for the dropdown
     private final List<String> allPlantCommonNames = new ArrayList<>();
     private boolean isFavouriteFlow = false;
 
@@ -61,52 +59,58 @@ public class AddPlantFragment extends Fragment {
             isFavouriteFlow = getArguments().getBoolean("isFavouriteFlow", false);
         }
 
-        fetchAllPlantNamesFromServer();
         setupRecyclerView();
         setupSearchLogic();
+        fetchAllPlantNamesFromServer(); // Moved to be after setup
         setupBackButton();
         setupNextButton();
     }
 
     private void fetchAllPlantNamesFromServer() {
         Log.d(TAG, "Fetching all plant names from server...");
-        ApiService apiService = ApiClient.create(requireContext());
 
-        // This part is correct: the API call is for a list of PlantWikiDto
+        binding.progressBarSearch.setVisibility(View.VISIBLE);
+        binding.textViewSearchStatus.setText("Loading plant names...");
+        binding.textViewSearchStatus.setVisibility(View.VISIBLE);
+        binding.recyclerViewScientificNames.setVisibility(View.GONE);
+
+        ApiService apiService = ApiClient.create(requireContext());
         Call<ApiResponse<List<PlantWikiDto>>> call = apiService.getAllWikis();
 
-        // --- FIX 1: Correct the type in the Callback to match the call ---
-        // The callback must expect the same type: ApiResponse<List<PlantWikiDto>>
         call.enqueue(new Callback<ApiResponse<List<PlantWikiDto>>>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse<List<PlantWikiDto>>> call, @NonNull Response<ApiResponse<List<PlantWikiDto>>> response) {
+                if (binding == null) return; // View destroyed, do nothing
+                binding.progressBarSearch.setVisibility(View.GONE);
+
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
                     allPlantCommonNames.clear();
-
-                    // --- FIX 2: Map the 'name' from PlantWikiDto ---
-                    // Use PlantWikiDto::getName to get the common plant name for the dropdown.
                     List<String> fetchedNames = response.body().getData().stream()
-                            .map(PlantWikiDto::getName) // Use getName from PlantWikiDto
-                            .filter(name -> name != null && !name.isEmpty()) // Optional: Filter out any null or empty names
+                            .map(PlantWikiDto::getName)
+                            .filter(name -> name != null && !name.isEmpty())
                             .distinct()
                             .collect(Collectors.toList());
 
                     allPlantCommonNames.addAll(fetchedNames);
-                    Log.d(TAG, "Successfully loaded " + allPlantCommonNames.size() + " unique plant names for searching.");
+                    Log.d(TAG, "Successfully loaded " + allPlantCommonNames.size() + " unique plant names.");
+
+                    // --- FIX 1: Show the full list immediately after fetching ---
+                    searchAdapter.updateData(allPlantCommonNames);
+                    binding.recyclerViewScientificNames.setVisibility(View.VISIBLE);
+                    binding.textViewSearchStatus.setVisibility(View.GONE);
+
                 } else {
                     Log.e(TAG, "Failed to fetch plant names. Code: " + response.code());
-                    if(getContext() != null) {
-                        Toast.makeText(getContext(), "Failed to load plant list.", Toast.LENGTH_SHORT).show();
-                    }
+                    binding.textViewSearchStatus.setText("Failed to load plant list. Please try again.");
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<ApiResponse<List<PlantWikiDto>>> call, @NonNull Throwable t) {
+                if (binding == null) return; // View destroyed, do nothing
+                binding.progressBarSearch.setVisibility(View.GONE);
+                binding.textViewSearchStatus.setText("Network error. Please check connection.");
                 Log.e(TAG, "Network error fetching plant names.", t);
-                if (getContext() != null) {
-                    Toast.makeText(getContext(), "Network error. Please check connection.", Toast.LENGTH_SHORT).show();
-                }
             }
         });
     }
@@ -118,7 +122,6 @@ public class AddPlantFragment extends Fragment {
             binding.searchScientificNameEditText.setSelection(selectedPlantName.length());
             binding.recyclerViewScientificNames.setVisibility(View.GONE);
 
-            // Hide the keyboard
             if (getContext() != null) {
                 InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(binding.searchScientificNameEditText.getWindowToken(), 0);
@@ -130,8 +133,9 @@ public class AddPlantFragment extends Fragment {
     }
 
     private void setupSearchLogic() {
-        binding.textViewSearchStatus.setText("Search for a plant by its name.");
-        binding.textViewSearchStatus.setVisibility(View.VISIBLE);
+        // Initial state message, will be replaced on data load
+        binding.textViewSearchStatus.setText("");
+        binding.textViewSearchStatus.setVisibility(View.GONE);
         binding.recyclerViewScientificNames.setVisibility(View.GONE);
 
         binding.searchScientificNameEditText.addTextChangedListener(new TextWatcher() {
@@ -149,20 +153,22 @@ public class AddPlantFragment extends Fragment {
     }
 
     private void filterPlantNames(String query) {
-        if (query.isEmpty()) {
-            binding.recyclerViewScientificNames.setVisibility(View.GONE);
-            binding.textViewSearchStatus.setVisibility(View.VISIBLE);
-            binding.textViewSearchStatus.setText("Search for a plant by its name.");
-            searchAdapter.updateData(new ArrayList<>());
-            return;
-        }
+        // --- FIX 2: Simplified filtering logic ---
+        List<String> filteredList;
 
-        List<String> filteredList = allPlantCommonNames.stream()
-                .filter(name -> name.toLowerCase().contains(query.toLowerCase()))
-                .collect(Collectors.toList());
+        if (query.isEmpty()) {
+            // If the query is empty, show the full list
+            filteredList = new ArrayList<>(allPlantCommonNames);
+        } else {
+            // Otherwise, show the filtered list
+            filteredList = allPlantCommonNames.stream()
+                    .filter(name -> name.toLowerCase().contains(query.toLowerCase()))
+                    .collect(Collectors.toList());
+        }
 
         searchAdapter.updateData(filteredList);
 
+        // Update visibility based on whether the list is empty
         if (filteredList.isEmpty()) {
             binding.recyclerViewScientificNames.setVisibility(View.GONE);
             binding.textViewSearchStatus.setText("No results found.");
@@ -175,30 +181,21 @@ public class AddPlantFragment extends Fragment {
 
     private void setupNextButton() {
         binding.imageView.setOnClickListener(v -> {
-            // The value is now a common name, but the key is still "scientificName" for the next fragment.
-            // This is acceptable if the next fragment is prepared to handle a common name.
             String plantName = binding.searchScientificNameEditText.getText().toString().trim();
-
             if (plantName.isEmpty()) {
                 binding.searchScientificNameEditText.setError("Please enter or select a name");
                 return;
             }
 
-            Log.d(TAG, "Navigating to UploadFragment with plant name: " + plantName + " and isFavouriteFlow: " + isFavouriteFlow);
+            Log.d(TAG, "Navigating to UploadFragment with plant name: " + plantName);
             Bundle args = new Bundle();
-            args.putString("scientificName", plantName); // The key remains "scientificName"
+            args.putString("scientificName", plantName);
             args.putBoolean("isFavouriteFlow", isFavouriteFlow);
 
             try {
-                // The navigation action ID seems incorrect based on the class name.
-                // Assuming you want to navigate from AddPlantFragment to UploadFragment.
-                // Please verify this ID in your mobile_navigation.xml
                 navController.navigate(R.id.navigation_upload, args);
             } catch (Exception e) {
-                Log.e(TAG, "Navigation failed. Check the action ID in your navigation graph.", e);
-                if(getContext() != null) {
-                    Toast.makeText(getContext(), "Error: Cannot proceed.", Toast.LENGTH_SHORT).show();
-                }
+                Log.e(TAG, "Navigation failed.", e);
             }
         });
     }
