@@ -47,6 +47,14 @@ public class Plant implements Parcelable {
     private String temperatureRequirement;
     @SerializedName("humidityRequirement")
     private String humidityRequirement;
+    @SerializedName("matureHeight")
+    private String matureHeight;
+    @SerializedName("leafType")
+    private String leafType;
+    @SerializedName("toxicity")
+    private String toxicity;
+    @SerializedName("airPurifying")
+    private String airPurifying;
 
     // --- FIX: A public constructor for the DTO to use for conversion ---
     public Plant(int plantId, int userId, String name, String imageUrl, String description,
@@ -147,4 +155,20 @@ public class Plant implements Parcelable {
     public String getWaterRequirement() { return waterRequirement; }
     public String getTemperatureRequirement() { return temperatureRequirement; }
     public String getHumidityRequirement() { return humidityRequirement; }
+
+    public String getMatureHeight() {
+        return matureHeight;
+    }
+
+    public String getLeafType() {
+        return leafType;
+    }
+
+    public String getToxicity() {
+        return toxicity;
+    }
+
+    public String getAirPurifying() {
+        return airPurifying;
+    }
 }
