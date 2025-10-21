@@ -23,6 +23,7 @@ import com.example.myapplication.network.ApiService;
 import com.example.myapplication.network.BaseResponse;
 import com.example.myapplication.sensor.SensorDataCollector;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -195,30 +196,42 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
     private void handleAIResponse(Response<BaseResponse> response, TextView aiThinking) {
         if (response.isSuccessful() && response.body() != null) {
             BaseResponse base = response.body();
+            Log.d(TAG, "API Response: " + base.toString());
 
             if (base.code != null && base.code == 200 && base.data != null) {
                 JsonElement data = base.data;
+                Log.d(TAG, "Data type: " + data.getClass().getSimpleName());
+                Log.d(TAG, "Data content: " + data.toString());
+                
                 String reply = "";
                 
                 if (data.isJsonObject()) {
-                    if (data.getAsJsonObject().has("answer")) {
-                        reply = data.getAsJsonObject().get("answer").getAsString();
-                    } else if (data.getAsJsonObject().has("recommendations")) {
-                        reply = data.getAsJsonObject().get("recommendations").getAsString();
-                    } else if (data.getAsJsonObject().has("reply")) {
-                        reply = data.getAsJsonObject().get("reply").getAsString();
+                    JsonObject dataObj = data.getAsJsonObject();
+                    Log.d(TAG, "Data object keys: " + dataObj.keySet().toString());
+                    
+                    if (dataObj.has("answer")) {
+                        reply = dataObj.get("answer").getAsString();
+                        Log.d(TAG, "Found answer: " + reply);
+                    } else if (dataObj.has("recommendations")) {
+                        reply = dataObj.get("recommendations").getAsString();
+                        Log.d(TAG, "Found recommendations: " + reply);
+                    } else if (dataObj.has("reply")) {
+                        reply = dataObj.get("reply").getAsString();
+                        Log.d(TAG, "Found reply: " + reply);
                     }
                 }
                 
                 if (!reply.isEmpty()) {
                     typewriterEffect(aiThinking, "🌱 Plant AI: " + reply);
                 } else {
-                    aiThinking.setText("⚠️ Plant AI: Unexpected data format.");
+                    aiThinking.setText("⚠️ Plant AI: Unexpected data format. Check logs for details.");
                 }
             } else {
+                Log.d(TAG, "Response code: " + base.code + ", message: " + base.msg);
                 aiThinking.setText("⚠️ Plant AI: " + base.msg);
             }
         } else {
+            Log.d(TAG, "Response not successful or body is null");
             aiThinking.setText("⚠️ Plant AI: Server returned no data.");
         }
     }
