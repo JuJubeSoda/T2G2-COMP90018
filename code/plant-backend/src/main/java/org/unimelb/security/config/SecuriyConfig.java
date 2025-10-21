@@ -55,7 +55,8 @@ public class SecuriyConfig {
                             "/test/**",
                             "/health/**",
                             "/actuator/**",
-                            "/sms/**").anonymous()
+                            "/sms/**",
+                            "/api/plant-ai/**").anonymous()
                     .anyRequest().authenticated(); // 其余请求都需认证
         });
         // 2. 登录请求url

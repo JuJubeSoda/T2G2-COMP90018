@@ -85,6 +85,14 @@ public class SignInActivity extends AppCompatActivity {
                     }
 
                     BaseResponse br = response.body();
+                    
+                    // 检查登录是否成功
+                    if (br.code != null && br.code != 200) {
+                        // 登录失败，显示具体错误信息
+                        String errorMessage = getLoginErrorMessage(br.code, br.msg);
+                        Toast.makeText(SignInActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                        return;
+                    }
 
                     // 提取后端返回的token
                     String token = null;
@@ -167,5 +175,23 @@ public class SignInActivity extends AppCompatActivity {
     private String readToken() {
         SharedPreferences sp = getSharedPreferences(PREFS_AUTH, MODE_PRIVATE);
         return sp.getString(KEY_TOKEN, "");
+    }
+    
+    // 根据错误码返回用户友好的错误信息
+    private String getLoginErrorMessage(Integer code, String message) {
+        if (code == null) {
+            return "Login failed. Please try again.";
+        }
+        
+        switch (code) {
+            case 205: // FAIL_USER_NOT_FOUND
+                return "User not found. Please check your username or register first.";
+            case 206: // FAIL_WRONG_PASSWORD
+                return "Incorrect password. Please try again.";
+            case 202: // FAIL_LOGIN_ERROR
+                return "Login failed. Please check your credentials.";
+            default:
+                return message != null ? message : "Login failed. Please try again.";
+        }
     }
 }

@@ -7,6 +7,10 @@ public enum ResultConstant {
     FAIL(201, "Operation fail"),
 
     FAIL_LOGIN_ERROR(202,"Incorrect username or password"),
+    
+    FAIL_USER_NOT_FOUND(205,"User not found. Please check your username or register first"),
+    
+    FAIL_WRONG_PASSWORD(206,"Incorrect password"),
 
     FAIL_UNLOGIN_ERROR(203,"Your login state has expired, please login again"),
 
