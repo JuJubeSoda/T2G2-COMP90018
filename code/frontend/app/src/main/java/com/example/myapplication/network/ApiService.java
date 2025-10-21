@@ -38,6 +38,21 @@ public interface ApiService {
     @GET("api/ai_bot/ask")
     Call<BaseResponse> askQuestion(@Query("q") String question);
 
+    // --- Plant AI Endpoints ---
+    
+    @POST("api/plant-ai/recommendations")
+    Call<BaseResponse> getPlantRecommendations(@Query("location") String location, @Body java.util.Map<String, Object> sensorData);
+    
+    @POST("api/plant-ai/care-advice")
+    Call<BaseResponse> getPlantCareAdvice(@Query("plantName") String plantName, @Body java.util.Map<String, Object> currentConditions);
+    
+    @GET("api/plant-ai/ask")
+    Call<BaseResponse> askPlantQuestion(@Query("question") String question);
+    
+    @retrofit2.http.Multipart
+    @POST("api/plant-ai/identify")
+    Call<BaseResponse> identifyPlant(@retrofit2.http.Part okhttp3.MultipartBody.Part imageFile, @Query("location") String location);
+
     @POST("/api/plants/add")
     Call<ApiResponse> addPlant(@Body PlantRequest plantRequest);
 
