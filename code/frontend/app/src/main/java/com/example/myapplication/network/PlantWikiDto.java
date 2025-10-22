@@ -1,5 +1,6 @@
 package com.example.myapplication.network;
 
+import android.util.Log;
 import com.example.myapplication.ui.myplants.Plant;
 import com.google.gson.annotations.SerializedName;
 import java.util.List;
@@ -9,6 +10,8 @@ import java.util.List;
  * This class represents the richer plant data available in the wiki.
  */
 public class PlantWikiDto {
+    
+    private static final String TAG = "PlantWikiDto";
 
     @SerializedName("plantWikiId")
     private Long plantWikiId;
@@ -40,7 +43,7 @@ public class PlantWikiDto {
     @SerializedName("difficulty")
     private String difficulty;
 
-    @SerializedName("GrowthHeight")
+    @SerializedName("growthHeight")
     private String growthHeight;
 
     /**
@@ -48,20 +51,15 @@ public class PlantWikiDto {
      * Maps the wiki-specific fields to the Plant object.
      */
     public Plant toPlant() {
-        // Create a comprehensive description that includes all wiki information
-        StringBuilder fullDescription = new StringBuilder();
-        if (description != null && !description.isEmpty()) {
-            fullDescription.append(description);
-        }
-        if (features != null && !features.isEmpty()) {
-            if (fullDescription.length() > 0) fullDescription.append("\n\n");
-            fullDescription.append("Features: ").append(features);
-        }
-        if (careGuide != null && !careGuide.isEmpty()) {
-            if (fullDescription.length() > 0) fullDescription.append("\n\n");
-            fullDescription.append("Care Guide: ").append(careGuide);
-        }
-
+        Log.d(TAG, "Converting PlantWikiDto to Plant:");
+        Log.d(TAG, "  Name: " + name);
+        Log.d(TAG, "  Description: " + description);
+        Log.d(TAG, "  WaterNeeds: " + waterNeeds);
+        Log.d(TAG, "  LightNeeds: " + lightNeeds);
+        Log.d(TAG, "  GrowthHeight: " + growthHeight);
+        Log.d(TAG, "  Features: " + features);
+        Log.d(TAG, "  CareGuide: " + careGuide);
+        
         // Create tags from the wiki-specific information
         List<String> tags = new java.util.ArrayList<>();
         if (waterNeeds != null && !waterNeeds.isEmpty()) {
@@ -77,12 +75,13 @@ public class PlantWikiDto {
             tags.add("Height: " + growthHeight);
         }
 
-        return new Plant(
+        // Create a Plant object with all wiki-specific fields properly mapped
+        Plant plant = new Plant(
                 plantWikiId != null ? plantWikiId.intValue() : 0, // plantId
                 0, // userId (not applicable for wiki)
                 name != null ? name : "Unknown Plant", // name
                 image, // imageUrl
-                fullDescription.toString(), // description (enhanced with wiki info)
+                description, // description (from API)
                 null, // latitude (not available in wiki)
                 null, // longitude (not available in wiki)
                 scientificName, // scientificName
@@ -92,11 +91,22 @@ public class PlantWikiDto {
                 null, // updatedAt (not available in wiki)
                 tags, // tags (created from wiki fields)
                 "Wiki", // discoveredBy (wiki source)
-                lightNeeds, // lightRequirement
-                waterNeeds, // waterRequirement
+                lightNeeds, // lightRequirement (maps to lightNeeds from API)
+                waterNeeds, // waterRequirement (maps to waterNeeds from API)
                 null, // temperatureRequirement (not available)
                 null  // humidityRequirement (not available)
         );
+        
+        // Set additional wiki-specific fields using setters
+        plant.setMatureHeight(growthHeight);
+        plant.setFeatures(features);
+        plant.setCareGuide(careGuide);
+        
+        Log.d(TAG, "Plant object created with description: " + plant.getDescription());
+        Log.d(TAG, "Plant object created with waterRequirement: " + plant.getWaterRequirement());
+        Log.d(TAG, "Plant object created with lightRequirement: " + plant.getLightRequirement());
+        
+        return plant;
     }
 
     // Getters

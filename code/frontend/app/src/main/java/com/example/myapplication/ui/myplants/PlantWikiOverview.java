@@ -8,6 +8,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,11 +23,10 @@ import androidx.fragment.app.Fragment;
 import com.example.myapplication.R;
 import com.example.myapplication.databinding.PlantwikiOverviewtabBinding;
 
-import java.io.Serializable;
-
 public class PlantWikiOverview extends Fragment implements SensorEventListener {
 
     private static final String ARG_PLANT = "plant_object";
+    private static final String TAG = "PlantWikiOverview";
 
     private PlantwikiOverviewtabBinding binding;
     private Plant plant;
@@ -40,7 +40,7 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
     public static PlantWikiOverview newInstance(Plant plant) {
         PlantWikiOverview fragment = new PlantWikiOverview();
         Bundle args = new Bundle();
-        args.putSerializable(ARG_PLANT, (Serializable) plant);
+        args.putParcelable(ARG_PLANT, plant);
         fragment.setArguments(args);
         return fragment;
     }
@@ -49,10 +49,7 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            Serializable serializable = getArguments().getSerializable(ARG_PLANT);
-            if (serializable instanceof Plant) {
-                plant = (Plant) serializable;
-            }
+            plant = getArguments().getParcelable(ARG_PLANT);
         }
 
         sensorManager = (SensorManager) requireActivity().getSystemService(Context.SENSOR_SERVICE);
@@ -73,24 +70,31 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
         super.onViewCreated(view, savedInstanceState);
 
         if (plant != null) {
-            // --- THIS IS THE FIX ---
-            // Use a helper function or ternary operator to set "N/A" for null or empty strings.
-
+            Log.d(TAG, "Plant object received: " + plant.getName());
+            
+            // Get description from plant object
             String description = plant.getDescription();
+            Log.d(TAG, "Description: " + description);
             binding.overviewIntroText.setText(description != null && !description.isEmpty() ? description : "No description available.");
 
+            // Get light requirement (mapped from lightNeeds in API)
             String lightReq = plant.getLightRequirement();
+            Log.d(TAG, "Light Requirement: " + lightReq);
             binding.lightSubtitle.setText(lightReq != null && !lightReq.isEmpty() ? lightReq : "N/A");
 
+            // Get water requirement (mapped from waterNeeds in API)
             String waterReq = plant.getWaterRequirement();
+            Log.d(TAG, "Water Requirement: " + waterReq);
             binding.waterSubtitle.setText(waterReq != null && !waterReq.isEmpty() ? waterReq : "N/A");
 
+            // Temperature and humidity are not available in wiki API
             String tempReq = plant.getTemperatureRequirement();
             binding.temperatureSubtitle.setText(tempReq != null && !tempReq.isEmpty() ? tempReq : "N/A");
 
             String humidityReq = plant.getHumidityRequirement();
             binding.humiditySubtitle.setText(humidityReq != null && !humidityReq.isEmpty() ? humidityReq : "N/A");
         } else {
+            Log.e(TAG, "Plant object is null!");
             // Handle case where the entire plant object is null
             binding.overviewIntroText.setText("Plant data to be updated!");
             binding.lightSubtitle.setText("N/A");

@@ -59,6 +59,10 @@ public class Plant implements Parcelable {
     private String soilGuide;
     @SerializedName("fertilizerGuide")
     private String fertilizerGuide;
+    @SerializedName("features")
+    private String features;
+    @SerializedName("careGuide")
+    private String careGuide;
 
     // --- FIX: A public constructor for the DTO to use for conversion ---
     public Plant(int plantId, int userId, String name, String imageUrl, String description,
@@ -106,6 +110,14 @@ public class Plant implements Parcelable {
         waterRequirement = in.readString();
         temperatureRequirement = in.readString();
         humidityRequirement = in.readString();
+        matureHeight = in.readString();
+        leafType = in.readString();
+        toxicity = in.readString();
+        airPurifying = in.readString();
+        soilGuide = in.readString();
+        fertilizerGuide = in.readString();
+        features = in.readString();
+        careGuide = in.readString();
     }
 
     @Override
@@ -128,6 +140,14 @@ public class Plant implements Parcelable {
         dest.writeString(waterRequirement);
         dest.writeString(temperatureRequirement);
         dest.writeString(humidityRequirement);
+        dest.writeString(matureHeight);
+        dest.writeString(leafType);
+        dest.writeString(toxicity);
+        dest.writeString(airPurifying);
+        dest.writeString(soilGuide);
+        dest.writeString(fertilizerGuide);
+        dest.writeString(features);
+        dest.writeString(careGuide);
     }
 
     @Override
@@ -177,4 +197,11 @@ public class Plant implements Parcelable {
     }
     public String getSoilGuide() { return soilGuide; }
     public String getFertilizerGuide() { return fertilizerGuide; }
+    public String getFeatures() { return features; }
+    public String getCareGuide() { return careGuide; }
+
+    // Setters for wiki-specific fields
+    public void setMatureHeight(String matureHeight) { this.matureHeight = matureHeight; }
+    public void setFeatures(String features) { this.features = features; }
+    public void setCareGuide(String careGuide) { this.careGuide = careGuide; }
 }

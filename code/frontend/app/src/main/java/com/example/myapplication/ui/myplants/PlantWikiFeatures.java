@@ -11,8 +11,6 @@ import androidx.fragment.app.Fragment;
 // 1. Import the binding class for your layout
 import com.example.myapplication.databinding.PlantwikiFeaturestabBinding;
 
-import java.io.Serializable;
-
 public class PlantWikiFeatures extends Fragment {
 
     private static final String ARG_PLANT = "plant_object";
@@ -27,8 +25,8 @@ public class PlantWikiFeatures extends Fragment {
     public static PlantWikiFeatures newInstance(Plant plant) {
         PlantWikiFeatures fragment = new PlantWikiFeatures();
         Bundle args = new Bundle();
-        // The Plant object must implement Serializable to be passed this way
-        args.putSerializable(ARG_PLANT, (Serializable) plant);
+        // The Plant object implements Parcelable
+        args.putParcelable(ARG_PLANT, plant);
         fragment.setArguments(args);
         return fragment;
     }
@@ -38,10 +36,7 @@ public class PlantWikiFeatures extends Fragment {
         super.onCreate(savedInstanceState);
         // 3. Retrieve the Plant object from the fragment's arguments.
         if (getArguments() != null) {
-            Serializable serializable = getArguments().getSerializable(ARG_PLANT);
-            if (serializable instanceof Plant) {
-                plant = (Plant) serializable;
-            }
+            plant = getArguments().getParcelable(ARG_PLANT);
         }
     }
 
@@ -65,24 +60,31 @@ public class PlantWikiFeatures extends Fragment {
         final String PENDING_TEXT = "Pending Information";
 
         if (plant != null) {
-            // --- THIS IS THE FIX ---
-            // For each feature, check if the data exists. If not, show the pending text.
-
-            // Set Mature Height
+            // Set Mature Height from growthHeight (from wiki API)
             String height = plant.getMatureHeight();
             binding.featureHeightText.setText(height != null && !height.isEmpty() ? height : PENDING_TEXT);
 
-            // Set Leaf Type
-            String leafType = plant.getLeafType();
-            binding.featureLeafTypeText.setText(leafType != null && !leafType.isEmpty() ? leafType : PENDING_TEXT);
+            // Parse features string if available (from wiki API features field)
+            String featuresText = plant.getFeatures();
+            if (featuresText != null && !featuresText.isEmpty()) {
+                // Try to extract specific feature information
+                // For now, set generic features
+                binding.featureLeafTypeText.setText(PENDING_TEXT);
+                binding.featureToxicityText.setText(PENDING_TEXT);
+                binding.featureAirPurifyingText.setText(PENDING_TEXT);
+            } else {
+                // Set Leaf Type
+                String leafType = plant.getLeafType();
+                binding.featureLeafTypeText.setText(leafType != null && !leafType.isEmpty() ? leafType : PENDING_TEXT);
 
-            // Set Toxicity
-            String toxicity = plant.getToxicity();
-            binding.featureToxicityText.setText(toxicity != null && !toxicity.isEmpty() ? toxicity : PENDING_TEXT);
+                // Set Toxicity
+                String toxicity = plant.getToxicity();
+                binding.featureToxicityText.setText(toxicity != null && !toxicity.isEmpty() ? toxicity : PENDING_TEXT);
 
-            // Set Air Purifying ability
-            String airPurifying = plant.getAirPurifying();
-            binding.featureAirPurifyingText.setText(airPurifying != null && !airPurifying.isEmpty() ? airPurifying : PENDING_TEXT);
+                // Set Air Purifying ability
+                String airPurifying = plant.getAirPurifying();
+                binding.featureAirPurifyingText.setText(airPurifying != null && !airPurifying.isEmpty() ? airPurifying : PENDING_TEXT);
+            }
         } else {
             // Fallback in case the plant object itself is null
             binding.featureHeightText.setText(PENDING_TEXT);

@@ -11,8 +11,6 @@ import androidx.fragment.app.Fragment;
 // 1. Import the binding class for your layout
 import com.example.myapplication.databinding.PlantwikiCareguideBinding; // Changed from PlantwikiCareguidetabBinding
 
-import java.io.Serializable;
-
 public class PlantWikiCareGuide extends Fragment {
 
     private static final String ARG_PLANT = "plant_object";
@@ -26,7 +24,8 @@ public class PlantWikiCareGuide extends Fragment {
     public static PlantWikiCareGuide newInstance(Plant plant) {
         PlantWikiCareGuide fragment = new PlantWikiCareGuide();
         Bundle args = new Bundle();
-        args.putSerializable(ARG_PLANT, (Serializable) plant);
+        // The Plant object implements Parcelable
+        args.putParcelable(ARG_PLANT, plant);
         fragment.setArguments(args);
         return fragment;
     }
@@ -36,10 +35,7 @@ public class PlantWikiCareGuide extends Fragment {
         super.onCreate(savedInstanceState);
         // 3. Retrieve the Plant object from the fragment's arguments.
         if (getArguments() != null) {
-            Serializable serializable = getArguments().getSerializable(ARG_PLANT);
-            if (serializable instanceof Plant) {
-                plant = (Plant) serializable;
-            }
+            plant = getArguments().getParcelable(ARG_PLANT);
         }
     }
 
@@ -62,33 +58,35 @@ public class PlantWikiCareGuide extends Fragment {
         final String PENDING_TEXT = "Pending Information";
 
         if (plant != null) {
-            // --- THIS IS THE FIX ---
-            // Set the text for each specific care guide section.
-            // This assumes you have added corresponding getter methods to your Plant.java class.
+            // Check if we have a comprehensive care guide from the wiki API
+            String careGuideText = plant.getCareGuide();
+            
+            if (careGuideText != null && !careGuideText.isEmpty()) {
+                // If we have a care guide, use it for all sections
+                // For now, we'll set the same care guide text for all sections
+                // In a more sophisticated implementation, you could parse the care guide
+                binding.careWateringText.setText(careGuideText);
+                binding.careLightText.setText(careGuideText);
+                binding.careSoilText.setText(careGuideText);
+                binding.careFertilizerText.setText(careGuideText);
+            } else {
+                // Fall back to individual fields
+                // Set Watering Text from waterNeeds
+                String wateringInfo = plant.getWaterRequirement();
+                binding.careWateringText.setText(wateringInfo != null && !wateringInfo.isEmpty() ? wateringInfo : PENDING_TEXT);
 
-            // Set Watering Text
-            // NOTE: Using getWaterRequirement() as a proxy. Ideally, you'd have a specific getWateringGuide() method.
-            String wateringInfo = plant.getWaterRequirement();
-            binding.careWateringText.setText(wateringInfo != null && !wateringInfo.isEmpty() ? wateringInfo : PENDING_TEXT);
+                // Set Light Text from lightNeeds
+                String lightInfo = plant.getLightRequirement();
+                binding.careLightText.setText(lightInfo != null && !lightInfo.isEmpty() ? lightInfo : PENDING_TEXT);
 
-            // Set Light Text
-            // NOTE: Using getLightRequirement() as a proxy.
-            String lightInfo = plant.getLightRequirement();
-            binding.careLightText.setText(lightInfo != null && !lightInfo.isEmpty() ? lightInfo : PENDING_TEXT);
+                // Set Soil Text
+                String soilInfo = plant.getSoilGuide();
+                binding.careSoilText.setText(soilInfo != null && !soilInfo.isEmpty() ? soilInfo : PENDING_TEXT);
 
-            // Set Soil Text (Assuming you add getSoilGuide() to Plant.java)
-            String soilInfo = plant.getSoilGuide();
-            binding.careSoilText.setText(soilInfo != null && !soilInfo.isEmpty() ? soilInfo : PENDING_TEXT);
-            // For now, let's set it to pending as the field doesn't exist yet
-//            binding.careSoilText.setText(PENDING_TEXT);
-
-
-            // Set Fertilizer Text (Assuming you add getFertilizerGuide() to Plant.java)
-            String fertilizerInfo = plant.getFertilizerGuide();
-            binding.careFertilizerText.setText(fertilizerInfo != null && !fertilizerInfo.isEmpty() ? fertilizerInfo : PENDING_TEXT);
-            // For now, let's set it to pending as the field doesn't exist yet
-//            binding.careFertilizerText.setText(PENDING_TEXT);
-
+                // Set Fertilizer Text
+                String fertilizerInfo = plant.getFertilizerGuide();
+                binding.careFertilizerText.setText(fertilizerInfo != null && !fertilizerInfo.isEmpty() ? fertilizerInfo : PENDING_TEXT);
+            }
         } else {
             // Fallback in case the plant object itself is null
             binding.careWateringText.setText(PENDING_TEXT);

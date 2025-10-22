@@ -21,27 +21,22 @@ public class TabsPagerAdapter extends FragmentStateAdapter {
     @NonNull
     @Override
     public Fragment createFragment(int position) {
-        // Create an arguments bundle to pass the plant data down to each tab
-        Bundle args = new Bundle();
-        args.putParcelable(PlantDetailFragment.ARG_PLANT, plant);
-
+        // Use the factory methods to create fragments with the plant object
         Fragment fragment;
         switch (position) {
             case 0:
-                fragment = new PlantWikiOverview();
+                fragment = PlantWikiOverview.newInstance(plant);
                 break;
             case 1:
-                fragment = new PlantWikiFeatures();
+                fragment = PlantWikiFeatures.newInstance(plant);
                 break;
             case 2:
-                fragment = new PlantWikiCareGuide();
+                fragment = PlantWikiCareGuide.newInstance(plant);
                 break;
             default:
                 throw new IllegalStateException("Invalid position: " + position);
         }
 
-        // FIX: SET THE ARGUMENTS ON THE FRAGMENT BEFORE RETURNING IT
-        fragment.setArguments(args);
         return fragment;
     }
 
