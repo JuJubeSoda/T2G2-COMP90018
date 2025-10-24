@@ -4,6 +4,7 @@ import com.example.myapplication.auth.model.LoginRequest;
 import com.example.myapplication.auth.model.RegisterRequest;
 import com.example.myapplication.model.Garden;
 import com.example.myapplication.model.Plant;
+import com.example.myapplication.network.ApiResponse;
 import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -68,5 +69,47 @@ public interface ApiService {
      */
     @GET("/api/wiki/all")
     Call<ApiResponse<List<PlantWikiDto>>> getAllWikis();
+
+    // --- Map Data Endpoints ---
+    
+    /**
+     * Fetches nearby plants within a specified radius of the given coordinates.
+     * @param latitude The latitude coordinate
+     * @param longitude The longitude coordinate  
+     * @param radius The search radius in meters
+     * @return Call containing ApiResponse with list of nearby plants
+     */
+    @GET("api/map/plants/nearby")
+    Call<ApiResponse<List<Plant>>> getNearbyPlants(@Query("latitude") double latitude, 
+                                                   @Query("longitude") double longitude, 
+                                                   @Query("radius") int radius);
+    
+    /**
+     * Fetches nearby gardens within a specified radius of the given coordinates.
+     * @param latitude The latitude coordinate
+     * @param longitude The longitude coordinate
+     * @param radius The search radius in meters  
+     * @return Call containing ApiResponse with list of nearby gardens
+     */
+    @GET("api/map/gardens/nearby")
+    Call<ApiResponse<List<Garden>>> getNearbyGardens(@Query("latitude") double latitude,
+                                                     @Query("longitude") double longitude,
+                                                     @Query("radius") int radius);
+    
+    /**
+     * Likes a plant by its ID.
+     * @param plantId The ID of the plant to like
+     * @return Call containing ApiResponse with success message
+     */
+    @POST("api/plants/like")
+    Call<ApiResponse<String>> likePlant(@Query("plantId") Long plantId);
+    
+    /**
+     * Unlikes a plant by its ID.
+     * @param plantId The ID of the plant to unlike
+     * @return Call containing ApiResponse with success message
+     */
+    @POST("api/plants/unlike")
+    Call<ApiResponse<String>> unlikePlant(@Query("plantId") Long plantId);
 
 }

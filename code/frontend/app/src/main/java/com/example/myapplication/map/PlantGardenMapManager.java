@@ -87,6 +87,16 @@ public class PlantGardenMapManager {
                 }
             }
         });
+        
+        // 设置地图标记点击监听器（用于植物标记）
+        googleMap.setOnMarkerClickListener(marker -> {
+            // 尝试处理植物标记点击
+            if (displayManager.handlePlantMarkerClick(marker)) {
+                return true; // 植物标记点击已处理
+            }
+            // 如果不是植物标记，返回false让其他监听器处理
+            return false;
+        });
     }
     
     /**
@@ -170,6 +180,33 @@ public class PlantGardenMapManager {
         
         if (onPlantGardenMapInteractionListener != null) {
             onPlantGardenMapInteractionListener.onDataTypeChanged(isShowingPlants);
+        }
+    }
+    
+    /**
+     * 增量更新植物显示（添加新植物）
+     */
+    public void addNewPlants(List<Plant> newPlants) {
+        if (isShowingPlants) {
+            displayManager.addNewPlants(newPlants);
+        }
+    }
+    
+    /**
+     * 移除植物显示
+     */
+    public void removePlants(List<Plant> plantsToRemove) {
+        if (isShowingPlants) {
+            displayManager.removePlants(plantsToRemove);
+        }
+    }
+    
+    /**
+     * 刷新植物显示（全量更新）
+     */
+    public void refreshPlants(List<Plant> plants) {
+        if (isShowingPlants) {
+            displayManager.displayPlantsOnMap(plants);
         }
     }
     

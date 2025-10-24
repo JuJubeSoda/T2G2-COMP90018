@@ -35,7 +35,10 @@ public class MapDisplayManager {
     private final Context context;
     private final GoogleMap googleMap;
     private GeoJsonLayer currentGeoJsonLayer;
-    private List<Marker> currentMarkers = new ArrayList<>();
+    private List<Marker> currentPlantMarkers = new ArrayList<>();
+    private List<Marker> currentGardenMarkers = new ArrayList<>();
+    private List<Plant> currentPlants = new ArrayList<>();
+    private List<Garden> currentGardens = new ArrayList<>();
     
     // 回调接口
     public interface OnGardenMapClickListener {
@@ -63,39 +66,107 @@ public class MapDisplayManager {
     }
     
     /**
-     * 在地图上显示植物列表
+     * 在地图上显示植物列表 - 使用Marker方式（适合频繁刷新）
      */
     public void displayPlantsOnMap(List<Plant> plants) {
-        try {
-            clearCurrentDisplay();
+        clearPlantMarkers();
+        currentPlants.clear();
+        
+        for (Plant plant : plants) {
+            if (plant.getLatitude() != null && plant.getLongitude() != null) {
+                addPlantMarker(plant);
+                currentPlants.add(plant);
+            }
+        }
+        
+        Log.d(TAG, "Successfully displayed " + currentPlantMarkers.size() + " plants as markers");
+        Toast.makeText(context, "Displayed " + currentPlantMarkers.size() + " plants", Toast.LENGTH_SHORT).show();
+    }
+    
+    /**
+     * 增量更新植物显示（添加新植物）
+     */
+    public void addNewPlants(List<Plant> newPlants) {
+        for (Plant plant : newPlants) {
+            if (plant.getLatitude() != null && plant.getLongitude() != null && !currentPlants.contains(plant)) {
+                addPlantMarker(plant);
+                currentPlants.add(plant);
+            }
+        }
+        
+        Log.d(TAG, "Added " + newPlants.size() + " new plants to map");
+    }
+    
+    /**
+     * 移除植物标记
+     */
+    public void removePlants(List<Plant> plantsToRemove) {
+        for (Plant plant : plantsToRemove) {
+            removePlantMarker(plant);
+            currentPlants.remove(plant);
+        }
+        
+        Log.d(TAG, "Removed " + plantsToRemove.size() + " plants from map");
+    }
+    
+    /**
+     * 添加单个植物标记
+     */
+    private void addPlantMarker(Plant plant) {
+        LatLng position = new LatLng(plant.getLatitude(), plant.getLongitude());
+        
+        MarkerOptions markerOptions = new MarkerOptions()
+                .position(position)
+                .title(plant.getName())
+                .snippet(plant.getDescription())
+                .icon(createPlantIcon());
+        
+        Marker marker = googleMap.addMarker(markerOptions);
+        if (marker != null) {
+            marker.setTag(plant);
+            currentPlantMarkers.add(marker);
             
-            JSONObject geoJson = convertPlantsToGeoJson(plants);
-            GeoJsonLayer layer = new GeoJsonLayer(googleMap, geoJson);
-            setupPlantGeoJsonLayer(layer);
-            
-            currentGeoJsonLayer = layer;
-            
-            Log.d(TAG, "Successfully displayed " + plants.size() + " plants on map");
-            Toast.makeText(context, "Displayed " + plants.size() + " plants", Toast.LENGTH_SHORT).show();
-            
-        } catch (JSONException e) {
-            Log.e(TAG, "Failed to display plants on map", e);
-            Toast.makeText(context, "Failed to display plants", Toast.LENGTH_SHORT).show();
+            // 设置点击监听器
+            setupPlantMarkerClickListener(marker);
         }
     }
     
     /**
-     * 在地图上显示花园列表
+     * 移除单个植物标记
+     */
+    private void removePlantMarker(Plant plant) {
+        for (int i = currentPlantMarkers.size() - 1; i >= 0; i--) {
+            Marker marker = currentPlantMarkers.get(i);
+            Plant markerPlant = (Plant) marker.getTag();
+            if (markerPlant != null && markerPlant.getPlantId().equals(plant.getPlantId())) {
+                marker.remove();
+                currentPlantMarkers.remove(i);
+                break;
+            }
+        }
+    }
+    
+    /**
+     * 设置植物标记点击监听器
+     */
+    private void setupPlantMarkerClickListener(Marker marker) {
+        // 点击监听器通过GoogleMap的setOnMarkerClickListener统一处理
+    }
+    
+    /**
+     * 在地图上显示花园列表 - 使用GeoJSON方式（适合静态数据）
      */
     public void displayGardensOnMap(List<Garden> gardens) {
         try {
-            clearCurrentDisplay();
+            clearGardenLayer();
+            currentGardens.clear();
             
             JSONObject geoJson = convertGardensToGeoJson(gardens);
             GeoJsonLayer layer = new GeoJsonLayer(googleMap, geoJson);
             setupGardenGeoJsonLayer(layer);
             
             currentGeoJsonLayer = layer;
+            currentGardens.addAll(gardens);
             
             Log.d(TAG, "Successfully displayed " + gardens.size() + " gardens on map");
             Toast.makeText(context, "Displayed " + gardens.size() + " gardens", Toast.LENGTH_SHORT).show();
@@ -107,52 +178,25 @@ public class MapDisplayManager {
     }
     
     /**
-     * 使用标记方式显示花园（备选方案）
+     * 清除植物标记
      */
-    public void displayGardensAsMarkers(List<Garden> gardens) {
-        clearCurrentDisplay();
-        
-        for (Garden garden : gardens) {
-            if (garden.getLatitude() != null && garden.getLongitude() != null) {
-                LatLng position = new LatLng(garden.getLatitude(), garden.getLongitude());
-                
-                MarkerOptions markerOptions = new MarkerOptions()
-                        .position(position)
-                        .title(garden.getName())
-                        .snippet(garden.getDescription())
-                        .icon(createGardenIcon());
-                
-                Marker marker = googleMap.addMarker(markerOptions);
-                if (marker != null) {
-                    marker.setTag(garden);
-                    currentMarkers.add(marker);
-                }
-            }
+    public void clearPlantMarkers() {
+        for (Marker marker : currentPlantMarkers) {
+            marker.remove();
         }
-        
-        Log.d(TAG, "Successfully displayed " + currentMarkers.size() + " gardens as markers");
-        Toast.makeText(context, "Displayed " + currentMarkers.size() + " gardens", Toast.LENGTH_SHORT).show();
+        currentPlantMarkers.clear();
     }
     
     /**
-     * 将植物列表转换为GeoJSON格式
+     * 清除花园GeoJSON图层
      */
-    private JSONObject convertPlantsToGeoJson(List<Plant> plants) throws JSONException {
-        JSONObject geoJson = new JSONObject();
-        geoJson.put("type", "FeatureCollection");
-        
-        JSONArray features = new JSONArray();
-        
-        for (Plant plant : plants) {
-            if (plant.getLatitude() != null && plant.getLongitude() != null) {
-                JSONObject feature = createPlantFeature(plant);
-                features.put(feature);
-            }
+    public void clearGardenLayer() {
+        if (currentGeoJsonLayer != null) {
+            currentGeoJsonLayer.removeLayerFromMap();
+            currentGeoJsonLayer = null;
         }
-        
-        geoJson.put("features", features);
-        return geoJson;
     }
+    
     
     /**
      * 将花园列表转换为GeoJSON格式
@@ -174,36 +218,6 @@ public class MapDisplayManager {
         return geoJson;
     }
     
-    /**
-     * 创建植物GeoJSON特征
-     */
-    private JSONObject createPlantFeature(Plant plant) throws JSONException {
-        JSONObject feature = new JSONObject();
-        feature.put("type", "Feature");
-        
-        // 几何信息
-        JSONObject geometry = new JSONObject();
-        geometry.put("type", "Point");
-        JSONArray coordinates = new JSONArray();
-        coordinates.put(plant.getLongitude()); // GeoJSON使用[经度, 纬度]顺序
-        coordinates.put(plant.getLatitude());
-        geometry.put("coordinates", coordinates);
-        feature.put("geometry", geometry);
-        
-        // 属性信息
-        JSONObject properties = new JSONObject();
-        properties.put("plantId", plant.getPlantId());
-        properties.put("name", plant.getName());
-        properties.put("description", plant.getDescription());
-        properties.put("scientificName", plant.getScientificName());
-        properties.put("latitude", plant.getLatitude());
-        properties.put("longitude", plant.getLongitude());
-        properties.put("gardenId", plant.getGardenId());
-        properties.put("isFavourite", plant.isFavourite());
-        feature.put("properties", properties);
-        
-        return feature;
-    }
     
     /**
      * 创建花园GeoJSON特征
@@ -233,21 +247,6 @@ public class MapDisplayManager {
         return feature;
     }
     
-    /**
-     * 设置植物GeoJSON图层
-     */
-    private void setupPlantGeoJsonLayer(GeoJsonLayer layer) {
-        applyPlantMarkerStyles(layer);
-        layer.addLayerToMap();
-        
-        layer.setOnFeatureClickListener(new GeoJsonLayer.OnFeatureClickListener() {
-            @Override
-            public void onFeatureClick(Feature feature) {
-                Log.d(TAG, "Plant GeoJSON feature clicked!");
-                handlePlantFeatureClick(feature);
-            }
-        });
-    }
     
     /**
      * 设置花园GeoJSON图层
@@ -265,19 +264,6 @@ public class MapDisplayManager {
         });
     }
     
-    /**
-     * 处理植物GeoJSON特征点击事件
-     */
-    private void handlePlantFeatureClick(Feature feature) {
-        try {
-            Plant plant = createPlantFromFeature(feature);
-            if (plant != null && plantClickListener != null) {
-                plantClickListener.onPlantClick(plant);
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to handle plant feature click", e);
-        }
-    }
     
     /**
      * 处理花园GeoJSON特征点击事件
@@ -293,41 +279,6 @@ public class MapDisplayManager {
         }
     }
     
-    /**
-     * 从GeoJSON特征创建Plant对象
-     */
-    private Plant createPlantFromFeature(Feature feature) {
-        try {
-            String plantIdStr = feature.getProperty("plantId");
-            String name = feature.getProperty("name");
-            String description = feature.getProperty("description");
-            String scientificName = feature.getProperty("scientificName");
-            String latitudeStr = feature.getProperty("latitude");
-            String longitudeStr = feature.getProperty("longitude");
-            String gardenIdStr = feature.getProperty("gardenId");
-            String isFavouriteStr = feature.getProperty("isFavourite");
-            
-            if (plantIdStr != null && latitudeStr != null && longitudeStr != null) {
-                Plant plant = new Plant();
-                plant.setPlantId(Long.parseLong(plantIdStr));
-                plant.setName(name);
-                plant.setDescription(description);
-                plant.setScientificName(scientificName);
-                plant.setLatitude(Double.parseDouble(latitudeStr));
-                plant.setLongitude(Double.parseDouble(longitudeStr));
-                if (gardenIdStr != null) {
-                    plant.setGardenId(Long.parseLong(gardenIdStr));
-                }
-                if (isFavouriteStr != null) {
-                    plant.setFavourite(Boolean.parseBoolean(isFavouriteStr));
-                }
-                return plant;
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to create plant from feature", e);
-        }
-        return null;
-    }
     
     /**
      * 从GeoJSON特征创建Garden对象
@@ -355,16 +306,6 @@ public class MapDisplayManager {
         return null;
     }
     
-    /**
-     * 应用植物标记样式
-     */
-    private void applyPlantMarkerStyles(GeoJsonLayer geoJsonLayer) {
-        for (GeoJsonFeature feature : geoJsonLayer.getFeatures()) {
-            GeoJsonPointStyle pointStyle = new GeoJsonPointStyle();
-            pointStyle.setIcon(createPlantIcon());
-            feature.setPointStyle(pointStyle);
-        }
-    }
     
     /**
      * 应用花园标记样式
@@ -395,17 +336,27 @@ public class MapDisplayManager {
      * 清除当前显示
      */
     public void clearCurrentDisplay() {
-        // 清除GeoJSON图层
-        if (currentGeoJsonLayer != null) {
-            currentGeoJsonLayer.removeLayerFromMap();
-            currentGeoJsonLayer = null;
-        }
+        // 清除花园GeoJSON图层
+        clearGardenLayer();
         
-        // 清除标记
-        for (Marker marker : currentMarkers) {
-            marker.remove();
+        // 清除植物标记
+        clearPlantMarkers();
+        
+        // 清除数据缓存
+        currentPlants.clear();
+        currentGardens.clear();
+    }
+    
+    /**
+     * 处理植物标记点击事件
+     */
+    public boolean handlePlantMarkerClick(Marker marker) {
+        Plant plant = (Plant) marker.getTag();
+        if (plant != null && plantClickListener != null) {
+            plantClickListener.onPlantClick(plant);
+            return true;
         }
-        currentMarkers.clear();
+        return false;
     }
     
     /**
