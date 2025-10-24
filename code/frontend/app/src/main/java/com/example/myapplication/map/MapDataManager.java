@@ -5,7 +5,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.example.myapplication.model.Garden;
-import com.example.myapplication.model.Plant;
+import com.example.myapplication.network.PlantDto;
 import com.example.myapplication.network.ApiClient;
 import com.example.myapplication.network.ApiResponse;
 import com.example.myapplication.network.ApiService;
@@ -42,9 +42,9 @@ public class MapDataManager {
      * 搜索附近的植物
      */
     public void searchNearbyPlants(double latitude, double longitude, int radius) {
-        searchNearbyPlants(latitude, longitude, radius, new MapDataCallback<List<Plant>>() {
+        searchNearbyPlants(latitude, longitude, radius, new MapDataCallback<List<PlantDto>>() {
             @Override
-            public void onSuccess(List<Plant> plants) {
+            public void onSuccess(List<PlantDto> plants) {
                 if (plants.isEmpty()) {
                     showToast("No plants found nearby");
                     return;
@@ -83,18 +83,18 @@ public class MapDataManager {
     /**
      * 搜索附近的植物（带回调）
      */
-    public void searchNearbyPlants(double latitude, double longitude, int radius, MapDataCallback<List<Plant>> callback) {
+    public void searchNearbyPlants(double latitude, double longitude, int radius, MapDataCallback<List<PlantDto>> callback) {
         Log.d(TAG, "Searching for nearby plants at: " + latitude + ", " + longitude + " radius: " + radius);
         
-        Call<ApiResponse<List<Plant>>> call = apiService.getNearbyPlants(latitude, longitude, radius);
-        call.enqueue(new Callback<ApiResponse<List<Plant>>>() {
+        Call<ApiResponse<List<PlantDto>>> call = apiService.getNearbyPlants(latitude, longitude, radius);
+        call.enqueue(new Callback<ApiResponse<List<PlantDto>>>() {
             @Override
-            public void onResponse(Call<ApiResponse<List<Plant>>> call, Response<ApiResponse<List<Plant>>> response) {
+            public void onResponse(Call<ApiResponse<List<PlantDto>>> call, Response<ApiResponse<List<PlantDto>>> response) {
                 handleApiResponse(response, "plants", callback);
             }
             
             @Override
-            public void onFailure(Call<ApiResponse<List<Plant>>> call, Throwable t) {
+            public void onFailure(Call<ApiResponse<List<PlantDto>>> call, Throwable t) {
                 Log.e(TAG, "Network call failed for plants", t);
                 callback.onError("Network error: " + t.getMessage());
             }
@@ -126,10 +126,27 @@ public class MapDataManager {
      * 统一的API响应处理方法
      */
     private <T> void handleApiResponse(Response<ApiResponse<T>> response, String dataType, MapDataCallback<T> callback) {
+        Log.d(TAG, "=== API Response Debug ===");
+        Log.d(TAG, "Response code: " + response.code());
+        Log.d(TAG, "Response message: " + response.message());
+        Log.d(TAG, "Response isSuccessful: " + response.isSuccessful());
+        Log.d(TAG, "Response body is null: " + (response.body() == null));
+        
         if (response.isSuccessful() && response.body() != null) {
             ApiResponse<T> apiResponse = response.body();
+            Log.d(TAG, "ApiResponse code: " + apiResponse.getCode());
+            Log.d(TAG, "ApiResponse message: " + apiResponse.getMessage());
+            Log.d(TAG, "ApiResponse isSuccessful: " + apiResponse.isSuccessful());
+            Log.d(TAG, "ApiResponse data is null: " + (apiResponse.getData() == null));
             
-            if (apiResponse.isSuccessful() && apiResponse.getData() != null) {
+            if (apiResponse.getData() != null) {
+                Log.d(TAG, "ApiResponse data type: " + apiResponse.getData().getClass().getSimpleName());
+                Log.d(TAG, "ApiResponse data size: " + (apiResponse.getData() instanceof List ? ((List<?>) apiResponse.getData()).size() : "N/A"));
+                Log.d(TAG, "ApiResponse data content: " + apiResponse.getData().toString());
+            }
+            
+            // 修复：后端返回的JSON中没有success字段，只依赖code字段判断
+            if (apiResponse.getCode() == 200 && apiResponse.getData() != null) {
                 Log.d(TAG, "Successfully received " + dataType + " data");
                 callback.onSuccess(apiResponse.getData());
             } else {
@@ -138,14 +155,23 @@ public class MapDataManager {
             }
         } else {
             Log.e(TAG, "HTTP request failed for " + dataType + ": " + response.code() + " " + response.message());
+            if (response.errorBody() != null) {
+                try {
+                    String errorBody = response.errorBody().string();
+                    Log.e(TAG, "Error body: " + errorBody);
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to read error body", e);
+                }
+            }
             callback.onError("HTTP error: " + response.code());
         }
+        Log.d(TAG, "=== End API Response Debug ===");
     }
     
     /**
      * 点赞植物
      */
-    public void likePlant(Long plantId, MapDataCallback<String> callback) {
+    public void likePlant(int plantId, MapDataCallback<String> callback) {
         Call<ApiResponse<String>> call = apiService.likePlant(plantId);
         call.enqueue(new Callback<ApiResponse<String>>() {
             @Override
@@ -164,7 +190,7 @@ public class MapDataManager {
     /**
      * 取消点赞植物
      */
-    public void unlikePlant(Long plantId, MapDataCallback<String> callback) {
+    public void unlikePlant(int plantId, MapDataCallback<String> callback) {
         Call<ApiResponse<String>> call = apiService.unlikePlant(plantId);
         call.enqueue(new Callback<ApiResponse<String>>() {
             @Override

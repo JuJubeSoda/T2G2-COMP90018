@@ -3,7 +3,7 @@ package com.example.myapplication.network;
 import com.example.myapplication.auth.model.LoginRequest;
 import com.example.myapplication.auth.model.RegisterRequest;
 import com.example.myapplication.model.Garden;
-import com.example.myapplication.model.Plant;
+import com.example.myapplication.network.PlantDto;
 import com.example.myapplication.network.ApiResponse;
 import java.util.List;
 import retrofit2.Call;
@@ -79,10 +79,10 @@ public interface ApiService {
      * @param radius The search radius in meters
      * @return Call containing ApiResponse with list of nearby plants
      */
-    @GET("api/map/plants/nearby")
-    Call<ApiResponse<List<Plant>>> getNearbyPlants(@Query("latitude") double latitude, 
-                                                   @Query("longitude") double longitude, 
-                                                   @Query("radius") int radius);
+    @GET("api/plants/nearby")
+    Call<ApiResponse<List<PlantDto>>> getNearbyPlants(@Query("latitude") double latitude, 
+                                                      @Query("longitude") double longitude, 
+                                                      @Query("radius") int radius);
     
     /**
      * Fetches nearby gardens within a specified radius of the given coordinates.
@@ -91,7 +91,7 @@ public interface ApiService {
      * @param radius The search radius in meters  
      * @return Call containing ApiResponse with list of nearby gardens
      */
-    @GET("api/map/gardens/nearby")
+    @GET("/api/garden/nearby")
     Call<ApiResponse<List<Garden>>> getNearbyGardens(@Query("latitude") double latitude,
                                                      @Query("longitude") double longitude,
                                                      @Query("radius") int radius);
@@ -101,15 +101,15 @@ public interface ApiService {
      * @param plantId The ID of the plant to like
      * @return Call containing ApiResponse with success message
      */
-    @POST("api/plants/like")
-    Call<ApiResponse<String>> likePlant(@Query("plantId") Long plantId);
+    @POST("/api/plants/like")
+    Call<ApiResponse<String>> likePlant(@Query("plantId") int plantId);
     
     /**
      * Unlikes a plant by its ID.
      * @param plantId The ID of the plant to unlike
      * @return Call containing ApiResponse with success message
      */
-    @POST("api/plants/unlike")
-    Call<ApiResponse<String>> unlikePlant(@Query("plantId") Long plantId);
+    @POST("/api/plants/unlike")
+    Call<ApiResponse<String>> unlikePlant(@Query("plantId") int plantId);
 
 }

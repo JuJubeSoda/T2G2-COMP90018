@@ -4,7 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.example.myapplication.model.Garden;
-import com.example.myapplication.model.Plant;
+import com.example.myapplication.network.PlantDto;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -39,6 +39,9 @@ public class PlantGardenMapManager {
         this.displayManager = new MapDisplayManager(context, googleMap);
         this.dataManager = new MapDataManager(context, displayManager);
         
+        // 设置智能半径变化监听器
+        setupSmartRadiusListener();
+        
         Log.d(TAG, "PlantGardenMapManager initialized");
     }
     
@@ -72,7 +75,7 @@ public class PlantGardenMapManager {
     private void setupClickListeners() {
         displayManager.setOnPlantClickListener(new MapDisplayManager.OnPlantMapClickListener() {
             @Override
-            public void onPlantClick(Plant plant) {
+            public void onPlantClick(PlantDto plant) {
                 if (onPlantGardenMapInteractionListener != null) {
                     onPlantGardenMapInteractionListener.onPlantClick(plant);
                 }
@@ -103,7 +106,13 @@ public class PlantGardenMapManager {
      * 搜索附近数据（根据当前模式搜索植物或花园）
      */
     public void searchNearbyData() {
+        Log.d(TAG, "=== Search Nearby Data Debug ===");
+        Log.d(TAG, "Location permission granted: " + locationManager.hasLocationPermission());
+        Log.d(TAG, "Last known location: " + (locationManager.getLastKnownLocation() != null ? "available" : "null"));
+        Log.d(TAG, "Current mode: " + (isShowingPlants ? "Plants" : "Gardens"));
+        
         if (!locationManager.hasLocationPermission() || locationManager.getLastKnownLocation() == null) {
+            Log.e(TAG, "Location permission or location not available");
             if (onPlantGardenMapInteractionListener != null) {
                 onPlantGardenMapInteractionListener.onSearchError("Location permission required to search nearby data");
             }
@@ -111,31 +120,65 @@ public class PlantGardenMapManager {
         }
         
         android.location.Location location = locationManager.getLastKnownLocation();
-        int radius = MapDataManager.getDefaultSearchRadius();
+        // 使用智能半径替代固定半径
+        int radius = locationManager.getSmartSearchRadius();
+        
+        Log.d(TAG, "Search parameters:");
+        Log.d(TAG, "  - Latitude: " + location.getLatitude());
+        Log.d(TAG, "  - Longitude: " + location.getLongitude());
+        Log.d(TAG, "  - Radius: " + radius + " meters");
+        Log.d(TAG, "  - Mode: " + (isShowingPlants ? "Plants" : "Gardens"));
         
         if (isShowingPlants) {
             searchNearbyPlants(location.getLatitude(), location.getLongitude(), radius);
         } else {
             searchNearbyGardens(location.getLatitude(), location.getLongitude(), radius);
         }
+        Log.d(TAG, "=== End Search Nearby Data Debug ===");
     }
     
     /**
      * 搜索附近植物
      */
     public void searchNearbyPlants(double latitude, double longitude, int radius) {
-        Log.d(TAG, "Searching for nearby plants");
+        Log.d(TAG, "Searching for nearby plants with radius: " + radius + " meters");
         
-        dataManager.searchNearbyPlants(latitude, longitude, radius, new MapDataManager.MapDataCallback<List<Plant>>() {
+        dataManager.searchNearbyPlants(latitude, longitude, radius, new MapDataManager.MapDataCallback<List<PlantDto>>() {
             @Override
-            public void onSuccess(List<Plant> plants) {
+            public void onSuccess(List<PlantDto> plants) {
+                Log.d(TAG, "=== Search Plants Success Debug ===");
+                Log.d(TAG, "Plants found: " + (plants == null ? "null" : plants.size()));
+                if (plants != null && !plants.isEmpty()) {
+                    Log.d(TAG, "First plant details:");
+                    PlantDto firstPlant = plants.get(0);
+                    Log.d(TAG, "  - Name: " + firstPlant.getName());
+                    Log.d(TAG, "  - Coordinates: (" + firstPlant.getLatitude() + ", " + firstPlant.getLongitude() + ")");
+                    Log.d(TAG, "  - PlantId: " + firstPlant.getPlantId());
+                }
+                Log.d(TAG, "=== End Search Plants Success Debug ===");
+                
+                Log.d(TAG, "Calling onPlantsFound callback...");
+                
+                // 修复：先在地图上显示植物
+                Log.d(TAG, "Displaying plants on map...");
+                displayManager.displayPlantsOnMap(plants);
+                Log.d(TAG, "Plants displayed on map successfully");
+                
                 if (onPlantGardenMapInteractionListener != null) {
+                    Log.d(TAG, "Listener is not null, calling onPlantsFound");
                     onPlantGardenMapInteractionListener.onPlantsFound(plants);
+                    Log.d(TAG, "onPlantsFound called successfully");
+                } else {
+                    Log.e(TAG, "onPlantGardenMapInteractionListener is null!");
                 }
             }
             
             @Override
             public void onError(String message) {
+                Log.e(TAG, "=== Search Plants Error Debug ===");
+                Log.e(TAG, "Error message: " + message);
+                Log.e(TAG, "=== End Search Plants Error Debug ===");
+                
                 if (onPlantGardenMapInteractionListener != null) {
                     onPlantGardenMapInteractionListener.onSearchError(message);
                 }
@@ -147,7 +190,7 @@ public class PlantGardenMapManager {
      * 搜索附近花园
      */
     public void searchNearbyGardens(double latitude, double longitude, int radius) {
-        Log.d(TAG, "Searching for nearby gardens");
+        Log.d(TAG, "Searching for nearby gardens with radius: " + radius + " meters");
         
         dataManager.searchNearbyGardens(latitude, longitude, radius, new MapDataManager.MapDataCallback<List<Garden>>() {
             @Override
@@ -186,7 +229,7 @@ public class PlantGardenMapManager {
     /**
      * 增量更新植物显示（添加新植物）
      */
-    public void addNewPlants(List<Plant> newPlants) {
+    public void addNewPlants(List<PlantDto> newPlants) {
         if (isShowingPlants) {
             displayManager.addNewPlants(newPlants);
         }
@@ -195,7 +238,7 @@ public class PlantGardenMapManager {
     /**
      * 移除植物显示
      */
-    public void removePlants(List<Plant> plantsToRemove) {
+    public void removePlants(List<PlantDto> plantsToRemove) {
         if (isShowingPlants) {
             displayManager.removePlants(plantsToRemove);
         }
@@ -204,7 +247,7 @@ public class PlantGardenMapManager {
     /**
      * 刷新植物显示（全量更新）
      */
-    public void refreshPlants(List<Plant> plants) {
+    public void refreshPlants(List<PlantDto> plants) {
         if (isShowingPlants) {
             displayManager.displayPlantsOnMap(plants);
         }
@@ -213,7 +256,7 @@ public class PlantGardenMapManager {
     /**
      * 点赞植物
      */
-    public void likePlant(Long plantId) {
+    public void likePlant(int plantId) {
         dataManager.likePlant(plantId, new MapDataManager.MapDataCallback<String>() {
             @Override
             public void onSuccess(String result) {
@@ -234,7 +277,7 @@ public class PlantGardenMapManager {
     /**
      * 取消点赞植物
      */
-    public void unlikePlant(Long plantId) {
+    public void unlikePlant(int plantId) {
         dataManager.unlikePlant(plantId, new MapDataManager.MapDataCallback<String>() {
             @Override
             public void onSuccess(String result) {
@@ -295,12 +338,30 @@ public class PlantGardenMapManager {
     }
     
     /**
+     * 设置智能半径变化监听器
+     */
+    private void setupSmartRadiusListener() {
+        locationManager.setOnMapRadiusChangeListener(new MapLocationManager.OnMapRadiusChangeListener() {
+            @Override
+            public void onMapRadiusChanged(int newRadius) {
+                Log.d(TAG, "Map radius changed to: " + newRadius + " meters");
+                
+                // 如果用户有位置权限且已获取位置，自动重新搜索
+                if (locationManager.hasLocationPermission() && locationManager.getLastKnownLocation() != null) {
+                    Log.d(TAG, "Auto-refreshing data with new smart radius");
+                    searchNearbyData();
+                }
+            }
+        });
+    }
+    
+    /**
      * 植物花园地图交互监听器接口
      */
     public interface OnPlantGardenMapInteractionListener {
-        void onPlantClick(Plant plant);
+        void onPlantClick(PlantDto plant);
         void onGardenClick(Garden garden);
-        void onPlantsFound(java.util.List<Plant> plants);
+        void onPlantsFound(java.util.List<PlantDto> plants);
         void onGardensFound(java.util.List<Garden> gardens);
         void onSearchError(String message);
         void onDataTypeChanged(boolean isShowingPlants);

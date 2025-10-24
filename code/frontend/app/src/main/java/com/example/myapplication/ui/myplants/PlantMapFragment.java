@@ -26,7 +26,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import com.example.myapplication.model.Garden;
-import com.example.myapplication.model.Plant;
+import com.example.myapplication.network.PlantDto;
 import com.example.myapplication.map.PlantGardenMapManager;
 
 import java.util.List;
@@ -60,7 +60,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     private double currentLng = 0.0;
     
     // Current plant for like functionality
-    private Plant currentPlant = null;
+    private PlantDto currentPlant = null;
     
     // UI related fields
     private FloatingActionButton fabPlaces;
@@ -102,7 +102,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
         plantGardenMapManager = new PlantGardenMapManager(requireContext(), mMap);
         plantGardenMapManager.setOnPlantGardenMapInteractionListener(new PlantGardenMapManager.OnPlantGardenMapInteractionListener() {
             @Override
-            public void onPlantClick(Plant plant) {
+            public void onPlantClick(PlantDto plant) {
                 showPlantBottomSheet(plant);
             }
             
@@ -112,7 +112,15 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
             }
             
             @Override
-            public void onPlantsFound(List<Plant> plants) {
+            public void onPlantsFound(List<PlantDto> plants) {
+                Log.d(TAG, "=== onPlantsFound Callback Debug ===");
+                Log.d(TAG, "Received plants: " + (plants == null ? "null" : plants.size()));
+                if (plants != null && !plants.isEmpty()) {
+                    Log.d(TAG, "First plant: " + plants.get(0).getName());
+                    Log.d(TAG, "Coordinates: (" + plants.get(0).getLatitude() + ", " + plants.get(0).getLongitude() + ")");
+                }
+                Log.d(TAG, "PlantGardenMapManager instance: " + (plantGardenMapManager == null ? "null" : "available"));
+                Log.d(TAG, "=== End onPlantsFound Callback Debug ===");
                 // 植物数据已由MapDisplayManager自动显示在地图上
             }
             
@@ -141,6 +149,13 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
             @Override
             public void onPlantLikeError(String message) {
                 Toast.makeText(getContext(), "Failed to like plant: " + message, Toast.LENGTH_SHORT).show();
+            }
+            
+            public void onMapRadiusChanged(int newRadius) {
+                // 可以在这里显示半径变化信息，或者实现自动重新搜索
+                Log.d(TAG, "Map radius changed to: " + newRadius + " meters");
+                // 可选：显示半径变化提示
+                // Toast.makeText(getContext(), "Search radius: " + newRadius + "m", Toast.LENGTH_SHORT).show();
             }
         });
         
@@ -378,7 +393,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     /**
      * 显示植物信息底部弹窗
      */
-    private void showPlantBottomSheet(Plant plant) {
+    private void showPlantBottomSheet(PlantDto plant) {
         Log.d(TAG, "showPlantBottomSheet called with: " + plant.getName());
 
         if (bottomSheetContainer != null) {
@@ -513,7 +528,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     /**
      * Like a plant
      */
-    private void likePlant(Long plantId) {
+    private void likePlant(int plantId) {
         if (plantGardenMapManager != null) {
             plantGardenMapManager.likePlant(plantId);
             // Update UI immediately for better UX
@@ -527,7 +542,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     /**
      * Unlike a plant
      */
-    private void unlikePlant(Long plantId) {
+    private void unlikePlant(int plantId) {
         if (plantGardenMapManager != null) {
             plantGardenMapManager.unlikePlant(plantId);
             // Update UI immediately for better UX

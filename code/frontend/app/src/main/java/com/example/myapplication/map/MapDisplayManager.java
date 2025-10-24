@@ -5,7 +5,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.example.myapplication.model.Garden;
-import com.example.myapplication.model.Plant;
+import com.example.myapplication.network.PlantDto;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -37,7 +37,7 @@ public class MapDisplayManager {
     private GeoJsonLayer currentGeoJsonLayer;
     private List<Marker> currentPlantMarkers = new ArrayList<>();
     private List<Marker> currentGardenMarkers = new ArrayList<>();
-    private List<Plant> currentPlants = new ArrayList<>();
+    private List<PlantDto> currentPlants = new ArrayList<>();
     private List<Garden> currentGardens = new ArrayList<>();
     
     // 回调接口
@@ -46,7 +46,7 @@ public class MapDisplayManager {
     }
     
     public interface OnPlantMapClickListener {
-        void onPlantClick(Plant plant);
+        void onPlantClick(PlantDto plant);
     }
     
     private OnGardenMapClickListener gardenClickListener;
@@ -68,26 +68,66 @@ public class MapDisplayManager {
     /**
      * 在地图上显示植物列表 - 使用Marker方式（适合频繁刷新）
      */
-    public void displayPlantsOnMap(List<Plant> plants) {
-        clearPlantMarkers();
-        currentPlants.clear();
+    public void displayPlantsOnMap(List<PlantDto> plants) {
+        Log.d(TAG, "=== Display Plants Debug ===");
+        Log.d(TAG, "Received plants list: " + (plants == null ? "null" : "size=" + plants.size()));
+        Log.d(TAG, "GoogleMap instance: " + (googleMap == null ? "null" : "available"));
         
-        for (Plant plant : plants) {
-            if (plant.getLatitude() != null && plant.getLongitude() != null) {
-                addPlantMarker(plant);
-                currentPlants.add(plant);
+        if (plants != null) {
+            for (int i = 0; i < plants.size(); i++) {
+                PlantDto plant = plants.get(i);
+                Log.d(TAG, "Plant " + i + ": " + plant.toString());
+                Log.d(TAG, "  - Name: " + plant.getName());
+                Log.d(TAG, "  - Latitude: " + plant.getLatitude());
+                Log.d(TAG, "  - Longitude: " + plant.getLongitude());
+                Log.d(TAG, "  - PlantId: " + plant.getPlantId());
             }
         }
         
-        Log.d(TAG, "Successfully displayed " + currentPlantMarkers.size() + " plants as markers");
+        Log.d(TAG, "Clearing existing markers...");
+        clearPlantMarkers();
+        currentPlants.clear();
+        
+        int validPlants = 0;
+        if (plants != null) {
+            for (PlantDto plant : plants) {
+                if (plant.getLatitude() != null && plant.getLongitude() != null) {
+                    Log.d(TAG, "Adding marker for plant: " + plant.getName() + " at (" + plant.getLatitude() + ", " + plant.getLongitude() + ")");
+                    try {
+                        addPlantMarker(plant);
+                        currentPlants.add(plant);
+                        validPlants++;
+                        Log.d(TAG, "Successfully added marker for: " + plant.getName());
+                    } catch (Exception e) {
+                        Log.e(TAG, "Failed to add marker for plant: " + plant.getName(), e);
+                    }
+                } else {
+                    Log.w(TAG, "Skipping plant with null coordinates: " + plant.getName());
+                }
+            }
+        }
+        
+        Log.d(TAG, "Final marker count: " + currentPlantMarkers.size());
+        Log.d(TAG, "Valid plants: " + validPlants + " out of " + (plants != null ? plants.size() : 0));
+        Log.d(TAG, "Current plants list size: " + currentPlants.size());
+        
+        // 检查地图状态
+        if (googleMap != null) {
+            Log.d(TAG, "GoogleMap is ready, camera position: " + googleMap.getCameraPosition());
+            Log.d(TAG, "GoogleMap is ready, visible region: " + googleMap.getProjection().getVisibleRegion());
+        } else {
+            Log.e(TAG, "GoogleMap is null! Cannot display markers.");
+        }
+        
         Toast.makeText(context, "Displayed " + currentPlantMarkers.size() + " plants", Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "=== End Display Plants Debug ===");
     }
     
     /**
      * 增量更新植物显示（添加新植物）
      */
-    public void addNewPlants(List<Plant> newPlants) {
-        for (Plant plant : newPlants) {
+    public void addNewPlants(List<PlantDto> newPlants) {
+        for (PlantDto plant : newPlants) {
             if (plant.getLatitude() != null && plant.getLongitude() != null && !currentPlants.contains(plant)) {
                 addPlantMarker(plant);
                 currentPlants.add(plant);
@@ -100,8 +140,8 @@ public class MapDisplayManager {
     /**
      * 移除植物标记
      */
-    public void removePlants(List<Plant> plantsToRemove) {
-        for (Plant plant : plantsToRemove) {
+    public void removePlants(List<PlantDto> plantsToRemove) {
+        for (PlantDto plant : plantsToRemove) {
             removePlantMarker(plant);
             currentPlants.remove(plant);
         }
@@ -112,8 +152,19 @@ public class MapDisplayManager {
     /**
      * 添加单个植物标记
      */
-    private void addPlantMarker(Plant plant) {
+    private void addPlantMarker(PlantDto plant) {
+        Log.d(TAG, "=== Add Plant Marker Debug ===");
+        Log.d(TAG, "Plant: " + plant.getName());
+        Log.d(TAG, "Coordinates: (" + plant.getLatitude() + ", " + plant.getLongitude() + ")");
+        Log.d(TAG, "GoogleMap null check: " + (googleMap == null));
+        
+        if (googleMap == null) {
+            Log.e(TAG, "GoogleMap is null! Cannot add marker.");
+            return;
+        }
+        
         LatLng position = new LatLng(plant.getLatitude(), plant.getLongitude());
+        Log.d(TAG, "Created LatLng: " + position);
         
         MarkerOptions markerOptions = new MarkerOptions()
                 .position(position)
@@ -121,24 +172,33 @@ public class MapDisplayManager {
                 .snippet(plant.getDescription())
                 .icon(createPlantIcon());
         
+        Log.d(TAG, "MarkerOptions created: " + markerOptions);
+        
         Marker marker = googleMap.addMarker(markerOptions);
+        Log.d(TAG, "Marker created: " + (marker == null ? "null" : "success"));
+        
         if (marker != null) {
             marker.setTag(plant);
             currentPlantMarkers.add(marker);
+            Log.d(TAG, "Marker added to list. Total markers: " + currentPlantMarkers.size());
             
             // 设置点击监听器
             setupPlantMarkerClickListener(marker);
+            Log.d(TAG, "Marker click listener set");
+        } else {
+            Log.e(TAG, "Failed to create marker for plant: " + plant.getName());
         }
+        Log.d(TAG, "=== End Add Plant Marker Debug ===");
     }
     
     /**
      * 移除单个植物标记
      */
-    private void removePlantMarker(Plant plant) {
+    private void removePlantMarker(PlantDto plant) {
         for (int i = currentPlantMarkers.size() - 1; i >= 0; i--) {
             Marker marker = currentPlantMarkers.get(i);
-            Plant markerPlant = (Plant) marker.getTag();
-            if (markerPlant != null && markerPlant.getPlantId().equals(plant.getPlantId())) {
+            PlantDto markerPlant = (PlantDto) marker.getTag();
+            if (markerPlant != null && markerPlant.getPlantId() == plant.getPlantId()) {
                 marker.remove();
                 currentPlantMarkers.remove(i);
                 break;
@@ -351,7 +411,7 @@ public class MapDisplayManager {
      * 处理植物标记点击事件
      */
     public boolean handlePlantMarkerClick(Marker marker) {
-        Plant plant = (Plant) marker.getTag();
+        PlantDto plant = (PlantDto) marker.getTag();
         if (plant != null && plantClickListener != null) {
             plantClickListener.onPlantClick(plant);
             return true;
