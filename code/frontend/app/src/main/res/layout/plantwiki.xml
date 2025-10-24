@@ -8,6 +8,18 @@
     android:padding="16dp"
     tools:context=".ui.myplants.MyGardenFragment"> <!-- Assuming this layout is still used by a similar fragment -->
 
+    <ProgressBar
+        android:id="@+id/progressBarWiki"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:visibility="visible" />
+
     <!-- TextView displaying the main title of the screen: "Plant Wiki". -->
     <TextView
         android:id="@+id/pageTitle"

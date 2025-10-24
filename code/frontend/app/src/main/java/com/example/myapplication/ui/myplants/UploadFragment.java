@@ -3,10 +3,12 @@
 package com.example.myapplication.ui.myplants;
 
 // Android framework and utility imports...
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,8 +16,11 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 // AndroidX imports...
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -23,43 +28,79 @@ import androidx.navigation.Navigation;
 // Application-specific and library imports...
 import com.example.myapplication.R;
 import com.example.myapplication.databinding.UploadplantBinding;
+import com.example.myapplication.network.ApiClient;
+import com.example.myapplication.network.ApiResponse;
+import com.example.myapplication.network.ApiService;
+import com.example.myapplication.network.PlantRequest;
+import com.example.myapplication.utils.ImageUtils;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 
 public class UploadFragment extends Fragment {
 
     private static final String TAG = "UploadFragment_Details";
+    private static final String KEY_IMAGE_URI = "key_image_uri";
     private UploadplantBinding binding;
     private NavController navController;
 
-    // --- MODIFICATION 1: Fields to store all received data ---
     private String receivedImageUriString;
     private String receivedScientificName;
     private boolean receivedIsFavouriteFlow;
 
-    // --- MODIFICATION 2: Define public constant keys for all arguments ---
+    // --- MODIFICATION: Add FusedLocationProviderClient and permission launcher ---
+    private FusedLocationProviderClient fusedLocationClient;
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) { // This is the success path
+                    Log.d(TAG, "Location permission granted. Proceeding with upload.");
+                    getCurrentLocationAndUpload(); // <-- FIX: Retry getting location now
+                } else { // This is the denial path
+                    Log.w(TAG, "Location permission denied by user.");
+                    Toast.makeText(getContext(), "Location denied. Uploading without location data.", Toast.LENGTH_LONG).show();
+                    uploadPlantToBackend(null); // <-- FIX: Proceed with the upload but with null location
+                }
+            });
+
     public static final String ARG_IMAGE_URI = "imageUri";
     public static final String ARG_SCIENTIFIC_NAME = "scientificName";
     public static final String ARG_IS_FAVOURITE_FLOW = "isFavouriteFlow";
 
-    public UploadFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * --- MODIFICATION 3: Receive all arguments when the fragment is created. ---
-     */
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
+
+        // --- FIX: Restore from savedInstanceState if it exists ---
+        if (savedInstanceState != null) {
+            receivedImageUriString = savedInstanceState.getString(KEY_IMAGE_URI);
+            Log.d(TAG, "Restored image URI from saved state: " + receivedImageUriString);
+        }
+
+        // If not restored, get from arguments (only on first creation)
+        if (getArguments() != null && receivedImageUriString == null) {
             receivedImageUriString = getArguments().getString(ARG_IMAGE_URI);
             receivedScientificName = getArguments().getString(ARG_SCIENTIFIC_NAME);
             receivedIsFavouriteFlow = getArguments().getBoolean(ARG_IS_FAVOURITE_FLOW, false);
+            Log.d(TAG, "Received image URI from arguments: " + receivedImageUriString);
+        }
+        // Initialize the location client
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
+    }
 
-            Log.d(TAG, "Received image URI: " + receivedImageUriString);
-            Log.d(TAG, "Received Scientific Name: " + receivedScientificName);
-            Log.d(TAG, "Received isFavouriteFlow: " + receivedIsFavouriteFlow);
-        } else {
-            Log.e(TAG, "No arguments bundle received.");
+    // --- FIX: Implement onSaveInstanceState to save the URI ---
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (receivedImageUriString != null) {
+            outState.putString(KEY_IMAGE_URI, receivedImageUriString);
+            Log.d(TAG, "Saving image URI to instance state: " + receivedImageUriString);
         }
     }
 
@@ -70,84 +111,158 @@ public class UploadFragment extends Fragment {
         return binding.getRoot();
     }
 
-    /**
-     * --- MODIFICATION 4: Pre-fill the scientific name field. ---
-     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         navController = Navigation.findNavController(view);
 
-        // Set the captured image
-        if (receivedImageUriString != null && !receivedImageUriString.isEmpty()) {
+        if (receivedImageUriString != null) {
             binding.plantImageViewPreview.setImageURI(Uri.parse(receivedImageUriString));
         }
 
-        // Pre-fill and disable the scientific name field if a name was passed
         if (receivedScientificName != null && !receivedScientificName.isEmpty()) {
             binding.editTextScientificName.setText(receivedScientificName);
-            // Make the field read-only
             binding.editTextScientificName.setEnabled(false);
-            binding.editTextScientificName.setFocusable(false);
-            binding.editTextScientificName.setClickable(false);
-            Log.d(TAG, "Prefilled and disabled scientific name field.");
         }
 
         binding.backButtonUpload.setOnClickListener(v -> navController.popBackStack());
-
-        binding.uploadButton.setOnClickListener(v -> {
-            // (Validation logic is correct and requires no changes)
-            String scientificName = binding.editTextScientificName.getText().toString().trim();
-            String location = binding.editTextLocation.getText().toString().trim();
-            String introduction = binding.editTextIntroduction.getText().toString().trim();
-            // ... field validation checks ...
-            if (scientificName.isEmpty() || location.isEmpty() || introduction.isEmpty()) {
-                // Show errors if needed
-                Toast.makeText(getContext(), "All fields must be filled.", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            Log.i(TAG, "UPLOAD REQUESTED (Simulated):");
-            Log.i(TAG, "Image URI: " + receivedImageUriString);
-            Log.i(TAG, "Scientific Name: " + scientificName);
-            Log.i(TAG, "Location: " + location);
-            Log.i(TAG, "Is Favourite on Upload: " + receivedIsFavouriteFlow); // Log the favourite status
-
-            Toast.makeText(getContext(), "Simulating upload...", Toast.LENGTH_SHORT).show();
-            new Handler(Looper.getMainLooper()).postDelayed(this::showSuccessOverlay, 1500);
-        });
+        // --- MODIFICATION: The upload button now starts the location permission flow ---
+        binding.uploadButton.setOnClickListener(v -> triggerUploadProcess());
     }
 
     /**
-     * --- MODIFICATION 5: Pass the 'isFavourite' value to the final preview screen ---
+     * Starts the upload process by validating fields and then checking for location permissions.
      */
-    private void showSuccessOverlay() {
-        if (getContext() == null || binding == null || binding.successOverlay == null) {
+    private void triggerUploadProcess() {
+        String scientificName = binding.editTextScientificName.getText().toString().trim();
+        if (scientificName.isEmpty()) {
+            Toast.makeText(getContext(), "Scientific name must be filled.", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        binding.uploadButton.setEnabled(false);
+        binding.uploadButton.setText("Uploading...");
+
+        // Check for location permission
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            getCurrentLocationAndUpload();
+        } else {
+            // Request permission. The result will be handled by the ActivityResultLauncher.
+            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+    }
+
+    /**
+     * Fetches the device's last known location and then proceeds to call the backend upload method.
+     */
+    @SuppressLint("MissingPermission") // We only call this after checking for permission.
+    private void getCurrentLocationAndUpload() {
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(requireActivity(), location -> {
+                    if (location != null) {
+                        Log.d(TAG, "Location acquired: Lat: " + location.getLatitude() + ", Lon: " + location.getLongitude());
+                        uploadPlantToBackend(location);
+                    } else {
+                        Log.w(TAG, "Could not get location. Uploading without location data.");
+                        Toast.makeText(getContext(), "Could not retrieve location. Uploading without it.", Toast.LENGTH_SHORT).show();
+                        uploadPlantToBackend(null);
+                    }
+                })
+                .addOnFailureListener(requireActivity(), e -> {
+                    Log.e(TAG, "Failed to get location", e);
+                    Toast.makeText(getContext(), "Failed to get location. Uploading without it.", Toast.LENGTH_SHORT).show();
+                    uploadPlantToBackend(null);
+                });
+    }
+
+    /**
+     * --- MODIFICATION: This method now takes a Location object and handles timestamps. ---
+     */
+    private void uploadPlantToBackend(@Nullable Location location) {
+        // --- FIX: Final safety check to prevent crash ---
+        if (receivedImageUriString == null) {
+            Log.e(TAG, "Cannot upload, image URI string is null.");
+            Toast.makeText(getContext(), "Error: Image data was lost. Please try again.", Toast.LENGTH_LONG).show();
+            resetUploadButton();
+            return;
+        }
+
+        if (getContext() == null) {
+            resetUploadButton();
+            return;
+        }
+
+        String base64Image = ImageUtils.convertImageToBase64(getContext(), Uri.parse(receivedImageUriString));
+        if (base64Image == null) {
+            Toast.makeText(getContext(), "Failed to process image", Toast.LENGTH_SHORT).show();
+            resetUploadButton();
+            return;
+        }
+
+        // Generate current timestamp in ISO 8601 UTC format
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String currentTime = sdf.format(new Date());
+
+        // Create the request object with all dynamic data
+        PlantRequest plantRequest = new PlantRequest(
+                binding.editTextScientificName.getText().toString().trim(), // name
+                base64Image,
+                binding.editTextIntroduction.getText().toString().trim(), // description
+                location != null ? location.getLatitude() : null, // latitude
+                location != null ? location.getLongitude() : null, // longitude
+                binding.editTextScientificName.getText().toString().trim(), // scientificName
+                currentTime, // createdAt
+                currentTime, // updatedAt
+                null, // gardenId
+                receivedIsFavouriteFlow
+        );
+
+        ApiService apiService = ApiClient.create(getContext());
+        Call<ApiResponse> call = apiService.addPlant(plantRequest);
+
+        call.enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+                if (isAdded() && response.isSuccessful()) {
+                    Toast.makeText(getContext(), "Plant uploaded successfully!", Toast.LENGTH_SHORT).show();
+                    showSuccessOverlay();
+                } else if (isAdded()) {
+                    Toast.makeText(getContext(), "Upload failed: " + response.message(), Toast.LENGTH_SHORT).show();
+                    resetUploadButton();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                if (isAdded()) {
+                    Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    resetUploadButton();
+                }
+            }
+        });
+    }
+
+    private void resetUploadButton() {
+        if (binding != null) {
+            binding.uploadButton.setEnabled(true);
+            binding.uploadButton.setText("Upload");
+        }
+    }
+
+    private void showSuccessOverlay() {
+        // This method remains the same, but the hardcoded location field is gone
+        // You may want to update UploadCompleteFragment to handle latitude/longitude instead of a location string
+        if (getContext() == null || binding == null) return;
         binding.successOverlay.getRoot().setVisibility(View.VISIBLE);
         binding.successOverlay.okButtonSuccess.setOnClickListener(view -> {
             binding.successOverlay.getRoot().setVisibility(View.GONE);
-
-            // Create a bundle to pass all data to the final preview fragment
             Bundle args = new Bundle();
+            // Pass the data that UploadCompleteFragment actually needs
             args.putString(UploadCompleteFragment.ARG_IMAGE_URI, receivedImageUriString);
             args.putString(UploadCompleteFragment.ARG_SCIENTIFIC_NAME, binding.editTextScientificName.getText().toString().trim());
-            args.putString(UploadCompleteFragment.ARG_LOCATION, binding.editTextLocation.getText().toString().trim());
-            args.putString(UploadCompleteFragment.ARG_INTRODUCTION, binding.editTextIntroduction.getText().toString().trim());
-            args.putString(UploadCompleteFragment.ARG_SEARCH_TAG, binding.editTextSearchTags.getText().toString().trim());
-
-            // Pass the favourite flag along to the final preview screen
-            // You will need to add ARG_IS_FAVOURITE to UploadCompleteFragment as well
             args.putBoolean("isFavourite", receivedIsFavouriteFlow);
-            Log.d(TAG, "Navigating to UploadCompleteFragment with isFavourite: " + receivedIsFavouriteFlow);
-
-            try {
-                navController.navigate(R.id.navigation_upload_complete_preview, args);
-            } catch (IllegalArgumentException e) {
-                Log.e(TAG, "Navigation to UploadCompleteFragment failed.", e);
-            }
+            navController.navigate(R.id.navigation_upload_complete_preview, args);
         });
     }
 

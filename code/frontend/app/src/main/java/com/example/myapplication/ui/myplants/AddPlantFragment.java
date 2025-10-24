@@ -1,5 +1,6 @@
 package com.example.myapplication.ui.myplants;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -8,7 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.content.Context;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -20,11 +20,18 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.myapplication.R;
 import com.example.myapplication.databinding.AddplantBinding;
-import com.example.myapplication.ui.myplants.Plant;
+import com.example.myapplication.network.ApiClient;
+import com.example.myapplication.network.ApiResponse;
+import com.example.myapplication.network.ApiService;
+import com.example.myapplication.network.PlantWikiDto;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class AddPlantFragment extends Fragment {
 
@@ -33,10 +40,7 @@ public class AddPlantFragment extends Fragment {
     private NavController navController;
     private SearchResultAdapter searchAdapter;
 
-    // This will hold all possible plant names to search against.
-    private final List<String> allPlantNames = new ArrayList<>();
-
-    // --- MODIFICATION 1: Field to hold the isFavouriteFlow flag ---
+    private final List<String> allPlantCommonNames = new ArrayList<>();
     private boolean isFavouriteFlow = false;
 
     @Nullable
@@ -51,60 +55,87 @@ public class AddPlantFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         navController = Navigation.findNavController(view);
 
-        // --- MODIFICATION 2: Receive the isFavouriteFlow argument ---
         if (getArguments() != null) {
             isFavouriteFlow = getArguments().getBoolean("isFavouriteFlow", false);
-            Log.d(TAG, "Received isFavouriteFlow: " + isFavouriteFlow);
         }
 
-        loadAllPlantNames();
         setupRecyclerView();
         setupSearchLogic();
+        fetchAllPlantNamesFromServer(); // Moved to be after setup
         setupBackButton();
         setupNextButton();
     }
 
-    /**
-     * Loads the master list of all searchable plant names.
-     */
-    private void loadAllPlantNames() {
-        // Placeholder: generating sample data
-        List<Plant> allPlants = generateAllSamplePlants();
-        allPlantNames.clear();
-        allPlantNames.addAll(
-                allPlants.stream()
-                        .map(Plant::getScientificName) // Search by scientific name now
-                        .distinct()
-                        .collect(Collectors.toList())
-        );
-        Log.d(TAG, "Loaded " + allPlantNames.size() + " unique plant names for searching.");
+    private void fetchAllPlantNamesFromServer() {
+        Log.d(TAG, "Fetching all plant names from server...");
+
+        binding.progressBarSearch.setVisibility(View.VISIBLE);
+        binding.textViewSearchStatus.setText("Loading plant names...");
+        binding.textViewSearchStatus.setVisibility(View.VISIBLE);
+        binding.recyclerViewScientificNames.setVisibility(View.GONE);
+
+        ApiService apiService = ApiClient.create(requireContext());
+        Call<ApiResponse<List<PlantWikiDto>>> call = apiService.getAllWikis();
+
+        call.enqueue(new Callback<ApiResponse<List<PlantWikiDto>>>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<List<PlantWikiDto>>> call, @NonNull Response<ApiResponse<List<PlantWikiDto>>> response) {
+                if (binding == null) return; // View destroyed, do nothing
+                binding.progressBarSearch.setVisibility(View.GONE);
+
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    allPlantCommonNames.clear();
+                    List<String> fetchedNames = response.body().getData().stream()
+                            .map(PlantWikiDto::getName)
+                            .filter(name -> name != null && !name.isEmpty())
+                            .distinct()
+                            .collect(Collectors.toList());
+
+                    allPlantCommonNames.addAll(fetchedNames);
+                    Log.d(TAG, "Successfully loaded " + allPlantCommonNames.size() + " unique plant names.");
+
+                    // --- FIX 1: Show the full list immediately after fetching ---
+                    searchAdapter.updateData(allPlantCommonNames);
+                    binding.recyclerViewScientificNames.setVisibility(View.VISIBLE);
+                    binding.textViewSearchStatus.setVisibility(View.GONE);
+
+                } else {
+                    Log.e(TAG, "Failed to fetch plant names. Code: " + response.code());
+                    binding.textViewSearchStatus.setText("Failed to load plant list. Please try again.");
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<List<PlantWikiDto>>> call, @NonNull Throwable t) {
+                if (binding == null) return; // View destroyed, do nothing
+                binding.progressBarSearch.setVisibility(View.GONE);
+                binding.textViewSearchStatus.setText("Network error. Please check connection.");
+                Log.e(TAG, "Network error fetching plant names.", t);
+            }
+        });
     }
 
-    /**
-     * Initializes the RecyclerView and its adapter.
-     */
     private void setupRecyclerView() {
-        searchAdapter = new SearchResultAdapter(scientificName -> {
-            Log.d(TAG, "User selected: " + scientificName);
-
-            binding.searchScientificNameEditText.setText(scientificName);
-            binding.searchScientificNameEditText.setSelection(scientificName.length());
+        searchAdapter = new SearchResultAdapter(selectedPlantName -> {
+            Log.d(TAG, "User selected: " + selectedPlantName);
+            binding.searchScientificNameEditText.setText(selectedPlantName);
+            binding.searchScientificNameEditText.setSelection(selectedPlantName.length());
             binding.recyclerViewScientificNames.setVisibility(View.GONE);
 
-            InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(binding.searchScientificNameEditText.getWindowToken(), 0);
+            if (getContext() != null) {
+                InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(binding.searchScientificNameEditText.getWindowToken(), 0);
+            }
         });
 
         binding.recyclerViewScientificNames.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.recyclerViewScientificNames.setAdapter(searchAdapter);
     }
 
-    /**
-     * Sets up the TextWatcher to listen for user input and trigger filtering.
-     */
     private void setupSearchLogic() {
-        binding.textViewSearchStatus.setText("Search for a plant by its scientific name.");
-        binding.textViewSearchStatus.setVisibility(View.VISIBLE);
+        // Initial state message, will be replaced on data load
+        binding.textViewSearchStatus.setText("");
+        binding.textViewSearchStatus.setVisibility(View.GONE);
         binding.recyclerViewScientificNames.setVisibility(View.GONE);
 
         binding.searchScientificNameEditText.addTextChangedListener(new TextWatcher() {
@@ -121,23 +152,23 @@ public class AddPlantFragment extends Fragment {
         });
     }
 
-    /**
-     * Filters the master list of plant names based on the user's query.
-     */
     private void filterPlantNames(String query) {
-        if (query.isEmpty()) {
-            binding.recyclerViewScientificNames.setVisibility(View.GONE);
-            binding.textViewSearchStatus.setVisibility(View.VISIBLE);
-            searchAdapter.updateData(new ArrayList<>());
-            return;
-        }
+        // --- FIX 2: Simplified filtering logic ---
+        List<String> filteredList;
 
-        List<String> filteredList = allPlantNames.stream()
-                .filter(name -> name.toLowerCase().contains(query.toLowerCase()))
-                .collect(Collectors.toList());
+        if (query.isEmpty()) {
+            // If the query is empty, show the full list
+            filteredList = new ArrayList<>(allPlantCommonNames);
+        } else {
+            // Otherwise, show the filtered list
+            filteredList = allPlantCommonNames.stream()
+                    .filter(name -> name.toLowerCase().contains(query.toLowerCase()))
+                    .collect(Collectors.toList());
+        }
 
         searchAdapter.updateData(filteredList);
 
+        // Update visibility based on whether the list is empty
         if (filteredList.isEmpty()) {
             binding.recyclerViewScientificNames.setVisibility(View.GONE);
             binding.textViewSearchStatus.setText("No results found.");
@@ -148,33 +179,23 @@ public class AddPlantFragment extends Fragment {
         }
     }
 
-    /**
-     * --- MODIFICATION 3: Pass both scientificName and isFavouriteFlow ---
-     * This will navigate to the CaptureFragment, passing all necessary data.
-     */
     private void setupNextButton() {
         binding.imageView.setOnClickListener(v -> {
-            String scientificName = binding.searchScientificNameEditText.getText().toString().trim();
-
-            if (scientificName.isEmpty()) {
+            String plantName = binding.searchScientificNameEditText.getText().toString().trim();
+            if (plantName.isEmpty()) {
                 binding.searchScientificNameEditText.setError("Please enter or select a name");
                 return;
             }
 
-            Log.d(TAG, "Navigating to CaptureFragment with scientific name: " + scientificName + " and isFavouriteFlow: " + isFavouriteFlow);
-
-            // Create a bundle to pass all necessary data
+            Log.d(TAG, "Navigating to UploadFragment with plant name: " + plantName);
             Bundle args = new Bundle();
-            args.putString("scientificName", scientificName);
+            args.putString("scientificName", plantName);
             args.putBoolean("isFavouriteFlow", isFavouriteFlow);
 
             try {
-                // Navigate to the CaptureFragment with the arguments.
-                // Ensure this action exists in your navigation graph.
                 navController.navigate(R.id.navigation_upload, args);
-            } catch (IllegalArgumentException e) {
-                Log.e(TAG, "Navigation failed. Check action 'action_addPlantFragment_to_captureFragment' in your nav graph.", e);
-                Toast.makeText(getContext(), "Error: Cannot proceed.", Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                Log.e(TAG, "Navigation failed.", e);
             }
         });
     }
@@ -185,25 +206,6 @@ public class AddPlantFragment extends Fragment {
                 navController.popBackStack();
             }
         });
-    }
-
-    /**
-     * --- MODIFICATION 4: Update Plant constructor to match new fields ---
-     * This is a temporary method to provide data. Replace with your actual data source.
-     */
-    private List<Plant> generateAllSamplePlants() {
-        List<Plant> samplePlants = new ArrayList<>();
-        long now = System.currentTimeMillis();
-        long oneDay = 24 * 60 * 60 * 1000;
-
-        // Using the new Plant constructor
-        samplePlants.add(new Plant("p1", "Monstera", "Monstera deliciosa", "A popular houseplant with iconic leaves.", "Indoor", "Houseplant, Tropical", "UserA", now - 5 * oneDay, "url_monstera", false));
-        samplePlants.add(new Plant("p2", "Snake Plant", "Dracaena trifasciata", "A very hardy plant.", "Indoor", "Succulent, Hardy", "UserB", now - 2 * oneDay, "url_snakeplant", true));
-        samplePlants.add(new Plant("p3", "Spider Plant", "Chlorophytum comosum", "Produces small 'spiderettes'.", "Indoor", "Easy Care", "UserA", now - 10 * oneDay, "url_spiderplant", false));
-        samplePlants.add(new Plant("p4", "Peace Lily", "Spathiphyllum wallisii", "Features elegant white spathes.", "Indoor", "Flowering, Air Purifying", "UserC", now - 7 * oneDay, "url_peacelily", true));
-        samplePlants.add(new Plant("p5", "Fiddle Leaf Fig", "Ficus lyrata", "A popular but tricky indoor tree.", "Indoor", "Tree, Fussy", "UserB", now - 30 * oneDay, "url_fiddle", false));
-
-        return samplePlants;
     }
 
     @Override

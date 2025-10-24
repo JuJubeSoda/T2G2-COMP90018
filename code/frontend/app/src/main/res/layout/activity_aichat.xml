@@ -27,7 +27,7 @@
 
         <TextView
             android:id="@+id/titleText"
-            android:text="AI Assistant"
+            android:text="🌱 Plant AI Assistant"
             android:textColor="@android:color/white"
             android:textSize="20sp"
             android:textStyle="bold"
@@ -73,7 +73,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="Ask me anything..."
+            android:hint="Ask about plants, gardening, or care advice..."
             android:padding="10dp"
             android:textSize="16sp"
             android:maxLines="4"
@@ -82,6 +82,16 @@
             android:textColor="@color/black"
             android:textColorHint="#999999"/>
 
+        <ImageButton
+            android:id="@+id/cameraButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@android:drawable/ic_menu_camera"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:backgroundTint="@color/brand_green"
+            android:layout_marginEnd="4dp"
+            android:contentDescription="Take photo for plant identification" />
+
         <Button
             android:id="@+id/sendButton"
             android:text="Send"
@@ -89,7 +99,7 @@
             android:textStyle="bold"
             android:textColor="@android:color/white"
             android:backgroundTint="@color/brand_teal"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="4dp"
             android:layout_width="wrap_content"
             android:layout_height="48dp"
             android:minWidth="72dp"

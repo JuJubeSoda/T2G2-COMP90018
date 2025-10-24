@@ -2,48 +2,115 @@ package com.example.myapplication.network;
 
 import com.example.myapplication.ui.myplants.Plant;
 import com.google.gson.annotations.SerializedName;
+import java.util.List;
 
 /**
- * Data Transfer Object (DTO) for a plant, matching the structure from the backend API.
+ * Data Transfer Object (DTO) for a plant, matching the JSON structure from the backend API.
+ * This class is used by Retrofit and GSON to parse the network response.
  */
 public class PlantDto {
 
+    // All fields from your backend API response's "data" object
     @SerializedName("plantId")
-    private Long plantId;
-
+    private int plantId;
+    @SerializedName("userId")
+    private int userId;
     @SerializedName("name")
     private String name;
-
     @SerializedName("image")
-    private String image; // Base64 encoded string
-
+    private String image;
     @SerializedName("description")
     private String description;
-
+    @SerializedName("latitude")
+    private Double latitude;
+    @SerializedName("longitude")
+    private Double longitude;
     @SerializedName("scientificName")
     private String scientificName;
-
     @SerializedName("gardenId")
-    private Long gardenId;
+    private int gardenId;
+    @SerializedName("isFavourite")
+    private boolean isFavourite;
+    @SerializedName("createdAt")
+    private String createdAt;
+    @SerializedName("updatedAt")
+    private String updatedAt;
+
+    // These fields are included for completeness based on previous errors.
+    // If your API doesn't send them, they will simply be null.
+    @SerializedName("tags")
+    private List<String> tags;
+    @SerializedName("discoveredBy")
+    private String discoveredBy;
+    @SerializedName("lightRequirement")
+    private String lightRequirement;
+    @SerializedName("waterRequirement")
+    private String waterRequirement;
+    @SerializedName("temperatureRequirement")
+    private String temperatureRequirement;
+    @SerializedName("humidityRequirement")
+    private String humidityRequirement;
 
     /**
-     * Converts this Data Transfer Object (DTO) to a domain model object (Plant).
-     * This method correctly maps the DTO fields to the Plant's constructor arguments.
-     *
+     * Converts this Data Transfer Object (DTO) to the app's domain model object (Plant).
+     * This allows the rest of the app to work with a clean, Parcelable Plant object.
      * @return A new Plant object populated with data from this DTO.
      */
     public Plant toPlant() {
         return new Plant(
-            this.plantId != null ? String.valueOf(this.plantId) : "",
-            this.scientificName,
-            this.name,
-            this.description, // DTO's description maps to Plant's introduction
-            this.gardenId != null ? String.valueOf(this.gardenId) : "", // DTO's gardenId maps to Plant's location
-            "", // searchTag - not provided by backend, set to empty
-            null, // discoveredBy - not provided, set to null
-            0L,   // discoveredOn - not provided, set to 0
-            this.image, // DTO's image (Base64) maps to Plant's imageUrl
-            false // isFavourite - not provided, default to false
+                this.plantId,
+                this.userId,
+                this.name,
+                this.image,
+                this.description,
+                this.latitude,
+                this.longitude,
+                this.scientificName,
+                this.gardenId,
+                this.isFavourite,
+                this.createdAt,
+                this.updatedAt,
+                this.tags,
+                this.discoveredBy,
+                this.lightRequirement,
+                this.waterRequirement,
+                this.temperatureRequirement,
+                this.humidityRequirement
         );
+    }
+
+    // --- Getters ---
+    // The presence of this method will fix the "Cannot resolve method" error.
+    public String getScientificName() {
+        return scientificName;
+    }
+
+    // It's good practice to add getters for any other fields you might need to access directly.
+    public int getPlantId() {
+        return plantId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public String getDiscoveredBy() {
+        return discoveredBy;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public boolean isFavourite() {
+        return isFavourite;
     }
 }

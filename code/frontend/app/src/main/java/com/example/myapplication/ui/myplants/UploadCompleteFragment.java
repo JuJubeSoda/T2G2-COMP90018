@@ -194,7 +194,7 @@ public class UploadCompleteFragment extends Fragment {
         binding.textViewIntroduction.setText(introduction != null && !introduction.isEmpty() ? introduction : "N/A");
         // For search tags, format the text to include "Tags: ".
         // Assumes your XML has a TextView with ID 'textViewSearchTag' for the tag value.
-        binding.textViewSearchTag.setText(searchTag != null && !searchTag.isEmpty() ? "Tags: " + searchTag : "Tags: N/A");
+//        binding.textViewSearchTag.setText(searchTag != null && !searchTag.isEmpty() ? "Tags: " + searchTag : "Tags: N/A");
 
         // Set static or dynamically generated text for other fields.
         binding.textViewDiscoveredBy.setText("Discovered by: You"); // Example: assuming the current user discovered it.
@@ -237,7 +237,8 @@ public class UploadCompleteFragment extends Fragment {
         // Currently, this is a placeholder functionality.
         binding.buttonGatherMoreInfo.setOnClickListener(v -> {
             Log.d(TAG, "Gather More Information button clicked");
-            Toast.makeText(getContext(), "Functionality to gather more info coming soon!", Toast.LENGTH_LONG).show();
+            navController.navigate(R.id.navigation_plant_wiki);
+//            Toast.makeText(getContext(), "Functionality to gather more info coming soon!", Toast.LENGTH_LONG).show();
         });
     }
 

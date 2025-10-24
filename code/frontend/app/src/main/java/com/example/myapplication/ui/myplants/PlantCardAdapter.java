@@ -109,9 +109,42 @@ public class PlantCardAdapter extends RecyclerView.Adapter<PlantCardAdapter.Plan
 
         if (currentViewType == VIEW_TYPE_LIST_WITH_DATE) {
             holder.textViewPlantDate.setVisibility(View.VISIBLE);
-            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
-            String formattedDate = sdf.format(new Date(plant.getDiscoveredOn()));
-            holder.textViewPlantDate.setText(context.getString(R.string.plant_added_on_date_format, formattedDate));
+            try {
+                String createdAt = plant.getCreatedAt();
+                String formattedDate = "Date not available";
+                
+                if (createdAt != null && !createdAt.isEmpty()) {
+                    try {
+                        // Try to parse the date string - handle different possible formats
+                        SimpleDateFormat displayFormat = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
+                        
+                        try {
+                            // Try ISO 8601 format first
+                            SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+                            isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                            java.util.Date date = isoFormat.parse(createdAt);
+                            formattedDate = displayFormat.format(date);
+                        } catch (java.text.ParseException e1) {
+                            try {
+                                // Try simpler ISO format
+                                SimpleDateFormat simpleIsoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
+                                simpleIsoFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                                java.util.Date date = simpleIsoFormat.parse(createdAt);
+                                formattedDate = displayFormat.format(date);
+                            } catch (java.text.ParseException e2) {
+                                // If all parsing fails, just display the raw string
+                                formattedDate = createdAt;
+                            }
+                        }
+                    } catch (Exception e) {
+                        formattedDate = "Date not available";
+                    }
+                }
+                
+                holder.textViewPlantDate.setText(context.getString(R.string.plant_added_on_date_format, formattedDate));
+            } catch (Exception e) {
+                holder.textViewPlantDate.setText(context.getString(R.string.plant_added_on_date_format, "Date not available"));
+            }
 
             constraintSet.constrainWidth(R.id.imageViewPlant, dpToPx(60));
             constraintSet.constrainHeight(R.id.imageViewPlant, dpToPx(60));

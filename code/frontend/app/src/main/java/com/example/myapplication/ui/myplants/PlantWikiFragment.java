@@ -1,6 +1,9 @@
-package com.example.myapplication.ui.myplants; // Assuming it resides here, adjust if needed.
+package com.example.myapplication.ui.myplants;
 
 import android.os.Bundle;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -19,31 +22,27 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.myapplication.R;
-import com.example.myapplication.databinding.PlantwikiBinding; // Correct binding class for plantwiki.xml
+import com.example.myapplication.databinding.PlantwikiBinding;
+import com.example.myapplication.network.ApiClient;
+import com.example.myapplication.network.ApiResponse;
+import com.example.myapplication.network.ApiService;
+import com.example.myapplication.network.PlantWikiDto;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * PlantWikiFragment displays a searchable encyclopedia of all known plants.
- * It allows users to browse plants in a grid or list format and search for specific ones.
- * Clicking on a plant will navigate to its detail page.
- */
 public class PlantWikiFragment extends Fragment {
 
     private static final String TAG = "PlantWikiFragment";
-    private PlantwikiBinding binding; // Binding class generated from plantwiki.xml
+    private PlantwikiBinding binding;
     private PlantCardAdapter plantCardAdapter;
 
-    // This list holds all plants available in the wiki.
-    // In a real app, this data would come from a remote database/API.
-    private final List<Plant> allWikiPlants = new ArrayList<>();
+    private List<Plant> masterWikiList = new ArrayList<>();
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // Inflate the layout using View Binding
         binding = PlantwikiBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
@@ -52,64 +51,49 @@ public class PlantWikiFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Load the master data for the wiki
-        generateAllWikiPlants();
+        setupWikiRecyclerView();
+        setupWikiClickListeners();
 
-        // Setup the UI components
-        setupRecyclerView();
-        setupSearch();
-        // setupViewToggles(); // This is commented out as the toggles are not in the final XML
-
-        // Initial display of all plants
-        displayFilteredPlants("");
+        if (masterWikiList.isEmpty()) {
+            Log.d(TAG, "Wiki list is empty. Fetching from server.");
+            fetchWikiPlantsFromServer();
+        } else {
+            Log.d(TAG, "Wiki data exists. Displaying from master list.");
+            displayWikiPlants();
+        }
     }
 
-    /**
-     * Initializes the RecyclerView, its adapter, and the click listener for navigation.
-     */
-    private void setupRecyclerView() {
+    private void setupWikiRecyclerView() {
         if (binding.recyclerViewPlants == null) {
             Log.e(TAG, "CRITICAL: recyclerViewPlants is NULL!");
             return;
         }
 
-        // The adapter's click listener will navigate to the PlantDetailFragment
         plantCardAdapter = new PlantCardAdapter(requireContext(), new ArrayList<>(), plant -> {
-            Log.d(TAG, "Wiki plant clicked: " + plant.getName() + ". Navigating to details.");
-
-            // Create a bundle to pass the selected Plant object
+            Log.d(TAG, "Wiki plant clicked: " + plant.getName() + ". Navigating to wiki tab.");
             Bundle args = new Bundle();
-            args.putParcelable(PlantDetailFragment.ARG_PLANT, plant);
-
+            args.putParcelable(PlantDetailFragment.ARG_PLANT, plant); // The key can be the same
             try {
-                // Navigate to the detail screen.
-                // NOTE: This assumes a global action or an action from the wiki fragment exists.
-                // You might need to add <action android:id="@+id/action_plantWikiFragment_to_plantDetailFragment" ... />
-                // to your mobile_navigation.xml inside the wiki fragment definition.
-                // TODO: Replace this with Wiki View
-                Navigation.findNavController(requireView()).navigate(R.id.plantDetailFragment, args);
+                // --- THIS IS THE FIX ---
+                // Provide the correct destination ID for the wiki flow.
+                Navigation.findNavController(requireView()).navigate(R.id.plantwiki_maintab, args);
             } catch (Exception e) {
-                Log.e(TAG, "Navigation to PlantDetailFragment from Wiki failed.", e);
+                Log.e(TAG, "Navigation to R.id.plantwiki_maintab failed. Check nav graph for this ID.", e);
                 Toast.makeText(getContext(), "Could not open plant details.", Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Set the adapter and default layout manager (the XML already defines a GridLayoutManager)
         binding.recyclerViewPlants.setAdapter(plantCardAdapter);
-        binding.recyclerViewPlants.setLayoutManager(new GridLayoutManager(getContext(), 2)); // Default to grid view
+        binding.recyclerViewPlants.setLayoutManager(new GridLayoutManager(getContext(), 2));
     }
 
-    /**
-     * Sets up the search logic for the EditText field.
-     */
-    private void setupSearch() {
+    private void setupWikiClickListeners() {
         binding.searchEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // Filter the list in real-time as the user types
                 displayFilteredPlants(s.toString());
             }
 
@@ -117,7 +101,6 @@ public class PlantWikiFragment extends Fragment {
             public void afterTextChanged(Editable s) {}
         });
 
-        // Handle the "Search" button on the keyboard
         binding.searchEditText.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 displayFilteredPlants(v.getText().toString());
@@ -127,55 +110,81 @@ public class PlantWikiFragment extends Fragment {
         });
     }
 
-    /**
-     * Filters the master plant list based on a query and updates the RecyclerView.
-     * @param query The search text entered by the user.
-     */
-    private void displayFilteredPlants(String query) {
-        List<Plant> filteredList;
+    private void displayWikiPlants() {
+        if (binding != null) {
+            displayFilteredPlants(binding.searchEditText.getText().toString());
+        }
+    }
 
-        if (query.trim().isEmpty()) {
-            // If query is empty, show all plants
-            filteredList = new ArrayList<>(allWikiPlants);
-        } else {
-            // Otherwise, filter by name or scientific name (case-insensitive)
-            String lowerCaseQuery = query.toLowerCase();
-            filteredList = allWikiPlants.stream()
-                    .filter(p -> p.getName().toLowerCase().contains(lowerCaseQuery) ||
-                            p.getScientificName().toLowerCase().contains(lowerCaseQuery))
-                    .collect(Collectors.toList());
+    private void displayFilteredPlants(String query) {
+        if (masterWikiList.isEmpty()) {
+            binding.recyclerViewPlants.setVisibility(View.GONE);
+            return;
         }
 
-        // Update the adapter with the new list
+        binding.recyclerViewPlants.setVisibility(View.VISIBLE);
+        List<Plant> filteredList;
+        if (query.trim().isEmpty()) {
+            filteredList = new ArrayList<>(masterWikiList);
+        } else {
+            String lowerCaseQuery = query.toLowerCase();
+            filteredList = masterWikiList.stream()
+                    .filter(p -> p.getName().toLowerCase().contains(lowerCaseQuery) ||
+                            (p.getScientificName() != null && p.getScientificName().toLowerCase().contains(lowerCaseQuery)))
+                    .collect(Collectors.toList());
+        }
         plantCardAdapter.setPlants(new ArrayList<>(filteredList));
     }
 
-    /**
-     * Generates a sample list of plants for the wiki.
-     * TODO: Replace this with a real API call to fetch all plants from your backend.
-     */
-    private void generateAllWikiPlants() {
-        if (!allWikiPlants.isEmpty()) return; // Generate only once
+    private void fetchWikiPlantsFromServer() {
+        binding.progressBarWiki.setVisibility(View.VISIBLE);
+        binding.recyclerViewPlants.setVisibility(View.GONE);
 
-        Log.d(TAG, "Generating new sample plants for the wiki.");
-        long now = System.currentTimeMillis();
+        ApiService apiService = ApiClient.create(requireContext());
+        // Use the getAllWikis endpoint as specified in the Swagger documentation
+        Call<ApiResponse<List<PlantWikiDto>>> call = apiService.getAllWikis();
 
-        // Create a more extensive list for the wiki
-        allWikiPlants.add(new Plant("p1", "Monstera deliciosa", "Monstera", "A popular houseplant with iconic fenestrated leaves.", "Tropical Rainforests", "Houseplant, Tropical", "Botanist", now, "url_monstera", false));
-        allWikiPlants.add(new Plant("p2", "Dracaena trifasciata", "Snake Plant", "A very hardy plant known for its air-purifying qualities.", "West Africa", "Succulent, Hardy, Air-purifying", "Botanist", now, "url_snakeplant", false));
-        allWikiPlants.add(new Plant("p3", "Chlorophytum comosum", "Spider Plant", "Easy to grow and known for producing 'spiderettes' or plantlets.", "South Africa", "Easy Care, Hanging Plant", "Botanist", now, "url_spiderplant", false));
-        allWikiPlants.add(new Plant("p4", "Spathiphyllum wallisii", "Peace Lily",  "Features elegant white spathes and thrives in low light.", "South America", "Flowering, Air Purifying, Low Light", "Botanist", now, "url_peacelily", false));
-        allWikiPlants.add(new Plant("p5", "Ficus lyrata", "Fiddle Leaf Fig", "A popular indoor tree with large, violin-shaped leaves.", "West Africa", "Tree, Fussy", "Botanist", now, "url_fiddle", false));
-        allWikiPlants.add(new Plant("p6", "Rosa", "Rose", "A woody perennial flowering plant of the genus Rosa, in the family Rosaceae.", "Global", "Flower, Shrub, Garden", "Botanist", now, "url_rose", false));
-        allWikiPlants.add(new Plant("p7", "Quercus","Oak Tree", "A tree or shrub in the genus Quercus of the beech family, Fagaceae.", "Northern Hemisphere", "Tree, Deciduous, Hardwood", "Botanist", now, "url_oak", false));
+        call.enqueue(new Callback<ApiResponse<List<PlantWikiDto>>>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<List<PlantWikiDto>>> call, @NonNull Response<ApiResponse<List<PlantWikiDto>>> response) {
+                if (binding == null) return;
+                binding.progressBarWiki.setVisibility(View.GONE);
+
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    masterWikiList.clear();
+                    for (PlantWikiDto dto : response.body().getData()) {
+                        Plant plant = dto.toPlant();
+                        masterWikiList.add(plant);
+                        Log.d(TAG, "Added wiki plant: " + plant.getName() + " (Scientific: " + plant.getScientificName() + ")");
+                        Log.d(TAG, "Plant features: " + dto.getFeatures());
+                        Log.d(TAG, "Care guide: " + dto.getCareGuide());
+                        Log.d(TAG, "Water needs: " + dto.getWaterNeeds());
+                        Log.d(TAG, "Light needs: " + dto.getLightNeeds());
+                        Log.d(TAG, "Difficulty: " + dto.getDifficulty());
+                        Log.d(TAG, "Growth height: " + dto.getGrowthHeight());
+                    }
+                    Log.d(TAG, "Successfully fetched " + masterWikiList.size() + " plants for wiki from database.");
+                    displayWikiPlants();
+                } else {
+                    Log.e(TAG, "Failed to fetch wiki plants. Code: " + response.code() + ", Message: " + response.message());
+                    Toast.makeText(getContext(), "Failed to load wiki from database. Code: " + response.code(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<List<PlantWikiDto>>> call, @NonNull Throwable t) {
+                if (binding == null) return;
+                binding.progressBarWiki.setVisibility(View.GONE);
+                Log.e(TAG, "Network error fetching wiki plants from database.", t);
+                Toast.makeText(getContext(), "Network error. Please check connection.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
-
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // Nullify the binding object to avoid memory leaks
         binding = null;
-        Log.d(TAG, "onDestroyView: PlantWikiFragment binding nulled.");
+        Log.d(TAG, "onDestroyView: PlantWikiFragment binding pulled.");
     }
 }

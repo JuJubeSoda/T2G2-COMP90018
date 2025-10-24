@@ -33,23 +33,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- ImageButton typically used for displaying a user profile avatar or icon. -->
-        <!-- Acts as a button to navigate to the user's profile. -->
-        <ImageButton
-            android:id="@+id/button_profile_avatar"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginEnd="16dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="User avatar"
-            android:padding="0dp"
-            android:scaleType="centerCrop"
-            app:layout_constraintBottom_toBottomOf="@+id/text_greeting_hello"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/text_greeting_hello"
-            app:layout_constraintVertical_bias="1.0"
-            app:srcCompat="@drawable/profile_icon_foreground" />
-
         <!-- ImageView displaying a thematic icon, like a plant bulb. -->
         <ImageView
             android:id="@+id/image_plant_bulb_icon"

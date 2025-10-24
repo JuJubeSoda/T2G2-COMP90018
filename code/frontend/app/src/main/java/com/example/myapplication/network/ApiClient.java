@@ -11,14 +11,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 
 public class ApiClient {
-    // Base URL for the backend API - for Android emulator, use 10.0.2.2
-    // For real device, use your computer's IP address (e.g., "http://192.168.1.100:9999/")
-    private static final String BASE_URL = "http://10.0.2.2:9999/";
-    
-    // Network timeouts
-    private static final long CONNECT_TIMEOUT_SECONDS = 30;
-    private static final long READ_TIMEOUT_SECONDS = 30;
-    private static final long WRITE_TIMEOUT_SECONDS = 30;
+    //private static final String BASE_URL = "http://192.168.1.210:9999/";
+    private static final String BASE_URL = "https://mobile.kevinauhome.com/";
 
     public static ApiService create(Context context) {
 

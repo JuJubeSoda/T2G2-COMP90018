@@ -68,49 +68,82 @@ public class MyGardenFragment extends Fragment {
         setupRecyclerView();
         setupClickListeners();
 
-        if (savedInstanceState == null) {
-            currentViewIsFavourites = false;
+        // Check if data already exists before fetching
+        if (masterPlantList.isEmpty()) {
+            // This will only run the first time the fragment is created
+            // or if the data was cleared.
+            Log.d(TAG, "Master list is empty. Fetching from server.");
+            fetchPlantsFromServer();
+        } else {
+            // Data already exists, just display it immediately.
+            // This prevents the loading icon on back navigation.
+            Log.d(TAG, "Data already exists. Displaying from master list.");
+            displayPlants();
+        }
+
+        // Restore UI state (Grid/List view and Favourites/Collection toggle)
+        if (isCurrentlyListView) {
+            switchToListView();
+        } else {
             switchToGridView();
-            fetchPlantsFromServer(); // Fetch data from the server.
         }
         updateToggleButtonsVisualState();
     }
 
     private void fetchPlantsFromServer() {
         Log.d(TAG, "Fetching plants from server...");
-        // TODO: Add a ProgressBar with id 'progressBar' to your mygardenlist.xml layout file.
-        // binding.progressBar.setVisibility(View.VISIBLE); // Show progress bar
+        // Make the ProgressBar visible and hide the RecyclerView
+        binding.progressBar.setVisibility(View.VISIBLE);
+        binding.recyclerViewMyGardenPlants.setVisibility(View.GONE);
 
         ApiService apiService = ApiClient.create(requireContext());
         Call<ApiResponse<List<PlantDto>>> call = apiService.getPlantsByUser();
 
         call.enqueue(new Callback<ApiResponse<List<PlantDto>>>() {
             @Override
-            public void onResponse(Call<ApiResponse<List<PlantDto>>> call, Response<ApiResponse<List<PlantDto>>> response) {
-                // TODO: Add a ProgressBar with id 'progressBar' to your mygardenlist.xml layout file.
-                // binding.progressBar.setVisibility(View.GONE); // Hide progress bar
+            public void onResponse(@NonNull Call<ApiResponse<List<PlantDto>>> call, @NonNull Response<ApiResponse<List<PlantDto>>> response) {
+                // --- THIS IS THE FIX ---
+                // If the binding is null, the view has been destroyed. Do nothing.
+                if (binding == null) {
+                    Log.w(TAG, "onResponse called after view was destroyed. Aborting update.");
+                    return;
+                }
+
+                // Hide the progress bar as soon as we get a response
+                binding.progressBar.setVisibility(View.GONE);
+
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
                     Log.d(TAG, "API call successful. Received " + response.body().getData().size() + " plants.");
                     masterPlantList.clear();
-                    // Convert each PlantDto to a Plant object and add to the master list.
-                    for (PlantDto dto : response.body().getData()) {
-                        masterPlantList.add(dto.toPlant());
-                    }
-                    displayPlants(); // Refresh the UI with the new data.
+                    masterPlantList = response.body().getData().stream()
+                            .map(PlantDto::toPlant)
+                            .collect(Collectors.toList());
+                    displayPlants(); // This method should handle showing the RecyclerView
                 } else {
                     Log.e(TAG, "API call failed or returned empty data. Code: " + response.code());
-                    Toast.makeText(getContext(), "Failed to load plants: " + response.message(), Toast.LENGTH_SHORT).show();
-                    updateEmptyViewVisibility(true); // Show empty view on failure
+                    // Add a null context check for the Toast as well for extra safety
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), "Failed to load plants: " + response.message(), Toast.LENGTH_SHORT).show();
+                    }
+                    updateEmptyViewVisibility(true); // Show empty view
                 }
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<List<PlantDto>>> call, Throwable t) {
-                // TODO: Add a ProgressBar with id 'progressBar' to your mygardenlist.xml layout file.
-                // binding.progressBar.setVisibility(View.GONE); // Hide progress bar
+            public void onFailure(@NonNull Call<ApiResponse<List<PlantDto>>> call, @NonNull Throwable t) {
+                // --- THIS IS THE FIX (also applied here for safety) ---
+                if (binding == null) {
+                    Log.w(TAG, "onFailure called after view was destroyed. Aborting update.");
+                    return;
+                }
+
+                // Also hide the progress bar on failure
+                binding.progressBar.setVisibility(View.GONE);
                 Log.e(TAG, "API call failed due to network error.", t);
-                Toast.makeText(getContext(), "Network error. Please check your connection.", Toast.LENGTH_LONG).show();
-                updateEmptyViewVisibility(true); // Show empty view on failure
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "Network error. Please check your connection.", Toast.LENGTH_LONG).show();
+                }
+                updateEmptyViewVisibility(true); // Show empty view
             }
         });
     }
@@ -178,26 +211,60 @@ public class MyGardenFragment extends Fragment {
     }
 
     private void switchToListView() {
-        binding.recyclerViewMyGardenPlants.setLayoutManager(new LinearLayoutManager(getContext()));
-        plantCardAdapter.setViewType(PlantCardAdapter.VIEW_TYPE_LIST_WITH_DATE);
-        isCurrentlyListView = true;
-        updateToggleButtonsVisualState();
+        try {
+            if (binding.recyclerViewMyGardenPlants == null) {
+                Log.e(TAG, "RecyclerView is null, cannot switch to list view");
+                return;
+            }
+            if (plantCardAdapter == null) {
+                Log.e(TAG, "PlantCardAdapter is null, cannot switch to list view");
+                return;
+            }
+            
+            binding.recyclerViewMyGardenPlants.setLayoutManager(new LinearLayoutManager(getContext()));
+            plantCardAdapter.setViewType(PlantCardAdapter.VIEW_TYPE_LIST_WITH_DATE);
+            isCurrentlyListView = true;
+            updateToggleButtonsVisualState();
+            Log.d(TAG, "Successfully switched to list view");
+        } catch (Exception e) {
+            Log.e(TAG, "Error switching to list view", e);
+            Toast.makeText(getContext(), "Error switching to list view", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void switchToGridView() {
-        binding.recyclerViewMyGardenPlants.setLayoutManager(new GridLayoutManager(getContext(), 2));
-        plantCardAdapter.setViewType(PlantCardAdapter.VIEW_TYPE_GRID);
-        isCurrentlyListView = false;
-        updateToggleButtonsVisualState();
+        try {
+            if (binding.recyclerViewMyGardenPlants == null) {
+                Log.e(TAG, "RecyclerView is null, cannot switch to grid view");
+                return;
+            }
+            if (plantCardAdapter == null) {
+                Log.e(TAG, "PlantCardAdapter is null, cannot switch to grid view");
+                return;
+            }
+            
+            binding.recyclerViewMyGardenPlants.setLayoutManager(new GridLayoutManager(getContext(), 2));
+            plantCardAdapter.setViewType(PlantCardAdapter.VIEW_TYPE_GRID);
+            isCurrentlyListView = false;
+            updateToggleButtonsVisualState();
+            Log.d(TAG, "Successfully switched to grid view");
+        } catch (Exception e) {
+            Log.e(TAG, "Error switching to grid view", e);
+            Toast.makeText(getContext(), "Error switching to grid view", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void updateToggleButtonsVisualState() {
-        if (isCurrentlyListView) {
-            binding.imageButton.setImageResource(R.drawable.list_select_foreground);
-            binding.imageButton2.setImageResource(R.drawable.grid_unselect_foreground);
-        } else {
-            binding.imageButton.setImageResource(R.drawable.list_unselect_foreground);
-            binding.imageButton2.setImageResource(R.drawable.grid_select_foreground);
+        try {
+            if (isCurrentlyListView) {
+                binding.imageButton.setImageResource(R.drawable.list_select_foreground);
+                binding.imageButton2.setImageResource(R.drawable.grid_unselect_foreground);
+            } else {
+                binding.imageButton.setImageResource(R.drawable.list_unselect_foreground);
+                binding.imageButton2.setImageResource(R.drawable.grid_select_foreground);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error updating toggle buttons visual state", e);
         }
     }
 
@@ -231,14 +298,18 @@ public class MyGardenFragment extends Fragment {
         Log.d(TAG, "Displaying " + plantsToShow.size() + " plants.");
     }
 
+    // You have two versions of this method. I've merged them and used the correct ID.
+// Please consolidate to a single, correct implementation like this one.
     private void updateEmptyViewVisibility(boolean isEmpty) {
         if (binding == null) return;
         if (isEmpty) {
+            // FIX: Use the correct ID
             binding.recyclerViewMyGardenPlants.setVisibility(View.GONE);
             binding.textViewMyGardenEmptyMessage.setVisibility(View.VISIBLE);
             binding.textViewMyGardenEmptyMessage.setText(currentViewIsFavourites ?
                     R.string.no_favourites_yet : R.string.collection_is_empty);
         } else {
+            // FIX: Use the correct ID
             binding.recyclerViewMyGardenPlants.setVisibility(View.VISIBLE);
             binding.textViewMyGardenEmptyMessage.setVisibility(View.GONE);
         }

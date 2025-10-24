@@ -40,51 +40,33 @@ public interface ApiService {
     @GET("api/ai_bot/ask")
     Call<BaseResponse> askQuestion(@Query("q") String question);
 
-    // --- Garden Data Endpoints ---
+    // --- Plant AI Endpoints ---
+    
+    @POST("api/plant-ai/recommendations")
+    Call<BaseResponse> getPlantRecommendations(@Query("location") String location, @Body java.util.Map<String, Object> sensorData);
+    
+    @POST("api/plant-ai/care-advice")
+    Call<BaseResponse> getPlantCareAdvice(@Query("plantName") String plantName, @Body java.util.Map<String, Object> currentConditions);
+    
+    @GET("api/plant-ai/ask")
+    Call<BaseResponse> askPlantQuestion(@Query("question") String question);
+    
+    @retrofit2.http.Multipart
+    @POST("api/plant-ai/identify")
+    Call<BaseResponse> identifyPlant(@retrofit2.http.Part okhttp3.MultipartBody.Part imageFile, @Query("location") String location);
 
+    @POST("/api/plants/add")
+    Call<ApiResponse> addPlant(@Body PlantRequest plantRequest);
+
+    @GET("/api/wiki/all")
+    Call<ApiResponse<List<PlantDto>>> getAllPlants();
+    
     /**
-     * Get all gardens
-     * GET /api/garden/all
+     * Fetches all wiki plants from the database.
+     * This endpoint corresponds to the wiki-controller/getAllWikis endpoint.
+     * Returns PlantWikiDto objects with richer plant information.
      */
-    @GET("api/garden/all")
-    Call<ApiResponse<List<Garden>>> getAllGardens();
-
-    /**
-     * Get nearby gardens based on location and radius
-     * GET /api/garden/nearby?latitude={lat}&longitude={lng}&radius={radius}
-     */
-    @GET("api/garden/nearby")
-    Call<ApiResponse<List<Garden>>> getNearbyGardens(
-        @Query("latitude") double latitude,
-        @Query("longitude") double longitude,
-        @Query("radius") int radius
-    );
-
-    // --- Plant Data Endpoints (Enhanced) ---
-
-    /**
-     * Get nearby plants based on location and radius
-     * GET /api/plants/nearby?latitude={lat}&longitude={lng}&radius={radius}
-     */
-    @GET("api/plants/nearby")
-    Call<ApiResponse<List<Plant>>> getNearbyPlants(
-        @Query("latitude") double latitude,
-        @Query("longitude") double longitude,
-        @Query("radius") int radius
-    );
-
-    /**
-     * Like a plant
-     * POST /api/plants/like?plantId={id}
-     */
-    @POST("api/plants/like")
-    Call<ApiResponse<String>> likePlant(@Query("plantId") Long plantId);
-
-    /**
-     * Unlike a plant
-     * POST /api/plants/unlike?plantId={id}
-     */
-    @POST("api/plants/unlike")
-    Call<ApiResponse<String>> unlikePlant(@Query("plantId") Long plantId);
+    @GET("/api/wiki/all")
+    Call<ApiResponse<List<PlantWikiDto>>> getAllWikis();
 
 }
