@@ -76,19 +76,6 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/plantImageViewPreview" />
 
-            <!-- EditText for entering the location where the plant was found. -->
-            <EditText
-                android:id="@+id/editTextLocation"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:hint="Location (e.g., Park Name, City)"
-                android:inputType="textCapWords"
-                android:imeOptions="actionNext"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/editTextScientificName" />
-
             <!-- EditText for entering a multi-line introduction or description of the plant. -->
             <EditText
                 android:id="@+id/editTextIntroduction"
@@ -97,20 +84,16 @@
                 android:layout_marginTop="16dp"
                 android:gravity="top"
                 android:hint="Introduction (Describe your discovery)"
-                android:inputType="textMultiLine|textCapSentences"
-                android:minLines="3"
-                android:maxLines="6"
-                android:scrollHorizontally="false"
                 android:imeOptions="actionDone"
-                app:layout_constraintStart_toStartOf="parent"
+                android:inputType="textMultiLine|textCapSentences"
+                android:maxLines="6"
+                android:minLines="3"
+                android:scrollHorizontally="false"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/editTextLocation" />
-
-            <!-- EditText for entering search tags (REMOVED) -->
-            <!-- The EditText with id 'editTextSearchTags' has been deleted. -->
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/editTextScientificName" /> <!-- THIS IS THE FIX -->
 
             <!-- Button to trigger the upload process. -->
-            <!-- FIX: The top constraint is now connected to 'editTextIntroduction'. -->
             <Button
                 android:id="@+id/uploadButton"
                 android:layout_width="0dp"
@@ -120,7 +103,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/editTextIntroduction"
-                app:layout_constraintVertical_bias="1.0"
                 app:layout_constraintBottom_toBottomOf="parent"
                 android:layout_marginBottom="16dp"/>
 

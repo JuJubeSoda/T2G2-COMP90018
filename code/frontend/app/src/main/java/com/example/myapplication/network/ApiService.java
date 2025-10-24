@@ -67,4 +67,11 @@ public interface ApiService {
     @GET("/api/wiki/all")
     Call<ApiResponse<List<PlantWikiDto>>> getAllWikis();
 
+    /**
+     * Fetches nearby plants based on user's location.
+     * The backend uses the authenticated user's location to find plants within a certain radius.
+     */
+    @GET("/api/plants/nearby")
+    Call<ApiResponse<List<PlantDto>>> getNearbyPlants();
+
 }

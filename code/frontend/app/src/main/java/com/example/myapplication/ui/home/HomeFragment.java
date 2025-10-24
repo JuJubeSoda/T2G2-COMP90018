@@ -13,18 +13,26 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation; // For NavController
-// import androidx.recyclerview.widget.LinearLayoutManager; // Only if not set in XML, and only if using 'binding.recyclerViewNearbyDiscoveries.setLayoutManager(...)'
 
 import com.example.myapplication.R; // Your app's R file
 import com.example.myapplication.ui.home.DiscoveryAdapter; // Assuming this is your adapter's package
 import com.example.myapplication.databinding.HomeBinding; // Generated from fragment_home.xml
 import com.example.myapplication.ui.home.DiscoveryItem; // Assuming this is your model's package
+import com.example.myapplication.network.ApiClient;
+import com.example.myapplication.network.ApiResponse;
+import com.example.myapplication.network.ApiService;
+import com.example.myapplication.network.PlantDto;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class HomeFragment extends Fragment {
 
+    private static final String TAG = "HomeFragment";
     private HomeBinding binding; // ViewBinding instance
     private DiscoveryAdapter discoveryAdapter;
     private List<DiscoveryItem> discoveryItemList;
@@ -51,7 +59,6 @@ public class HomeFragment extends Fragment {
         Log.d("HomeFragment", "Check1");
         // Setup UI components
         setupTopCardClickListeners();
-        setupSearchView();
         setupNearbyDiscoveriesRecyclerView();
         loadNearbyDiscoveryData();
         Log.d("HomeFragment", "Check2");
@@ -117,27 +124,6 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private void setupSearchView() {
-        if (binding.searchViewMain != null) {
-            binding.searchViewMain.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-                @Override
-                public boolean onQueryTextSubmit(String query) {
-                    // User pressed search button on keyboard
-                    Toast.makeText(getContext(), "Searching for: " + query, Toast.LENGTH_SHORT).show();
-                    // TODO: Implement your actual search logic here (e.g., navigate to a search results fragment)
-                    return true; // True if the listener has consumed the event
-                }
-
-                @Override
-                public boolean onQueryTextChange(String newText) {
-                    // Text changed in search view
-                    // TODO: Implement filtering of the discovery list or provide live suggestions if needed
-                    return false;
-                }
-            });
-        }
-    }
-
     private void setupNearbyDiscoveriesRecyclerView() {
         // The LinearLayoutManager is assumed to be set in the XML layout for recyclerViewNearbyDiscoveries
         // (e.g., app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" and android:orientation="horizontal")
@@ -152,20 +138,86 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadNearbyDiscoveryData() {
-        // This is sample data. In a real app, you'd fetch this from a ViewModel, API, database, etc.
-        List<DiscoveryItem> sampleData = new ArrayList<>();
-        int placeholderImage = R.drawable.map_foreground; // Ensure ic_placeholder.xml exists in res/drawable
-
-        // Add some sample items
-        sampleData.add(new DiscoveryItem("Mystic Fern", "0.2 km away", placeholderImage, "A beautiful fern found nearby."));
-        sampleData.add(new DiscoveryItem("Sunny Sunflower", "1.5 km away", placeholderImage, "Bright and cheerful."));
-        sampleData.add(new DiscoveryItem("Royal Orchid", "0.8 km away", placeholderImage, "An elegant orchid specimen."));
-        sampleData.add(new DiscoveryItem("Desert Cactus", "2.1 km away", placeholderImage, "Resilient and striking."));
-        sampleData.add(new DiscoveryItem("Forest Pine", "3.0 km away", placeholderImage, "A tall and sturdy pine tree."));
-
-        // Update the adapter with the new data
+        Log.d(TAG, "Fetching nearby plants from server...");
+        
+        ApiService apiService = ApiClient.create(requireContext());
+        Call<ApiResponse<List<PlantDto>>> call = apiService.getNearbyPlants();
+        
+        call.enqueue(new Callback<ApiResponse<List<PlantDto>>>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<List<PlantDto>>> call, 
+                                 @NonNull Response<ApiResponse<List<PlantDto>>> response) {
+                if (binding == null) return;
+                
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    List<PlantDto> nearbyPlants = response.body().getData();
+                    Log.d(TAG, "Successfully fetched " + nearbyPlants.size() + " nearby plants.");
+                    
+                    // Convert PlantDto to DiscoveryItem
+                    List<DiscoveryItem> discoveryItems = new ArrayList<>();
+                    for (PlantDto plant : nearbyPlants) {
+                        String distance = calculateDistance(plant);
+                        String description = plant.getDescription() != null ? plant.getDescription() : "Discovered nearby";
+                        
+                        // Use placeholder image for now, as Base64 decoding is handled by the adapter
+                        discoveryItems.add(new DiscoveryItem(
+                            plant.getName(),
+                            distance,
+                            R.drawable.map_foreground, // Placeholder, actual image will be loaded from plant.getImage()
+                            description,
+                            plant.getImage() // Pass the Base64 image string
+                        ));
+                    }
+                    
+                    // Update the adapter with the new data
+                    if (discoveryAdapter != null) {
+                        discoveryAdapter.updateData(discoveryItems);
+                    }
+                } else {
+                    Log.e(TAG, "Failed to fetch nearby plants. Code: " + response.code());
+                    Toast.makeText(getContext(), "No nearby plants found", Toast.LENGTH_SHORT).show();
+                    
+                    // Show placeholder data if API fails
+                    loadPlaceholderData();
+                }
+            }
+            
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<List<PlantDto>>> call, @NonNull Throwable t) {
+                if (binding == null) return;
+                Log.e(TAG, "Network error fetching nearby plants", t);
+                Toast.makeText(getContext(), "Unable to load nearby plants", Toast.LENGTH_SHORT).show();
+                
+                // Show placeholder data if network fails
+                loadPlaceholderData();
+            }
+        });
+    }
+    
+    /**
+     * Calculates a display-friendly distance string from plant location data.
+     * If latitude/longitude are null, returns "Unknown distance".
+     */
+    private String calculateDistance(PlantDto plant) {
+        if (plant.getLatitude() != null && plant.getLongitude() != null) {
+            // TODO: Calculate actual distance from user's location
+            // For now, return a placeholder
+            return String.format("%.1f km away", Math.random() * 5);
+        }
+        return "Unknown distance";
+    }
+    
+    /**
+     * Loads placeholder data if the API call fails.
+     */
+    private void loadPlaceholderData() {
+        List<DiscoveryItem> placeholderData = new ArrayList<>();
+        int placeholderImage = R.drawable.map_foreground;
+        
+        placeholderData.add(new DiscoveryItem("Nearby Plant", "Loading...", placeholderImage, "Discovering plants near you..."));
+        
         if (discoveryAdapter != null) {
-            discoveryAdapter.updateData(sampleData); // Make sure your adapter has an updateData method
+            discoveryAdapter.updateData(placeholderData);
         }
     }
 

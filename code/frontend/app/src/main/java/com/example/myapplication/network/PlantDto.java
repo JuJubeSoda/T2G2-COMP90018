@@ -113,4 +113,12 @@ public class PlantDto {
     public boolean isFavourite() {
         return isFavourite;
     }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
 }
