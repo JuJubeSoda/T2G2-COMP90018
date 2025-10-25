@@ -108,11 +108,11 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
 
     private void setupClickListeners() {
         binding.viewFullCareGuideButton.setOnClickListener(v -> switchToCareGuideTab());
-        binding.waterCard.setOnClickListener(v -> switchToCareGuideTab());
+        // Water card is no longer clickable - removed click listener
 
         binding.lightCard.setOnClickListener(v -> {
             if (lightSensor != null) {
-                showSensorDialog("Live Light Reading", "lx", lightSensor);
+                showSensorDialog("Live Light Reading", lightSensor, SensorType.LIGHT);
             } else {
                 Toast.makeText(getContext(), "Light sensor not available on this device.", Toast.LENGTH_SHORT).show();
             }
@@ -120,7 +120,7 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
 
         binding.temperatureCard.setOnClickListener(v -> {
             if (tempSensor != null) {
-                showSensorDialog("Live Temperature", "°C", tempSensor);
+                showSensorDialog("Live Temperature", tempSensor, SensorType.TEMPERATURE);
             } else {
                 Toast.makeText(getContext(), "Ambient temperature sensor not available.", Toast.LENGTH_SHORT).show();
             }
@@ -128,15 +128,24 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
 
         binding.humidityCard.setOnClickListener(v -> {
             if (humiditySensor != null) {
-                showSensorDialog("Live Humidity", "%", humiditySensor);
+                showSensorDialog("Live Humidity", humiditySensor, SensorType.HUMIDITY);
             } else {
                 Toast.makeText(getContext(), "Humidity sensor not available on this device.", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
+    // Enum to track sensor types
+    private enum SensorType {
+        LIGHT, TEMPERATURE, HUMIDITY
+    }
+
+    private SensorType currentSensorType;
+
     @SuppressLint("MissingInflatedId")
-    private void showSensorDialog(String title, String unit, Sensor sensorToRegister) {
+    private void showSensorDialog(String title, Sensor sensorToRegister, SensorType sensorType) {
+        this.currentSensorType = sensorType;
+        
         LayoutInflater inflater = requireActivity().getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_sensor_reading, null);
         dialogValueView = dialogView.findViewById(R.id.sensor_value_text);
@@ -151,10 +160,58 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
         sensorDialog.setOnDismissListener(dialog -> {
             sensorManager.unregisterListener(this);
             dialogValueView = null;
+            currentSensorType = null;
         });
 
         sensorManager.registerListener(this, sensorToRegister, SensorManager.SENSOR_DELAY_NORMAL);
         sensorDialog.show();
+    }
+
+    /**
+     * Converts light sensor value (lux) to human-readable description
+     */
+    private String getLightDescription(float lux) {
+        if (lux > 10000) {
+            return "Very Bright";
+        } else if (lux > 1000) {
+            return "Bright";
+        } else if (lux > 100) {
+            return "Moderate";
+        } else {
+            return "Low Light";
+        }
+    }
+
+    /**
+     * Converts temperature sensor value (°C) to human-readable description
+     */
+    private String getTemperatureDescription(float celsius) {
+        if (celsius > 30) {
+            return "Very Hot";
+        } else if (celsius > 24) {
+            return "Warm";
+        } else if (celsius > 18) {
+            return "Moderate";
+        } else if (celsius > 12) {
+            return "Cool";
+        } else {
+            return "Cold";
+        }
+    }
+
+    /**
+     * Converts humidity sensor value (%) to human-readable description
+     */
+    private String getHumidityDescription(float humidity) {
+        if (humidity > 70) {
+            return "Very High";
+        } else if (humidity > 60) {
+            return "High";
+        } else if (humidity > 40) {
+            return "Moderate";
+        } else {
+            return "Low";
+        }
     }
 
     private void switchToCareGuideTab() {
@@ -177,22 +234,30 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
 
     @Override
     public final void onSensorChanged(SensorEvent event) {
-        if (dialogValueView == null) return;
+        if (dialogValueView == null || currentSensorType == null) return;
 
         float value = event.values[0];
-        String unit = "";
-        switch (event.sensor.getType()) {
-            case Sensor.TYPE_LIGHT:
-                unit = " lx";
+        String description;
+        String displayText;
+
+        switch (currentSensorType) {
+            case LIGHT:
+                description = getLightDescription(value);
+                displayText = String.format("%s\n(%.1f lx)", description, value);
                 break;
-            case Sensor.TYPE_AMBIENT_TEMPERATURE:
-                unit = " °C";
+            case TEMPERATURE:
+                description = getTemperatureDescription(value);
+                displayText = String.format("%s\n(%.1f °C)", description, value);
                 break;
-            case Sensor.TYPE_RELATIVE_HUMIDITY:
-                unit = " %";
+            case HUMIDITY:
+                description = getHumidityDescription(value);
+                displayText = String.format("%s\n(%.1f %%)", description, value);
+                break;
+            default:
+                displayText = String.format("%.1f", value);
                 break;
         }
 
-        dialogValueView.setText(String.format("%.1f%s", value, unit));
+        dialogValueView.setText(displayText);
     }
 }
