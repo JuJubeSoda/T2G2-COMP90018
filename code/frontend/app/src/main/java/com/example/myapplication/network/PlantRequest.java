@@ -38,13 +38,16 @@ public class PlantRequest {
     @SerializedName("isFavourite")
     private Boolean isFavourite;
 
+    @SerializedName("isPublic")
+    private Boolean isPublic; // Whether the plant should be visible to nearby users
+
     // Constructors
     public PlantRequest() {}
 
     // --- FIX: Update constructor to include all fields ---
     public PlantRequest(String name, String image, String description, Double latitude,
                         Double longitude, String scientificName, String createdAt, String updatedAt,
-                        Long gardenId, Boolean isFavourite) {
+                        Long gardenId, Boolean isFavourite, Boolean isPublic) {
         this.name = name;
         this.image = image;
         this.description = description;
@@ -55,8 +58,40 @@ public class PlantRequest {
         this.updatedAt = updatedAt;
         this.gardenId = gardenId;
         this.isFavourite = isFavourite;
+        this.isPublic = isPublic;
     }
 
-    // Getters and Setters for all fields...
-    // (You can auto-generate these in Android Studio)
+    // Getters and Setters
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getImage() { return image; }
+    public void setImage(String image) { this.image = image; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
+
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
+
+    public String getScientificName() { return scientificName; }
+    public void setScientificName(String scientificName) { this.scientificName = scientificName; }
+
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+
+    public String getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
+
+    public Long getGardenId() { return gardenId; }
+    public void setGardenId(Long gardenId) { this.gardenId = gardenId; }
+
+    public Boolean getIsFavourite() { return isFavourite; }
+    public void setIsFavourite(Boolean isFavourite) { this.isFavourite = isFavourite; }
+
+    public Boolean getIsPublic() { return isPublic; }
+    public void setIsPublic(Boolean isPublic) { this.isPublic = isPublic; }
 }

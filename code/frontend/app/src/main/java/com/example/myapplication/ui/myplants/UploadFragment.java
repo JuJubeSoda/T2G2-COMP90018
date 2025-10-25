@@ -204,6 +204,10 @@ public class UploadFragment extends Fragment {
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         String currentTime = sdf.format(new Date());
 
+        // Get the visibility preference from the switch
+        boolean isPublic = binding.switchShowPublicly.isChecked();
+        Log.d(TAG, "Plant visibility set to public: " + isPublic);
+
         // Create the request object with all dynamic data
         PlantRequest plantRequest = new PlantRequest(
                 binding.editTextScientificName.getText().toString().trim(), // name
@@ -215,7 +219,8 @@ public class UploadFragment extends Fragment {
                 currentTime, // createdAt
                 currentTime, // updatedAt
                 null, // gardenId
-                receivedIsFavouriteFlow
+                receivedIsFavouriteFlow, // isFavourite
+                isPublic // isPublic - whether to show to nearby users
         );
 
         ApiService apiService = ApiClient.create(getContext());
