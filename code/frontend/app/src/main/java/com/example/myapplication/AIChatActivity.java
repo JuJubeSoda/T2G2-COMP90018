@@ -64,9 +64,16 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
     private SensorDataCollector sensorCollector;
     private Map<String, Object> currentSensorData;
     private boolean sensorsInitialized = false;
+    private boolean sensorPermissionAsked = false;
+    private boolean userAllowedSensorUsage = false;
     
     // Camera functionality
     private Uri currentImageUri;
+    
+    // Timeout and retry functionality
+    private Call<BaseResponse> currentApiCall;
+    private Runnable currentTimeoutTask;
+    private TextView currentAiThinkingView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,9 +100,6 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
             overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
         });
         
-        // Auto-start sensors for environmental data
-        initializeSensors();
-        
         // Add welcome message
         addMessage("🌱 Plant AI Assistant: Hello! I can help you:\n• 📷 Identify plants from photos\n• 🌍 Recommend plants for your area\n• 💬 Answer plant-related questions\n\nAsk me: 'What plants should I grow?' or upload a plant photo!", false);
     }
@@ -116,44 +120,80 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
         if (isRecommendationQuestion(message)) {
             handlePlantRecommendationRequest(message, aiThinking);
         } else {
-            // Regular plant question
-            apiService.askPlantQuestion(message).enqueue(new Callback<BaseResponse>() {
-                @Override
-                public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
-                    handleAIResponse(response, aiThinking);
-                }
-
-                @Override
-                public void onFailure(Call<BaseResponse> call, Throwable t) {
-                    aiThinking.setText("❌ Connection failed: " + t.getMessage());
-                }
-            });
+            // Regular plant question with timeout and retry
+            Runnable retryAction = () -> {
+                TextView newAiThinking = addMessage("🌱 Plant AI: ...", false);
+                Call<BaseResponse> call = apiService.askPlantQuestion(message);
+                executeWithTimeout(call, newAiThinking, null);
+            };
+            
+            Call<BaseResponse> call = apiService.askPlantQuestion(message);
+            executeWithTimeout(call, aiThinking, retryAction);
         }
     }
     
     private void handlePlantRecommendationRequest(String message, TextView aiThinking) {
-        // Auto-use sensor data for recommendations
-        if (currentSensorData != null && !currentSensorData.isEmpty()) {
+        // Check if sensors are already initialized
+        if (!sensorsInitialized) {
+            aiThinking.setText("🌱 Plant AI: Collecting environmental data... Please wait a moment.");
+            initializeSensors();
+            // Wait a bit for sensor data to be collected
+            new android.os.Handler().postDelayed(() -> {
+                if (currentSensorData != null && !currentSensorData.isEmpty()) {
+                    String location = sensorCollector.getLocationString();
+                    Runnable retryAction = () -> {
+                        TextView newAiThinking = addMessage("🌱 Plant AI: ...", false);
+                        Call<BaseResponse> call = apiService.getPlantRecommendations(location, currentSensorData);
+                        executeWithTimeout(call, newAiThinking, null);
+                    };
+                    Call<BaseResponse> call = apiService.getPlantRecommendations(location, currentSensorData);
+                    executeWithTimeout(call, aiThinking, retryAction);
+                } else {
+                    aiThinking.setText("🌱 Plant AI: Unable to collect sensor data. Using general recommendations...");
+                    // Fallback to general recommendations without sensor data
+                    Runnable retryAction = () -> {
+                        TextView newAiThinking = addMessage("🌱 Plant AI: ...", false);
+                        Call<BaseResponse> call = apiService.getPlantRecommendations("Unknown location", new java.util.HashMap<>());
+                        executeWithTimeout(call, newAiThinking, null);
+                    };
+                    Call<BaseResponse> call = apiService.getPlantRecommendations("Unknown location", new java.util.HashMap<>());
+                    executeWithTimeout(call, aiThinking, retryAction);
+                }
+            }, 3000); // Wait 3 seconds for sensor data
+        } else if (currentSensorData != null && !currentSensorData.isEmpty()) {
+            // Use existing sensor data
             String location = sensorCollector.getLocationString();
-            
-            // 直接调用API，不显示环境数据
-            apiService.getPlantRecommendations(location, currentSensorData).enqueue(new Callback<BaseResponse>() {
-                @Override
-                public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
-                    handleAIResponse(response, aiThinking);
-                }
-
-                @Override
-                public void onFailure(Call<BaseResponse> call, Throwable t) {
-                    aiThinking.setText("❌ Connection failed: " + t.getMessage());
-                }
-            });
+            Runnable retryAction = () -> {
+                TextView newAiThinking = addMessage("🌱 Plant AI: ...", false);
+                Call<BaseResponse> call = apiService.getPlantRecommendations(location, currentSensorData);
+                executeWithTimeout(call, newAiThinking, null);
+            };
+            Call<BaseResponse> call = apiService.getPlantRecommendations(location, currentSensorData);
+            executeWithTimeout(call, aiThinking, retryAction);
         } else {
-            aiThinking.setText("🌱 Plant AI: I need to collect environmental data first. Please wait a moment...");
-            // Try to initialize sensors if not done yet
-            if (!sensorsInitialized) {
-                initializeSensors();
-            }
+            // Sensors initialized but no data yet
+            aiThinking.setText("🌱 Plant AI: Waiting for sensor data... Please wait a moment.");
+            new android.os.Handler().postDelayed(() -> {
+                if (currentSensorData != null && !currentSensorData.isEmpty()) {
+                    String location = sensorCollector.getLocationString();
+                    Runnable retryAction = () -> {
+                        TextView newAiThinking = addMessage("🌱 Plant AI: ...", false);
+                        Call<BaseResponse> call = apiService.getPlantRecommendations(location, currentSensorData);
+                        executeWithTimeout(call, newAiThinking, null);
+                    };
+                    Call<BaseResponse> call = apiService.getPlantRecommendations(location, currentSensorData);
+                    executeWithTimeout(call, aiThinking, retryAction);
+                } else {
+                    aiThinking.setText("🌱 Plant AI: Using general recommendations...");
+                    Runnable retryAction = () -> {
+                        TextView newAiThinking = addMessage("🌱 Plant AI: ...", false);
+                        Call<BaseResponse> call = apiService.getPlantRecommendations("Unknown location", new java.util.HashMap<>());
+                        executeWithTimeout(call, newAiThinking, null);
+                    };
+                    Call<BaseResponse> call = apiService.getPlantRecommendations("Unknown location", new java.util.HashMap<>());
+                    executeWithTimeout(call, aiThinking, retryAction);
+                }
+            }, 2000);
         }
     }
     
@@ -174,18 +214,14 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
             
             String location = sensorCollector.getLocationString();
             
-            // Call plant identification API
-            apiService.identifyPlant(imagePart, location).enqueue(new Callback<BaseResponse>() {
-                @Override
-                public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
-                    handleAIResponse(response, aiThinking);
-                }
-
-                @Override
-                public void onFailure(Call<BaseResponse> call, Throwable t) {
-                    aiThinking.setText("❌ Plant identification failed: " + t.getMessage());
-                }
-            });
+            // Retry action for image identification
+            Runnable retryAction = () -> {
+                identifyPlantFromImage(imageUri);
+            };
+            
+            // Call plant identification API with timeout and retry
+            Call<BaseResponse> call = apiService.identifyPlant(imagePart, location);
+            executeWithTimeout(call, aiThinking, retryAction);
             
         } catch (Exception e) {
             aiThinking.setText("❌ Error processing image: " + e.getMessage());
@@ -194,6 +230,12 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
     }
     
     private void handleAIResponse(Response<BaseResponse> response, TextView aiThinking) {
+        Log.d(TAG, "=== API Response Debug ===");
+        Log.d(TAG, "Response successful: " + response.isSuccessful());
+        Log.d(TAG, "Response code: " + response.code());
+        Log.d(TAG, "Response message: " + response.message());
+        Log.d(TAG, "Response body null: " + (response.body() == null));
+        
         if (response.isSuccessful() && response.body() != null) {
             BaseResponse base = response.body();
             Log.d(TAG, "API Response: " + base.toString());
@@ -218,6 +260,9 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
                     } else if (dataObj.has("reply")) {
                         reply = dataObj.get("reply").getAsString();
                         Log.d(TAG, "Found reply: " + reply);
+                    } else if (dataObj.has("identification")) {
+                        reply = dataObj.get("identification").getAsString();
+                        Log.d(TAG, "Found identification: " + reply);
                     }
                 }
                 
@@ -232,8 +277,17 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
             }
         } else {
             Log.d(TAG, "Response not successful or body is null");
-            aiThinking.setText("⚠️ Plant AI: Server returned no data.");
+            Log.d(TAG, "Response details - Code: " + response.code() + ", Message: " + response.message());
+            if (response.errorBody() != null) {
+                try {
+                    Log.d(TAG, "Error body: " + response.errorBody().string());
+                } catch (Exception e) {
+                    Log.d(TAG, "Error reading error body: " + e.getMessage());
+                }
+            }
+            aiThinking.setText("⚠️ Plant AI: Server returned no data. Check logs for details.");
         }
+        Log.d(TAG, "=== End API Response Debug ===");
     }
     
     private boolean isRecommendationQuestion(String question) {
@@ -375,8 +429,51 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
         }, delay);
     }
     
-    // Auto-initialize sensors
+    // Show dialog asking user permission to use sensors
+    private void showSensorUsageDialog(Runnable onAllowed) {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setTitle("📱 Sensor Usage Permission");
+        builder.setMessage("To provide more accurate plant recommendations, this app needs to access the following sensors:\n\n" +
+                "• 📍 GPS Location - Get your geographic location\n" +
+                "• 🌡️ Environmental Sensors - Collect temperature, humidity, and other data\n\n" +
+                "This data will only be used to analyze plants suitable for your area.\n\n" +
+                "Do you allow the use of these sensors?");
+        builder.setPositiveButton("Allow", (dialog, which) -> {
+            userAllowedSensorUsage = true;
+            sensorPermissionAsked = true;
+            if (onAllowed != null) {
+                onAllowed.run();
+            }
+        });
+        builder.setNegativeButton("Deny", (dialog, which) -> {
+            userAllowedSensorUsage = false;
+            sensorPermissionAsked = true;
+            addMessage("ℹ️ You denied sensor usage. General recommendations will be used, which may be less accurate.", false);
+        });
+        builder.setCancelable(false);
+        builder.show();
+    }
+    
+    // Initialize sensors when needed
     private void initializeSensors() {
+        // First check if user has been asked and allowed
+        if (!sensorPermissionAsked) {
+            showSensorUsageDialog(() -> {
+                // After user allows, proceed with initialization
+                initializeSensorsInternal();
+            });
+            return;
+        }
+        
+        if (!userAllowedSensorUsage) {
+            Log.d(TAG, "User denied sensor usage");
+            return;
+        }
+        
+        initializeSensorsInternal();
+    }
+    
+    private void initializeSensorsInternal() {
         if (!hasLocationPermission()) {
             requestLocationPermission();
             return;
@@ -384,7 +481,7 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
         
         sensorCollector.startCollecting(this);
         sensorsInitialized = true;
-        addMessage("📡 Sensors: Ready to provide personalized plant recommendations!", false);
+        Log.d(TAG, "Sensors initialized for environmental data collection");
     }
     
     // SensorDataCallback implementation
@@ -431,8 +528,8 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 addMessage("✅ Location permission granted", false);
-                if (!sensorsInitialized) {
-                    initializeSensors();
+                if (!sensorsInitialized && userAllowedSensorUsage) {
+                    initializeSensorsInternal();
                 }
             } else {
                 addMessage("❌ Location permission denied", false);
@@ -492,6 +589,110 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
         if (sensorCollector != null) {
             sensorCollector.stopCollecting();
         }
+        // Cancel any pending API calls
+        cancelCurrentApiCall();
+    }
+    
+    // Cancel current API call if exists
+    private void cancelCurrentApiCall() {
+        if (currentApiCall != null && !currentApiCall.isCanceled()) {
+            currentApiCall.cancel();
+            Log.d(TAG, "API call cancelled");
+        }
+        if (currentTimeoutTask != null) {
+            handler.removeCallbacks(currentTimeoutTask);
+            currentTimeoutTask = null;
+        }
+    }
+    
+    // Execute API call with timeout and retry functionality
+    private void executeWithTimeout(Call<BaseResponse> call, TextView aiThinking, Runnable retryAction) {
+        // Cancel any previous call
+        cancelCurrentApiCall();
+        
+        currentApiCall = call;
+        currentAiThinkingView = aiThinking;
+        
+        // Set timeout handler (15 seconds)
+        currentTimeoutTask = () -> {
+            if (currentApiCall != null && !currentApiCall.isExecuted()) {
+                cancelCurrentApiCall();
+                showTimeoutMessage(aiThinking, retryAction);
+            }
+        };
+        handler.postDelayed(currentTimeoutTask, 15000); // 15 seconds timeout
+        
+        // Execute the API call
+        call.enqueue(new Callback<BaseResponse>() {
+            @Override
+            public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
+                // Cancel timeout since we got a response
+                if (currentTimeoutTask != null) {
+                    handler.removeCallbacks(currentTimeoutTask);
+                    currentTimeoutTask = null;
+                }
+                handleAIResponse(response, aiThinking);
+            }
+
+            @Override
+            public void onFailure(Call<BaseResponse> call, Throwable t) {
+                // Cancel timeout
+                if (currentTimeoutTask != null) {
+                    handler.removeCallbacks(currentTimeoutTask);
+                    currentTimeoutTask = null;
+                }
+                
+                if (call.isCanceled()) {
+                    Log.d(TAG, "API call was cancelled");
+                } else {
+                    showErrorWithRetry(aiThinking, "Connection failed: " + t.getMessage(), retryAction);
+                }
+            }
+        });
+    }
+    
+    // Show timeout message with retry button
+    private void showTimeoutMessage(TextView aiThinking, Runnable retryAction) {
+        runOnUiThread(() -> {
+            aiThinking.setText("⏱️ Plant AI: Request timed out (15s). The server is taking too long to respond.");
+            addRetryButton(retryAction);
+        });
+    }
+    
+    // Show error message with retry button
+    private void showErrorWithRetry(TextView aiThinking, String errorMsg, Runnable retryAction) {
+        runOnUiThread(() -> {
+            aiThinking.setText("❌ Plant AI: " + errorMsg);
+            addRetryButton(retryAction);
+        });
+    }
+    
+    // Add retry button to the chat
+    private void addRetryButton(Runnable retryAction) {
+        Button retryButton = new Button(this);
+        retryButton.setText("🔄 Retry");
+        retryButton.setTextColor(Color.WHITE);
+        retryButton.setBackgroundColor(Color.parseColor("#4CAF50"));
+        retryButton.setPadding(40, 20, 40, 20);
+        
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT);
+        params.gravity = Gravity.CENTER;
+        params.setMargins(0, 20, 0, 20);
+        retryButton.setLayoutParams(params);
+        
+        retryButton.setOnClickListener(v -> {
+            // Remove the retry button
+            chatContainer.removeView(retryButton);
+            // Execute the retry action
+            if (retryAction != null) {
+                retryAction.run();
+            }
+        });
+        
+        chatContainer.addView(retryButton);
+        chatScrollView.post(() -> chatScrollView.fullScroll(ScrollView.FOCUS_DOWN));
     }
 
 }
