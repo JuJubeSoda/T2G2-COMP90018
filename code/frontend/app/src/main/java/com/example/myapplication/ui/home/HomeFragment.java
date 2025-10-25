@@ -149,35 +149,62 @@ public class HomeFragment extends Fragment {
                                  @NonNull Response<ApiResponse<List<PlantDto>>> response) {
                 if (binding == null) return;
                 
-                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
-                    List<PlantDto> nearbyPlants = response.body().getData();
-                    Log.d(TAG, "Successfully fetched " + nearbyPlants.size() + " nearby plants.");
+                Log.d(TAG, "Response code: " + response.code());
+                Log.d(TAG, "Response successful: " + response.isSuccessful());
+                
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse<List<PlantDto>> apiResponse = response.body();
+                    Log.d(TAG, "API Response code: " + apiResponse.getCode());
+                    Log.d(TAG, "API Response message: " + apiResponse.getMessage());
                     
-                    // Convert PlantDto to DiscoveryItem
-                    List<DiscoveryItem> discoveryItems = new ArrayList<>();
-                    for (PlantDto plant : nearbyPlants) {
-                        String distance = calculateDistance(plant);
-                        String description = plant.getDescription() != null ? plant.getDescription() : "Discovered nearby";
+                    if (apiResponse.getData() != null) {
+                        List<PlantDto> nearbyPlants = apiResponse.getData();
+                        Log.d(TAG, "Successfully fetched " + nearbyPlants.size() + " nearby plants.");
                         
-                        // Use placeholder image for now, as Base64 decoding is handled by the adapter
-                        discoveryItems.add(new DiscoveryItem(
-                            plant.getName(),
-                            distance,
-                            R.drawable.map_foreground, // Placeholder, actual image will be loaded from plant.getImage()
-                            description,
-                            plant.getImage() // Pass the Base64 image string
-                        ));
-                    }
-                    
-                    // Update the adapter with the new data
-                    if (discoveryAdapter != null) {
-                        discoveryAdapter.updateData(discoveryItems);
+                        if (nearbyPlants.isEmpty()) {
+                            Log.w(TAG, "Nearby plants list is empty");
+                            Toast.makeText(getContext(), "No nearby plants discovered yet. Upload plants to share with others!", Toast.LENGTH_LONG).show();
+                            loadPlaceholderData();
+                            return;
+                        }
+                        
+                        // Convert PlantDto to DiscoveryItem
+                        List<DiscoveryItem> discoveryItems = new ArrayList<>();
+                        for (PlantDto plant : nearbyPlants) {
+                            Log.d(TAG, "Processing plant: " + plant.getName() + " (isPublic: checking...)");
+                            String distance = calculateDistance(plant);
+                            String description = plant.getDescription() != null ? plant.getDescription() : "Discovered nearby";
+                            
+                            // Use placeholder image for now, as Base64 decoding is handled by the adapter
+                            discoveryItems.add(new DiscoveryItem(
+                                plant.getName(),
+                                distance,
+                                R.drawable.map_foreground, // Placeholder, actual image will be loaded from plant.getImage()
+                                description,
+                                plant.getImage() // Pass the Base64 image string
+                            ));
+                        }
+                        
+                        // Update the adapter with the new data
+                        if (discoveryAdapter != null) {
+                            discoveryAdapter.updateData(discoveryItems);
+                            Log.d(TAG, "Updated adapter with " + discoveryItems.size() + " items");
+                        }
+                    } else {
+                        Log.e(TAG, "API response data is null");
+                        Toast.makeText(getContext(), "No nearby plants available", Toast.LENGTH_SHORT).show();
+                        loadPlaceholderData();
                     }
                 } else {
                     Log.e(TAG, "Failed to fetch nearby plants. Code: " + response.code());
-                    Toast.makeText(getContext(), "No nearby plants found", Toast.LENGTH_SHORT).show();
-                    
-                    // Show placeholder data if API fails
+                    if (response.errorBody() != null) {
+                        try {
+                            Log.e(TAG, "Error body: " + response.errorBody().string());
+                        } catch (Exception e) {
+                            Log.e(TAG, "Could not read error body", e);
+                        }
+                    }
+                    Toast.makeText(getContext(), "Unable to load nearby plants. Please check your location permissions.", Toast.LENGTH_LONG).show();
                     loadPlaceholderData();
                 }
             }
@@ -186,7 +213,7 @@ public class HomeFragment extends Fragment {
             public void onFailure(@NonNull Call<ApiResponse<List<PlantDto>>> call, @NonNull Throwable t) {
                 if (binding == null) return;
                 Log.e(TAG, "Network error fetching nearby plants", t);
-                Toast.makeText(getContext(), "Unable to load nearby plants", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Unable to connect to server. Please check your internet connection.", Toast.LENGTH_LONG).show();
                 
                 // Show placeholder data if network fails
                 loadPlaceholderData();
@@ -208,16 +235,22 @@ public class HomeFragment extends Fragment {
     }
     
     /**
-     * Loads placeholder data if the API call fails.
+     * Loads placeholder data if the API call fails or returns empty results.
      */
     private void loadPlaceholderData() {
         List<DiscoveryItem> placeholderData = new ArrayList<>();
         int placeholderImage = R.drawable.map_foreground;
         
-        placeholderData.add(new DiscoveryItem("Nearby Plant", "Loading...", placeholderImage, "Discovering plants near you..."));
+        placeholderData.add(new DiscoveryItem(
+            "No Nearby Plants Yet", 
+            "Be the first!", 
+            placeholderImage, 
+            "Upload a plant with 'Share with other users' enabled to appear in nearby discoveries."
+        ));
         
         if (discoveryAdapter != null) {
             discoveryAdapter.updateData(placeholderData);
+            Log.d(TAG, "Loaded placeholder data");
         }
     }
 
