@@ -46,14 +46,21 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
     private static final String TAG = "AIChatActivity";
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 1002;
-    private static final int CAMERA_REQUEST_CODE = 1003;
-    private static final int GALLERY_REQUEST_CODE = 1004;
+    private static final int STORAGE_PERMISSION_REQUEST_CODE = 1003;
+    private static final int CAMERA_REQUEST_CODE = 1004;
+    private static final int GALLERY_REQUEST_CODE = 1005;
 
     private LinearLayout chatContainer;
     private ScrollView chatScrollView;
     private EditText inputMessage;
     private Button sendButton;
     private ImageButton cameraButton;
+    
+    // Image preview components
+    private RelativeLayout imagePreviewContainer;
+    private ImageView imagePreview;
+    private ImageButton removeImageButton;
+    private Uri pendingImageUri;
 
     private Markwon markwon;
 
@@ -64,8 +71,6 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
     private SensorDataCollector sensorCollector;
     private Map<String, Object> currentSensorData;
     private boolean sensorsInitialized = false;
-    private boolean sensorPermissionAsked = false;
-    private boolean userAllowedSensorUsage = false;
     
     // Camera functionality
     private Uri currentImageUri;
@@ -85,6 +90,11 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
         inputMessage = findViewById(R.id.inputMessage);
         sendButton = findViewById(R.id.sendButton);
         cameraButton = findViewById(R.id.cameraButton);
+        
+        // Initialize image preview components
+        imagePreviewContainer = findViewById(R.id.imagePreviewContainer);
+        imagePreview = findViewById(R.id.imagePreview);
+        removeImageButton = findViewById(R.id.removeImageButton);
 
         apiService = ApiClient.create(this);
         sensorCollector = new SensorDataCollector(this);
@@ -93,6 +103,7 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
 
         sendButton.setOnClickListener(v -> sendMessage());
         cameraButton.setOnClickListener(v -> showImageSourceDialog());
+        removeImageButton.setOnClickListener(v -> clearImagePreview());
 
         ImageButton backButton = findViewById(R.id.backButton);
         backButton.setOnClickListener(v -> {
@@ -106,29 +117,47 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
 
     private void sendMessage() {
         String message = inputMessage.getText().toString().trim();
-        if (message.isEmpty()) {
-            Toast.makeText(this, "Please enter a message", Toast.LENGTH_SHORT).show();
+        boolean hasImage = pendingImageUri != null;
+        
+        // Check if there's either a message or an image
+        if (message.isEmpty() && !hasImage) {
+            Toast.makeText(this, "Please enter a message or attach an image", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        addMessage("You: " + message, true);
-        inputMessage.setText("");
-
-        TextView aiThinking = addMessage("🌱 Plant AI: ...", false);
-
-        // Check if asking for plant recommendations based on location
-        if (isRecommendationQuestion(message)) {
-            handlePlantRecommendationRequest(message, aiThinking);
-        } else {
-            // Regular plant question with timeout and retry
-            Runnable retryAction = () -> {
-                TextView newAiThinking = addMessage("🌱 Plant AI: ...", false);
-                Call<BaseResponse> call = apiService.askPlantQuestion(message);
-                executeWithTimeout(call, newAiThinking, null);
-            };
+        // If there's an image, send it with identification
+        if (hasImage) {
+            // Display user message with image
+            addUserMessageWithImage(message.isEmpty() ? "What plant is this?" : message, pendingImageUri);
             
-            Call<BaseResponse> call = apiService.askPlantQuestion(message);
-            executeWithTimeout(call, aiThinking, retryAction);
+            // Clear inputs
+            inputMessage.setText("");
+            Uri imageToSend = pendingImageUri;
+            clearImagePreview();
+            
+            // Send to AI for identification
+            identifyPlantFromImage(imageToSend);
+        } else {
+            // Text-only message
+            addMessage("You: " + message, true);
+            inputMessage.setText("");
+
+            TextView aiThinking = addMessage("🌱 Plant AI: ...", false);
+
+            // Check if asking for plant recommendations based on location
+            if (isRecommendationQuestion(message)) {
+                handlePlantRecommendationRequest(message, aiThinking);
+            } else {
+                // Regular plant question with timeout and retry
+                Runnable retryAction = () -> {
+                    TextView newAiThinking = addMessage("🌱 Plant AI: ...", false);
+                    Call<BaseResponse> call = apiService.askPlantQuestion(message);
+                    executeWithTimeout(call, newAiThinking, null);
+                };
+                
+                Call<BaseResponse> call = apiService.askPlantQuestion(message);
+                executeWithTimeout(call, aiThinking, retryAction);
+            }
         }
     }
     
@@ -332,9 +361,67 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
     }
     
     private void requestCameraPermission() {
-        ActivityCompat.requestPermissions(this,
-            new String[]{Manifest.permission.CAMERA},
-            CAMERA_PERMISSION_REQUEST_CODE);
+        // Show rationale dialog
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("📷 Camera Permission")
+                .setMessage("This app needs camera access to take photos of plants for identification.")
+                .setPositiveButton("Grant", (dialog, which) -> {
+                    ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.CAMERA},
+                        CAMERA_PERMISSION_REQUEST_CODE);
+                })
+                .setNegativeButton("Deny", null)
+                .show();
+        } else {
+            ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.CAMERA},
+                CAMERA_PERMISSION_REQUEST_CODE);
+        }
+    }
+    
+    private boolean checkStoragePermission() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+ (API 33+)
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES)
+                == PackageManager.PERMISSION_GRANTED;
+        } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            // Android 6.0 to 12 (API 23-32)
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED;
+        }
+        return true; // No permission needed for older versions
+    }
+    
+    private void requestStoragePermission() {
+        String permission;
+        String message;
+        
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            permission = Manifest.permission.READ_MEDIA_IMAGES;
+            message = "This app needs access to your photos to select plant images for identification.";
+        } else {
+            permission = Manifest.permission.READ_EXTERNAL_STORAGE;
+            message = "This app needs storage access to select photos from your gallery.";
+        }
+        
+        // Show rationale dialog if needed
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("📁 Storage Permission")
+                .setMessage(message)
+                .setPositiveButton("Grant", (dialog, which) -> {
+                    ActivityCompat.requestPermissions(this,
+                        new String[]{permission},
+                        STORAGE_PERMISSION_REQUEST_CODE);
+                })
+                .setNegativeButton("Deny", null)
+                .show();
+        } else {
+            ActivityCompat.requestPermissions(this,
+                new String[]{permission},
+                STORAGE_PERMISSION_REQUEST_CODE);
+        }
     }
     
     private void openCamera() {
@@ -345,8 +432,13 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
     }
     
     private void openGallery() {
-        Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(galleryIntent, GALLERY_REQUEST_CODE);
+        // Check storage permission first
+        if (checkStoragePermission()) {
+            Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(galleryIntent, GALLERY_REQUEST_CODE);
+        } else {
+            requestStoragePermission();
+        }
     }
     
     private File createImageFile(Uri imageUri) {
@@ -429,51 +521,14 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
         }, delay);
     }
     
-    // Show dialog asking user permission to use sensors
-    private void showSensorUsageDialog(Runnable onAllowed) {
-        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-        builder.setTitle("📱 Sensor Usage Permission");
-        builder.setMessage("To provide more accurate plant recommendations, this app needs to access the following sensors:\n\n" +
-                "• 📍 GPS Location - Get your geographic location\n" +
-                "• 🌡️ Environmental Sensors - Collect temperature, humidity, and other data\n\n" +
-                "This data will only be used to analyze plants suitable for your area.\n\n" +
-                "Do you allow the use of these sensors?");
-        builder.setPositiveButton("Allow", (dialog, which) -> {
-            userAllowedSensorUsage = true;
-            sensorPermissionAsked = true;
-            if (onAllowed != null) {
-                onAllowed.run();
-            }
-        });
-        builder.setNegativeButton("Deny", (dialog, which) -> {
-            userAllowedSensorUsage = false;
-            sensorPermissionAsked = true;
-            addMessage("ℹ️ You denied sensor usage. General recommendations will be used, which may be less accurate.", false);
-        });
-        builder.setCancelable(false);
-        builder.show();
-    }
-    
     // Initialize sensors when needed
     private void initializeSensors() {
-        // First check if user has been asked and allowed
-        if (!sensorPermissionAsked) {
-            showSensorUsageDialog(() -> {
-                // After user allows, proceed with initialization
-                initializeSensorsInternal();
-            });
+        // Check if we need to show sensor notice (first time only)
+        if (!hasSensorNoticeBeenShown()) {
+            showSensorDataNotice();
             return;
         }
         
-        if (!userAllowedSensorUsage) {
-            Log.d(TAG, "User denied sensor usage");
-            return;
-        }
-        
-        initializeSensorsInternal();
-    }
-    
-    private void initializeSensorsInternal() {
         if (!hasLocationPermission()) {
             requestLocationPermission();
             return;
@@ -482,6 +537,50 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
         sensorCollector.startCollecting(this);
         sensorsInitialized = true;
         Log.d(TAG, "Sensors initialized for environmental data collection");
+    }
+    
+    // Check if sensor notice has been shown before
+    private boolean hasSensorNoticeBeenShown() {
+        android.content.SharedPreferences prefs = getSharedPreferences("AppPreferences", MODE_PRIVATE);
+        return prefs.getBoolean("sensor_notice_shown", false);
+    }
+    
+    // Mark sensor notice as shown
+    private void markSensorNoticeShown() {
+        android.content.SharedPreferences prefs = getSharedPreferences("AppPreferences", MODE_PRIVATE);
+        prefs.edit().putBoolean("sensor_notice_shown", true).apply();
+    }
+    
+    // Show sensor data collection notice (first time only)
+    private void showSensorDataNotice() {
+        new android.app.AlertDialog.Builder(this)
+            .setTitle("🌡️ Environmental Data Collection")
+            .setMessage("To provide accurate plant recommendations, this app will collect environmental data from your device:\n\n" +
+                    "• 🌡️ Temperature - Ambient temperature\n" +
+                    "• 💧 Humidity - Relative humidity level\n" +
+                    "• 💡 Light - Light intensity\n" +
+                    "• 🌪️ Pressure - Atmospheric pressure\n" +
+                    "• 📍 Location - Your geographic location\n\n" +
+                    "This data is used only to recommend plants suitable for your local environment. " +
+                    "No personal information is collected or stored.\n\n" +
+                    "Do you want to continue?")
+            .setPositiveButton("Continue", (dialog, which) -> {
+                markSensorNoticeShown();
+                // Now proceed with location permission
+                if (!hasLocationPermission()) {
+                    requestLocationPermission();
+                } else {
+                    sensorCollector.startCollecting(this);
+                    sensorsInitialized = true;
+                    Log.d(TAG, "Sensors initialized for environmental data collection");
+                }
+            })
+            .setNegativeButton("No Thanks", (dialog, which) -> {
+                markSensorNoticeShown();
+                addMessage("ℹ️ Environmental data collection disabled. Plant recommendations will be general.", false);
+            })
+            .setCancelable(false)
+            .show();
     }
     
     // SensorDataCallback implementation
@@ -516,9 +615,29 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
     }
     
     private void requestLocationPermission() {
-        ActivityCompat.requestPermissions(this,
-            new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-            LOCATION_PERMISSION_REQUEST_CODE);
+        // Show rationale dialog if needed
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("📍 Location Permission")
+                .setMessage("To provide accurate plant recommendations, this app needs access to your location to:\n\n" +
+                        "• Get your geographic location\n" +
+                        "• Collect environmental data (temperature, humidity)\n" +
+                        "• Recommend suitable plants for your area\n\n" +
+                        "This data will only be used to analyze plants suitable for your location.")
+                .setPositiveButton("Grant", (dialog, which) -> {
+                    ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        LOCATION_PERMISSION_REQUEST_CODE);
+                })
+                .setNegativeButton("Deny", (dialog, which) -> {
+                    addMessage("ℹ️ Location access denied. Plant recommendations will be general and may be less accurate.", false);
+                })
+                .show();
+        } else {
+            ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                LOCATION_PERMISSION_REQUEST_CODE);
+        }
     }
     
     @Override
@@ -528,19 +647,93 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 addMessage("✅ Location permission granted", false);
-                if (!sensorsInitialized && userAllowedSensorUsage) {
-                    initializeSensorsInternal();
+                if (!sensorsInitialized) {
+                    initializeSensors();
                 }
             } else {
-                addMessage("❌ Location permission denied", false);
+                addMessage("❌ Location permission denied. Plant recommendations will be general and may be less accurate.", false);
             }
         } else if (requestCode == CAMERA_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                addMessage("✅ Camera permission granted", false);
                 openCamera();
             } else {
-                addMessage("❌ Camera permission denied", false);
+                addMessage("❌ Camera permission denied. Cannot take photos.", false);
+            }
+        } else if (requestCode == STORAGE_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                addMessage("✅ Storage permission granted", false);
+                openGallery();
+            } else {
+                addMessage("❌ Storage permission denied. Cannot access photos from gallery.", false);
             }
         }
+    }
+    
+    // Show image preview without sending immediately
+    private void showImagePreview(Uri imageUri) {
+        try {
+            pendingImageUri = imageUri;
+            imagePreview.setImageURI(imageUri);
+            imagePreviewContainer.setVisibility(android.view.View.VISIBLE);
+            
+            // Focus on input field so user can add a message
+            inputMessage.requestFocus();
+            
+            Log.d(TAG, "Image preview shown: " + imageUri.toString());
+        } catch (Exception e) {
+            Log.e(TAG, "Error showing image preview", e);
+            Toast.makeText(this, "Error loading image", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    // Clear image preview
+    private void clearImagePreview() {
+        pendingImageUri = null;
+        imagePreview.setImageURI(null);
+        imagePreviewContainer.setVisibility(android.view.View.GONE);
+    }
+    
+    // Add user message with image to chat
+    private void addUserMessageWithImage(String message, Uri imageUri) {
+        // Create a container for the message
+        LinearLayout messageContainer = new LinearLayout(this);
+        messageContainer.setOrientation(LinearLayout.VERTICAL);
+        messageContainer.setPadding(20, 12, 20, 12);
+        messageContainer.setBackgroundResource(R.drawable.bg_user_message);
+        
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT);
+        params.gravity = Gravity.END;
+        params.setMargins(50, 8, 8, 8);
+        messageContainer.setLayoutParams(params);
+        
+        // Add the image
+        ImageView msgImage = new ImageView(this);
+        msgImage.setImageURI(imageUri);
+        msgImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        msgImage.setMaxWidth((int) (getResources().getDisplayMetrics().widthPixels * 0.6));
+        msgImage.setAdjustViewBounds(true);
+        
+        LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT);
+        imageParams.setMargins(0, 0, 0, 8);
+        msgImage.setLayoutParams(imageParams);
+        messageContainer.addView(msgImage);
+        
+        // Add the text message if not empty
+        if (!message.isEmpty()) {
+            TextView msgText = new TextView(this);
+            msgText.setText("You: " + message);
+            msgText.setTextSize(16);
+            msgText.setTextColor(Color.WHITE);
+            messageContainer.addView(msgText);
+        }
+        
+        chatContainer.addView(messageContainer);
+        chatScrollView.post(() -> chatScrollView.fullScroll(ScrollView.FOCUS_DOWN));
     }
     
     @Override
@@ -553,10 +746,10 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
                 if (data != null && data.getExtras() != null) {
                     Bitmap photo = (Bitmap) data.getExtras().get("data");
                     if (photo != null) {
-                        // Save bitmap to file and identify plant
+                        // Save bitmap to file and show preview
                         Uri imageUri = saveBitmapToFile(photo);
                         if (imageUri != null) {
-                            identifyPlantFromImage(imageUri);
+                            showImagePreview(imageUri);
                         }
                     }
                 }
@@ -564,7 +757,7 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
                 // Handle gallery result
                 if (data != null && data.getData() != null) {
                     Uri imageUri = data.getData();
-                    identifyPlantFromImage(imageUri);
+                    showImagePreview(imageUri);
                 }
             }
         }

@@ -44,7 +44,7 @@
         android:scrollbars="vertical"
         android:overScrollMode="always"
         app:layout_constraintTop_toBottomOf="@id/topBar"
-        app:layout_constraintBottom_toTopOf="@id/inputLayout"
+        app:layout_constraintBottom_toTopOf="@id/inputContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -56,54 +56,104 @@
     </ScrollView>
 
     <LinearLayout
-        android:id="@+id/inputLayout"
-        android:orientation="horizontal"
-        android:padding="8dp"
+        android:id="@+id/inputContainer"
+        android:orientation="vertical"
         android:background="@android:color/white"
         android:elevation="8dp"
-        android:gravity="center_vertical"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <EditText
-            android:id="@+id/inputMessage"
-            android:layout_width="0dp"
+        <!-- Image Preview Area -->
+        <RelativeLayout
+            android:id="@+id/imagePreviewContainer"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="Ask about plants, gardening, or care advice..."
-            android:padding="10dp"
-            android:textSize="16sp"
-            android:maxLines="4"
-            android:scrollbars="vertical"
-            android:background="@drawable/bg_input_field"
-            android:textColor="@color/black"
-            android:textColorHint="#999999"/>
+            android:padding="8dp"
+            android:background="#F5F5F5"
+            android:visibility="gone">
 
-        <ImageButton
-            android:id="@+id/cameraButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@android:drawable/ic_menu_camera"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:backgroundTint="@color/brand_green"
-            android:layout_marginEnd="4dp"
-            android:contentDescription="Take photo for plant identification" />
+            <ImageView
+                android:id="@+id/imagePreview"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:scaleType="centerCrop"
+                android:background="#E0E0E0"
+                android:padding="2dp"/>
 
-        <Button
-            android:id="@+id/sendButton"
-            android:text="Send"
-            android:textAllCaps="false"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
-            android:backgroundTint="@color/brand_teal"
-            android:layout_marginStart="4dp"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:minWidth="72dp"
-            android:paddingHorizontal="16dp"/>
+            <ImageButton
+                android:id="@+id/removeImageButton"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_alignTop="@id/imagePreview"
+                android:layout_alignEnd="@id/imagePreview"
+                android:layout_marginTop="-8dp"
+                android:layout_marginEnd="-8dp"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:background="@android:color/white"
+                android:padding="2dp"
+                android:scaleType="fitCenter"
+                android:contentDescription="Remove image"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/imagePreview"
+                android:layout_marginStart="12dp"
+                android:layout_centerVertical="true"
+                android:text="📷 Image attached\nAdd a message (optional)"
+                android:textSize="14sp"
+                android:textColor="#666666"/>
+        </RelativeLayout>
+
+        <!-- Input Area -->
+        <LinearLayout
+            android:id="@+id/inputLayout"
+            android:orientation="horizontal"
+            android:padding="8dp"
+            android:gravity="center_vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/inputMessage"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Ask about plants, gardening, or care advice..."
+                android:padding="10dp"
+                android:textSize="16sp"
+                android:maxLines="4"
+                android:scrollbars="vertical"
+                android:background="@drawable/bg_input_field"
+                android:textColor="@color/black"
+                android:textColorHint="#999999"/>
+
+            <ImageButton
+                android:id="@+id/cameraButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@android:drawable/ic_menu_camera"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:backgroundTint="@color/brand_green"
+                android:layout_marginEnd="4dp"
+                android:contentDescription="Take photo for plant identification" />
+
+            <Button
+                android:id="@+id/sendButton"
+                android:text="Send"
+                android:textAllCaps="false"
+                android:textStyle="bold"
+                android:textColor="@android:color/white"
+                android:backgroundTint="@color/brand_teal"
+                android:layout_marginStart="4dp"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:minWidth="72dp"
+                android:paddingHorizontal="16dp"/>
+        </LinearLayout>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
