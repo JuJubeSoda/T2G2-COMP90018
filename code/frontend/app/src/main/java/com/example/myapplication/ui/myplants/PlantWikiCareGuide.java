@@ -8,87 +8,150 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-// 1. Import the binding class for your layout
-import com.example.myapplication.databinding.PlantwikiCareguideBinding; // Changed from PlantwikiCareguidetabBinding
+import com.example.myapplication.databinding.PlantwikiCareguideBinding;
 
+/**
+ * PlantWikiCareGuide - Care Guide tab showing detailed plant care instructions.
+ * 
+ * Purpose:
+ * - Display comprehensive care guide from wiki
+ * - Show watering instructions (from PlantWikiDto.waterNeeds)
+ * - Show light requirements (from PlantWikiDto.lightNeeds)
+ * - Show soil and fertilizer guidance
+ * - Handle missing data with "Pending Information" fallback
+ * 
+ * User Flow:
+ * 1. User navigates to Care Guide tab in PlantWikiMainTabFragment
+ * 2. Fragment displays detailed care instructions
+ * 3. Shows "Pending Information" for unavailable data
+ * 4. User can also access via "View Full Care Guide" button in Overview tab
+ * 
+ * Key Features:
+ * - Comprehensive care guide display
+ * - Watering schedule and tips
+ * - Light requirement details
+ * - Soil type recommendations
+ * - Fertilizer application guidance
+ * - Graceful handling of null/empty fields
+ * 
+ * Data Priority:
+ * 1. If careGuide field exists, use it for all sections
+ * 2. Otherwise, use individual requirement fields
+ * 3. Show "Pending Information" for missing data
+ * 
+ * Data Source:
+ * - Plant object passed from PlantWikiMainTabFragment
+ * - careGuide from PlantWikiDto (comprehensive)
+ * - waterNeeds, lightNeeds as fallback
+ * - soilGuide, fertilizerGuide if available
+ */
 public class PlantWikiCareGuide extends Fragment {
 
     private static final String ARG_PLANT = "plant_object";
-    // 2. Declare the correct binding variable
+    
+    /** View binding for plantwiki_careguide.xml layout */
     private PlantwikiCareguideBinding binding;
+    
+    /** Plant data to display */
     private Plant plant;
 
     /**
-     * Creates a new instance of this fragment and passes the Plant object.
+     * Factory method to create fragment with Plant data.
+     * @param plant Plant object to display
+     * @return New instance with Plant as Parcelable argument
      */
     public static PlantWikiCareGuide newInstance(Plant plant) {
         PlantWikiCareGuide fragment = new PlantWikiCareGuide();
         Bundle args = new Bundle();
-        // The Plant object implements Parcelable
         args.putParcelable(ARG_PLANT, plant);
         fragment.setArguments(args);
         return fragment;
     }
 
+    /**
+     * Fragment creation lifecycle method.
+     * Retrieves Plant object from arguments.
+     */
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // 3. Retrieve the Plant object from the fragment's arguments.
         if (getArguments() != null) {
             plant = getArguments().getParcelable(ARG_PLANT);
         }
     }
 
+    /** Inflates the layout using View Binding. */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // 4. Inflate the layout using the correct View Binding class
         binding = PlantwikiCareguideBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
+    /**
+     * Sets up UI after view is created.
+     * Populates all care guide fields from Plant object.
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        // 5. Populate the new TextViews with data from the Plant object
         populateCareGuide();
     }
 
+    /**
+     * Populates care guide fields with plant data.
+     * 
+     * Displays:
+     * - Watering instructions (from PlantWikiDto.waterNeeds or careGuide)
+     * - Light requirements (from PlantWikiDto.lightNeeds or careGuide)
+     * - Soil recommendations (from soilGuide or careGuide)
+     * - Fertilizer guidance (from fertilizerGuide or careGuide)
+     * 
+     * Data Priority:
+     * 1. If comprehensive careGuide exists, use it for all sections
+     * 2. Otherwise, use individual requirement fields
+     * 3. Show "Pending Information" for null/empty fields
+     * 
+     * Note: Current implementation uses same careGuide text for all sections.
+     * Future enhancement: Parse careGuide to extract section-specific content.
+     * 
+     * Handles null Plant gracefully with fallback text.
+     */
     private void populateCareGuide() {
         final String PENDING_TEXT = "Pending Information";
 
         if (plant != null) {
-            // Check if we have a comprehensive care guide from the wiki API
+            // Check if comprehensive care guide exists
             String careGuideText = plant.getCareGuide();
             
             if (careGuideText != null && !careGuideText.isEmpty()) {
-                // If we have a care guide, use it for all sections
-                // For now, we'll set the same care guide text for all sections
-                // In a more sophisticated implementation, you could parse the care guide
+                // Use comprehensive care guide for all sections
+                // TODO: Parse careGuide to extract section-specific content
                 binding.careWateringText.setText(careGuideText);
                 binding.careLightText.setText(careGuideText);
                 binding.careSoilText.setText(careGuideText);
                 binding.careFertilizerText.setText(careGuideText);
             } else {
-                // Fall back to individual fields
-                // Set Watering Text from waterNeeds
+                // Use individual requirement fields as fallback
+                
+                // Watering instructions from wiki API
                 String wateringInfo = plant.getWaterRequirement();
                 binding.careWateringText.setText(wateringInfo != null && !wateringInfo.isEmpty() ? wateringInfo : PENDING_TEXT);
 
-                // Set Light Text from lightNeeds
+                // Light requirements from wiki API
                 String lightInfo = plant.getLightRequirement();
                 binding.careLightText.setText(lightInfo != null && !lightInfo.isEmpty() ? lightInfo : PENDING_TEXT);
 
-                // Set Soil Text
+                // Soil recommendations
                 String soilInfo = plant.getSoilGuide();
                 binding.careSoilText.setText(soilInfo != null && !soilInfo.isEmpty() ? soilInfo : PENDING_TEXT);
 
-                // Set Fertilizer Text
+                // Fertilizer guidance
                 String fertilizerInfo = plant.getFertilizerGuide();
                 binding.careFertilizerText.setText(fertilizerInfo != null && !fertilizerInfo.isEmpty() ? fertilizerInfo : PENDING_TEXT);
             }
         } else {
-            // Fallback in case the plant object itself is null
+            // Handle null Plant with fallback text
             binding.careWateringText.setText(PENDING_TEXT);
             binding.careLightText.setText(PENDING_TEXT);
             binding.careSoilText.setText(PENDING_TEXT);
@@ -96,10 +159,10 @@ public class PlantWikiCareGuide extends Fragment {
         }
     }
 
+    /** Cleans up view binding to prevent memory leaks. */
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // Set binding to null to avoid memory leaks
         binding = null;
     }
 }

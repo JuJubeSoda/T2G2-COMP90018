@@ -8,85 +8,132 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-// 1. Import the binding class for your layout
 import com.example.myapplication.databinding.PlantwikiFeaturestabBinding;
 
+/**
+ * PlantWikiFeatures - Features tab showing physical plant characteristics.
+ * 
+ * Purpose:
+ * - Display plant physical features from wiki
+ * - Show mature height (from PlantWikiDto.growthHeight)
+ * - Show leaf type, toxicity, air purifying ability
+ * - Handle missing data with "Pending Information" fallback
+ * 
+ * User Flow:
+ * 1. User navigates to Features tab in PlantWikiMainTabFragment
+ * 2. Fragment displays plant physical characteristics
+ * 3. Shows "Pending Information" for unavailable data
+ * 
+ * Key Features:
+ * - Mature height display from wiki API
+ * - Leaf type classification
+ * - Toxicity information for safety
+ * - Air purifying capability indicator
+ * - Graceful handling of null/empty fields
+ * 
+ * Data Source:
+ * - Plant object passed from PlantWikiMainTabFragment
+ * - growthHeight from PlantWikiDto
+ * - features field (if available)
+ * - Individual feature fields as fallback
+ */
 public class PlantWikiFeatures extends Fragment {
 
     private static final String ARG_PLANT = "plant_object";
-    // 2. Declare a binding variable
+    
+    /** View binding for plantwiki_featurestab.xml layout */
     private PlantwikiFeaturestabBinding binding;
+    
+    /** Plant data to display */
     private Plant plant;
 
     /**
-     * Creates a new instance of this fragment and passes the Plant object.
-     * This is the recommended way to pass arguments to a fragment.
+     * Factory method to create fragment with Plant data.
+     * @param plant Plant object to display
+     * @return New instance with Plant as Parcelable argument
      */
     public static PlantWikiFeatures newInstance(Plant plant) {
         PlantWikiFeatures fragment = new PlantWikiFeatures();
         Bundle args = new Bundle();
-        // The Plant object implements Parcelable
         args.putParcelable(ARG_PLANT, plant);
         fragment.setArguments(args);
         return fragment;
     }
 
+    /**
+     * Fragment creation lifecycle method.
+     * Retrieves Plant object from arguments.
+     */
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // 3. Retrieve the Plant object from the fragment's arguments.
         if (getArguments() != null) {
             plant = getArguments().getParcelable(ARG_PLANT);
         }
     }
 
+    /** Inflates the layout using View Binding. */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // 4. Inflate the layout using View Binding instead of the constructor
         binding = PlantwikiFeaturestabBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
+    /**
+     * Sets up UI after view is created.
+     * Populates all feature fields from Plant object.
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        // 5. Populate the TextViews with data from the Plant object
         populateFeatures();
     }
 
+    /**
+     * Populates feature fields with plant data.
+     * 
+     * Displays:
+     * - Mature height (from PlantWikiDto.growthHeight)
+     * - Leaf type (if available)
+     * - Toxicity information (if available)
+     * - Air purifying ability (if available)
+     * 
+     * Data Priority:
+     * 1. If features field exists, show "Pending Information" for individual fields
+     * 2. Otherwise, use individual feature fields
+     * 3. Show "Pending Information" for null/empty fields
+     * 
+     * Handles null Plant gracefully with fallback text.
+     */
     private void populateFeatures() {
         final String PENDING_TEXT = "Pending Information";
 
         if (plant != null) {
-            // Set Mature Height from growthHeight (from wiki API)
+            // Display mature height from wiki API
             String height = plant.getMatureHeight();
             binding.featureHeightText.setText(height != null && !height.isEmpty() ? height : PENDING_TEXT);
 
-            // Parse features string if available (from wiki API features field)
+            // Check if comprehensive features field exists
             String featuresText = plant.getFeatures();
             if (featuresText != null && !featuresText.isEmpty()) {
-                // Try to extract specific feature information
-                // For now, set generic features
+                // Features field exists but not parsed yet - show pending
                 binding.featureLeafTypeText.setText(PENDING_TEXT);
                 binding.featureToxicityText.setText(PENDING_TEXT);
                 binding.featureAirPurifyingText.setText(PENDING_TEXT);
             } else {
-                // Set Leaf Type
+                // Use individual feature fields
                 String leafType = plant.getLeafType();
                 binding.featureLeafTypeText.setText(leafType != null && !leafType.isEmpty() ? leafType : PENDING_TEXT);
 
-                // Set Toxicity
                 String toxicity = plant.getToxicity();
                 binding.featureToxicityText.setText(toxicity != null && !toxicity.isEmpty() ? toxicity : PENDING_TEXT);
 
-                // Set Air Purifying ability
                 String airPurifying = plant.getAirPurifying();
                 binding.featureAirPurifyingText.setText(airPurifying != null && !airPurifying.isEmpty() ? airPurifying : PENDING_TEXT);
             }
         } else {
-            // Fallback in case the plant object itself is null
+            // Handle null Plant with fallback text
             binding.featureHeightText.setText(PENDING_TEXT);
             binding.featureLeafTypeText.setText(PENDING_TEXT);
             binding.featureToxicityText.setText(PENDING_TEXT);
@@ -94,10 +141,10 @@ public class PlantWikiFeatures extends Fragment {
         }
     }
 
+    /** Cleans up view binding to prevent memory leaks. */
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // Set binding to null to avoid memory leaks
         binding = null;
     }
 }

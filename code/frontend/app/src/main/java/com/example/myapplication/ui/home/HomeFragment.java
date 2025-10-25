@@ -1,4 +1,36 @@
-package com.example.myapplication.ui.home; // Adjust to your project's package structure
+/**
+ * HomeFragment - Main dashboard and landing screen for the application.
+ * 
+ * Features:
+ * 1. Quick Action Cards:
+ *    - Upload Plants: Navigate to plant upload flow
+ *    - Add to My Garden: Navigate to add plant screen
+ *    - AI Chat: Launch AI assistant activity
+ * 
+ * 2. Nearby Discoveries Carousel:
+ *    - Displays public plants from nearby users
+ *    - Fetches from /api/plants/nearby endpoint
+ *    - Shows distance, images, and descriptions
+ *    - Handles empty states with helpful messages
+ * 
+ * API Integration:
+ * - GET /api/plants/nearby: Fetches plants with isPublic=true near user's location
+ * - Converts PlantDto to DiscoveryItem for display
+ * - Handles Base64 encoded images from backend
+ * 
+ * Error Handling:
+ * - Network failures: Shows placeholder with helpful message
+ * - Empty results: Explains how to contribute plants
+ * - Permission issues: Guides user to enable location
+ * - Detailed logging for debugging
+ * 
+ * User Experience:
+ * - Horizontal scrolling carousel for discoveries
+ * - Smooth navigation to other app sections
+ * - Toast messages for user feedback
+ * - Graceful degradation on errors
+ */
+package com.example.myapplication.ui.home;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -12,12 +44,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
-import androidx.navigation.Navigation; // For NavController
+import androidx.navigation.Navigation;
 
-import com.example.myapplication.R; // Your app's R file
-import com.example.myapplication.ui.home.DiscoveryAdapter; // Assuming this is your adapter's package
-import com.example.myapplication.databinding.HomeBinding; // Generated from fragment_home.xml
-import com.example.myapplication.ui.home.DiscoveryItem; // Assuming this is your model's package
+import com.example.myapplication.R;
+import com.example.myapplication.ui.home.DiscoveryAdapter;
+import com.example.myapplication.databinding.HomeBinding;
+import com.example.myapplication.ui.home.DiscoveryItem;
 import com.example.myapplication.network.ApiClient;
 import com.example.myapplication.network.ApiResponse;
 import com.example.myapplication.network.ApiService;
@@ -33,49 +65,66 @@ import retrofit2.Response;
 public class HomeFragment extends Fragment {
 
     private static final String TAG = "HomeFragment";
-    private HomeBinding binding; // ViewBinding instance
+    
+    /** View binding for home.xml layout */
+    private HomeBinding binding;
+    
+    /** Adapter for nearby discoveries horizontal RecyclerView */
     private DiscoveryAdapter discoveryAdapter;
+    
+    /** List of discovery items to display in carousel */
     private List<DiscoveryItem> discoveryItemList;
+    
+    /** Navigation controller for fragment transitions */
     private NavController navController;
 
+    /**
+     * Inflates the layout using View Binding.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        // Inflate the layout for this fragment using view binding
         binding = HomeBinding.inflate(inflater, container, false);
-        // Don't return binding.getRoot() here yet if you need to initialize navController in onViewCreated
         return binding.getRoot();
     }
 
+    /**
+     * Initializes UI components after view is created.
+     * Sets up navigation, action cards, and nearby discoveries carousel.
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Initialize NavController here, as the view is now created
+        // Initialize navigation controller for fragment transitions
         navController = Navigation.findNavController(view);
 
-        Log.d("HomeFragment", "Check1");
-        // Setup UI components
+        // Setup all UI components
         setupTopCardClickListeners();
         setupNearbyDiscoveriesRecyclerView();
         loadNearbyDiscoveryData();
-        Log.d("HomeFragment", "Check2");
     }
 
+    /**
+     * Sets up click listeners for the three quick action cards on home screen.
+     * 
+     * Cards:
+     * 1. Upload Plants - Navigate to plant upload flow
+     * 2. Add to My Garden - Navigate to add plant screen
+     * 3. AI Chat - Launch AI assistant activity
+     */
     private void setupTopCardClickListeners() {
-        // Card 1: Upload Plants (leads to a camera/gallery flow eventually)
+        // Card 1: Upload Plants - navigate to upload flow
         binding.card1.setOnClickListener(v -> {
-            Log.d("HomeFragment", "Upload card clicked");
+            Log.d(TAG, "Upload Plants card clicked");
             if (navController != null) {
-                // Make sure R.id.action_navigation_home_to_uploadFragment is defined in your nav_graph.xml
                 try {
-                    Log.d("HomeFragment", "try navigate to upload plants.");
                     navController.navigate(R.id.navigation_upload);
-                    Log.d("HomeFragment", "After executing upload plants.");
                 } catch (IllegalArgumentException e) {
                     Toast.makeText(getContext(), "Upload navigation action not found", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Navigation failed", e);
                 }
             }
         });
@@ -137,9 +186,34 @@ public class HomeFragment extends Fragment {
         // binding.recyclerViewNearbyDiscoveries.addItemDecoration(new HorizontalSpaceItemDecoration(16)); // Example
     }
 
+    /**
+     * Fetches nearby public plants from backend API and displays them in carousel.
+     * 
+     * API Call: GET /api/plants/nearby
+     * - Returns plants with isPublic=true near user's location
+     * - Includes Base64 encoded images
+     * - Ordered by distance (backend logic)
+     * 
+     * Process:
+     * 1. Make API call via Retrofit
+     * 2. Log detailed response information for debugging
+     * 3. Handle various response scenarios:
+     *    - Success with data: Convert to DiscoveryItems and display
+     *    - Success but empty: Show helpful message about contributing
+     *    - API error: Log error details and show placeholder
+     *    - Network error: Show connection error message
+     * 4. Update RecyclerView adapter with results
+     * 
+     * Error Handling:
+     * - Checks if fragment is still attached before UI updates
+     * - Logs all response codes and error bodies
+     * - Provides user-friendly error messages
+     * - Falls back to placeholder data on any failure
+     */
     private void loadNearbyDiscoveryData() {
         Log.d(TAG, "Fetching nearby plants from server...");
         
+        // Create API service and make request
         ApiService apiService = ApiClient.create(requireContext());
         Call<ApiResponse<List<PlantDto>>> call = apiService.getNearbyPlants();
         
@@ -147,8 +221,10 @@ public class HomeFragment extends Fragment {
             @Override
             public void onResponse(@NonNull Call<ApiResponse<List<PlantDto>>> call, 
                                  @NonNull Response<ApiResponse<List<PlantDto>>> response) {
+                // Safety check: Ensure fragment is still attached
                 if (binding == null) return;
                 
+                // Log response details for debugging
                 Log.d(TAG, "Response code: " + response.code());
                 Log.d(TAG, "Response successful: " + response.isSuccessful());
                 
@@ -161,42 +237,54 @@ public class HomeFragment extends Fragment {
                         List<PlantDto> nearbyPlants = apiResponse.getData();
                         Log.d(TAG, "Successfully fetched " + nearbyPlants.size() + " nearby plants.");
                         
+                        // Handle empty results with helpful message
                         if (nearbyPlants.isEmpty()) {
                             Log.w(TAG, "Nearby plants list is empty");
-                            Toast.makeText(getContext(), "No nearby plants discovered yet. Upload plants to share with others!", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), 
+                                "No nearby plants discovered yet. Upload plants to share with others!", 
+                                Toast.LENGTH_LONG).show();
                             loadPlaceholderData();
                             return;
                         }
                         
-                        // Convert PlantDto to DiscoveryItem
+                        // Convert PlantDto objects to DiscoveryItem objects for display
                         List<DiscoveryItem> discoveryItems = new ArrayList<>();
                         for (PlantDto plant : nearbyPlants) {
-                            Log.d(TAG, "Processing plant: " + plant.getName() + " (isPublic: checking...)");
-                            String distance = calculateDistance(plant);
-                            String description = plant.getDescription() != null ? plant.getDescription() : "Discovered nearby";
+                            Log.d(TAG, "Processing plant: " + plant.getName());
                             
-                            // Use placeholder image for now, as Base64 decoding is handled by the adapter
+                            // Calculate distance (placeholder for now, TODO: use actual GPS calculation)
+                            String distance = calculateDistance(plant);
+                            
+                            // Use description or default text
+                            String description = plant.getDescription() != null ? 
+                                plant.getDescription() : "Discovered nearby";
+                            
+                            // Create discovery item with Base64 image string
                             discoveryItems.add(new DiscoveryItem(
                                 plant.getName(),
                                 distance,
-                                R.drawable.map_foreground, // Placeholder, actual image will be loaded from plant.getImage()
+                                R.drawable.map_foreground, // Placeholder resource ID
                                 description,
-                                plant.getImage() // Pass the Base64 image string
+                                plant.getImage() // Base64 image string (handled by adapter)
                             ));
                         }
                         
-                        // Update the adapter with the new data
+                        // Update RecyclerView adapter with new data
                         if (discoveryAdapter != null) {
                             discoveryAdapter.updateData(discoveryItems);
                             Log.d(TAG, "Updated adapter with " + discoveryItems.size() + " items");
                         }
                     } else {
+                        // API returned success but data is null
                         Log.e(TAG, "API response data is null");
                         Toast.makeText(getContext(), "No nearby plants available", Toast.LENGTH_SHORT).show();
                         loadPlaceholderData();
                     }
                 } else {
+                    // API returned error response
                     Log.e(TAG, "Failed to fetch nearby plants. Code: " + response.code());
+                    
+                    // Try to log error body for debugging
                     if (response.errorBody() != null) {
                         try {
                             Log.e(TAG, "Error body: " + response.errorBody().string());
@@ -204,18 +292,24 @@ public class HomeFragment extends Fragment {
                             Log.e(TAG, "Could not read error body", e);
                         }
                     }
-                    Toast.makeText(getContext(), "Unable to load nearby plants. Please check your location permissions.", Toast.LENGTH_LONG).show();
+                    
+                    Toast.makeText(getContext(), 
+                        "Unable to load nearby plants. Please check your location permissions.", 
+                        Toast.LENGTH_LONG).show();
                     loadPlaceholderData();
                 }
             }
             
             @Override
             public void onFailure(@NonNull Call<ApiResponse<List<PlantDto>>> call, @NonNull Throwable t) {
+                // Network error (no response from server)
                 if (binding == null) return;
-                Log.e(TAG, "Network error fetching nearby plants", t);
-                Toast.makeText(getContext(), "Unable to connect to server. Please check your internet connection.", Toast.LENGTH_LONG).show();
                 
-                // Show placeholder data if network fails
+                Log.e(TAG, "Network error fetching nearby plants", t);
+                Toast.makeText(getContext(), 
+                    "Unable to connect to server. Please check your internet connection.", 
+                    Toast.LENGTH_LONG).show();
+                
                 loadPlaceholderData();
             }
         });

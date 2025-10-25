@@ -3,48 +3,89 @@ package com.example.myapplication.network;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * Request model for adding a new plant. Matches the backend entity.
+ * PlantRequest - Data Transfer Object for creating new plants via API.
+ * 
+ * Purpose:
+ * - Encapsulates all plant data needed for POST /api/plants/add endpoint
+ * - Serializes to JSON format expected by backend
+ * - Matches backend Plant entity structure
+ * 
+ * Usage:
+ * 1. User captures plant photo and fills details in UploadFragment
+ * 2. Create PlantRequest with all fields
+ * 3. Send via ApiService.addPlant()
+ * 4. Backend creates Plant entity and stores in database
+ * 
+ * Key Fields:
+ * - image: Base64 encoded string (not file path)
+ * - isPublic: Controls visibility in nearby discoveries
+ * - timestamps: ISO 8601 UTC format (e.g., "2025-10-25T12:00:00.000Z")
+ * - location: Nullable (user may deny permission)
  */
 public class PlantRequest {
 
+    /** Common name of the plant (user-provided or from wiki) */
     @SerializedName("name")
     private String name;
 
+    /** Base64 encoded image string (converted from URI before upload) */
     @SerializedName("image")
-    private String image; // Base64 encoded
+    private String image;
 
+    /** User-provided description or introduction text */
     @SerializedName("description")
     private String description;
 
+    /** GPS latitude (null if location permission denied) */
     @SerializedName("latitude")
     private Double latitude;
 
+    /** GPS longitude (null if location permission denied) */
     @SerializedName("longitude")
     private Double longitude;
 
+    /** Scientific/botanical name of the plant */
     @SerializedName("scientificName")
     private String scientificName;
 
-    // --- FIX: Add createdAt and updatedAt fields ---
+    /** Timestamp when plant was created (ISO 8601 UTC format) */
     @SerializedName("createdAt")
-    private String createdAt; // ISO 8601 String
+    private String createdAt;
 
+    /** Timestamp when plant was last updated (ISO 8601 UTC format) */
     @SerializedName("updatedAt")
-    private String updatedAt; // ISO 8601 String
+    private String updatedAt;
 
+    /** ID of garden this plant belongs to (null for new plants) */
     @SerializedName("gardenId")
     private Long gardenId;
 
+    /** Whether user marked this plant as favourite */
     @SerializedName("isFavourite")
     private Boolean isFavourite;
 
+    /** Whether plant should be visible to nearby users (public sharing toggle) */
     @SerializedName("isPublic")
-    private Boolean isPublic; // Whether the plant should be visible to nearby users
+    private Boolean isPublic;
 
-    // Constructors
+    /** Default constructor for Gson deserialization */
     public PlantRequest() {}
 
-    // --- FIX: Update constructor to include all fields ---
+    /**
+     * Full constructor for creating a complete plant upload request.
+     * 
+     * @param name Common name of the plant
+     * @param image Base64 encoded image string
+     * @param description User's description/notes
+     * @param latitude GPS latitude (nullable)
+     * @param longitude GPS longitude (nullable)
+     * @param scientificName Scientific/botanical name
+     * @param createdAt Creation timestamp (ISO 8601 UTC)
+     * @param updatedAt Update timestamp (ISO 8601 UTC)
+     * @param gardenId Garden ID (nullable for new plants)
+     * @param isFavourite Favourite status
+     * @param isPublic Public visibility toggle
+     */
     public PlantRequest(String name, String image, String description, Double latitude,
                         Double longitude, String scientificName, String createdAt, String updatedAt,
                         Long gardenId, Boolean isFavourite, Boolean isPublic) {
@@ -61,7 +102,9 @@ public class PlantRequest {
         this.isPublic = isPublic;
     }
 
-    // Getters and Setters
+    // ===== Getters and Setters =====
+    // Standard JavaBean accessors for all fields
+    
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
