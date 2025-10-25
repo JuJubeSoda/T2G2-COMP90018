@@ -57,7 +57,7 @@ public class PlantAIService {
             headers.setBearerAuth(apiKey);
 
             Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", "gpt-4-vision-preview");
+            requestBody.put("model", "gpt-4o");  // Updated to latest vision-capable model
             requestBody.put("temperature", 0.7);
             requestBody.put("max_tokens", 1000);
 
@@ -111,7 +111,11 @@ public class PlantAIService {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return "AI service temporarily unavailable, please try again later.";
+            System.err.println("Vision API Error: " + e.getMessage());
+            if (e.getCause() != null) {
+                System.err.println("Cause: " + e.getCause().getMessage());
+            }
+            return "AI vision service error: " + e.getMessage();
         }
     }
 
@@ -182,7 +186,7 @@ public class PlantAIService {
             headers.setBearerAuth(apiKey);
 
             Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", "gpt-4");
+            requestBody.put("model", "gpt-4o");  // Updated to latest model for better performance
             requestBody.put("temperature", 0.7);
             requestBody.put("max_tokens", 1000);
 
@@ -221,7 +225,11 @@ public class PlantAIService {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return "AI service temporarily unavailable, please try again later.";
+            System.err.println("Text API Error: " + e.getMessage());
+            if (e.getCause() != null) {
+                System.err.println("Cause: " + e.getCause().getMessage());
+            }
+            return "AI text service error: " + e.getMessage();
         }
     }
 

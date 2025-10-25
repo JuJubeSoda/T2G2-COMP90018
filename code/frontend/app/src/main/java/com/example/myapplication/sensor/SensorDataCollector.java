@@ -32,6 +32,12 @@ public class SensorDataCollector implements SensorEventListener, LocationListene
     private Map<String, Object> currentSensorData = new HashMap<>();
     private Location currentLocation;
     
+    // Data collection flags
+    private boolean hasCollectedSensorData = false;
+    private boolean hasCollectedLocation = false;
+    private long startCollectionTime = 0;
+    private static final long COLLECTION_TIMEOUT = 5000; // 5 seconds timeout
+    
     // Callback interface
     public interface SensorDataCallback {
         void onSensorDataUpdated(Map<String, Object> sensorData);
@@ -65,8 +71,11 @@ public class SensorDataCollector implements SensorEventListener, LocationListene
     
     public void startCollecting(SensorDataCallback callback) {
         this.callback = callback;
+        this.startCollectionTime = System.currentTimeMillis();
+        this.hasCollectedSensorData = false;
+        this.hasCollectedLocation = false;
         
-        // Register sensor listeners
+        // Register sensor listeners (one-time collection)
         if (lightSensor != null) {
             sensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
@@ -83,7 +92,15 @@ public class SensorDataCollector implements SensorEventListener, LocationListene
         // Start location updates
         startLocationUpdates();
         
-        Log.d(TAG, "Started collecting sensor data");
+        Log.d(TAG, "Started collecting sensor data (one-time collection)");
+        
+        // Auto-stop after timeout
+        new android.os.Handler().postDelayed(() -> {
+            if (!hasCollectedSensorData || !hasCollectedLocation) {
+                Log.d(TAG, "Collection timeout - stopping with partial data");
+                stopCollecting();
+            }
+        }, COLLECTION_TIMEOUT);
     }
     
     public void stopCollecting() {
@@ -121,6 +138,11 @@ public class SensorDataCollector implements SensorEventListener, LocationListene
     
     @Override
     public void onSensorChanged(SensorEvent event) {
+        // Skip if already collected
+        if (hasCollectedSensorData) {
+            return;
+        }
+        
         float value = event.values[0];
         String sensorType = "";
         String unit = "";
@@ -150,11 +172,17 @@ public class SensorDataCollector implements SensorEventListener, LocationListene
             // Add additional context
             addSensorContext(sensorType, value);
             
-            Log.d(TAG, sensorType + ": " + value + unit);
+            Log.d(TAG, sensorType + ": " + value + unit + " (collected once)");
+            
+            // Mark as collected and stop sensor updates
+            hasCollectedSensorData = true;
             
             if (callback != null) {
                 callback.onSensorDataUpdated(new HashMap<>(currentSensorData));
             }
+            
+            // Check if we can stop collecting
+            checkAndStopIfComplete();
         }
     }
     
@@ -197,6 +225,11 @@ public class SensorDataCollector implements SensorEventListener, LocationListene
     
     @Override
     public void onLocationChanged(Location location) {
+        // Skip if already collected
+        if (hasCollectedLocation) {
+            return;
+        }
+        
         currentLocation = location;
         
         // Add location data to sensor data
@@ -205,11 +238,25 @@ public class SensorDataCollector implements SensorEventListener, LocationListene
         currentSensorData.put("altitude", location.getAltitude());
         currentSensorData.put("accuracy", location.getAccuracy() + " meters");
         
-        Log.d(TAG, "Location updated: " + location.getLatitude() + ", " + location.getLongitude());
+        Log.d(TAG, "Location collected once: " + location.getLatitude() + ", " + location.getLongitude());
+        
+        // Mark as collected
+        hasCollectedLocation = true;
         
         if (callback != null) {
             callback.onLocationUpdated(location);
             callback.onSensorDataUpdated(new HashMap<>(currentSensorData));
+        }
+        
+        // Check if we can stop collecting
+        checkAndStopIfComplete();
+    }
+    
+    // Check if collection is complete and stop if needed
+    private void checkAndStopIfComplete() {
+        if (hasCollectedSensorData && hasCollectedLocation) {
+            Log.d(TAG, "All data collected - stopping sensors");
+            stopCollecting();
         }
     }
     

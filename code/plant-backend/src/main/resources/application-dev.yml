@@ -5,6 +5,8 @@ spring:
     password: "DAb1239df0#!sd"
     driver-class-name: org.postgresql.Driver
 
+
+
 logging:
   level:
     org.unimelb: debug
