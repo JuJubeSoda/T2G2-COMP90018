@@ -1,6 +1,8 @@
 package com.example.myapplication.ui.myplants;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AlertDialog;
 
 import com.example.myapplication.R;
 
@@ -78,6 +81,9 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, co
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Request location permission with an official prompt before using location
+        checkAndRequestLocationPermission();
+
 
         // Initialize bottom sheet components
         // 移除 LinearLayout bottomSheetContainer 及其相关变量和逻辑。
@@ -97,6 +103,31 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, co
                 .findFragmentById(R.id.map_fragment);
         if (mapFragment != null) {
             mapFragment.getMapAsync(this);
+        }
+    }
+
+    private void checkAndRequestLocationPermission() {
+        Log.d(TAG, "检查定位权限...");
+        int requestCode = com.example.myapplication.map.MapLocationManager.getLocationPermissionRequestCode();
+        boolean hasPermission = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
+        Log.d(TAG, "定位权限状态: " + (hasPermission ? "已授予" : "未授予"));
+        
+        if (!hasPermission) {
+            Log.d(TAG, "显示权限请求对话框");
+            new AlertDialog.Builder(requireContext())
+                .setTitle("位置权限请求")
+                .setMessage("我们需要您的位置权限以显示当前位置和附近植物。请允许以获得完整体验。")
+                .setPositiveButton("继续", (dialog, which) -> {
+                    Log.d(TAG, "用户点击继续，请求权限");
+                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, requestCode);
+                })
+                .setNegativeButton("取消", (dialog, which) -> {
+                    Log.d(TAG, "用户取消权限请求");
+                })
+                .show();
+        } else {
+            Log.d(TAG, "已有权限，无需请求");
         }
     }
 
@@ -172,6 +203,31 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, co
         
         // Initialize map with location services
         plantGardenMapManager.initializeMap();
+
+        // If a plantId was provided, center and show that plant on the map
+        Bundle args = getArguments();
+        if (args != null && args.containsKey("plantId")) {
+            int plantId = args.getInt("plantId");
+            // Ensure in plants mode
+            if (!plantGardenMapManager.isShowingPlants()) {
+                plantGardenMapManager.toggleDataType();
+            }
+            MapDataManager dataManager = new MapDataManager(requireContext());
+            dataManager.getPlantById(plantId, new MapDataManager.MapDataCallback<com.example.myapplication.network.PlantDto>() {
+                @Override
+                public void onSuccess(com.example.myapplication.network.PlantDto plantDto) {
+                    com.example.myapplication.network.PlantMapDto mapDto = com.example.myapplication.network.PlantMapDto.fromPlantDto(plantDto);
+                    java.util.ArrayList<com.example.myapplication.network.PlantMapDto> list = new java.util.ArrayList<>();
+                    list.add(mapDto);
+                    plantGardenMapManager.refreshPlants(list);
+                }
+
+                @Override
+                public void onError(String message) {
+                    Toast.makeText(getContext(), "Failed to load plant on map: " + message, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
     
@@ -251,6 +307,8 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, co
     private void toggleDataType() {
         if (plantGardenMapManager != null) {
             plantGardenMapManager.toggleDataType();
+            // 自动触发一次加载，Garden 模式会全量拉取
+            plantGardenMapManager.searchNearbyData();
         }
     }
 
@@ -318,6 +376,13 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, co
         if (plantGardenMapManager != null) {
             plantGardenMapManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
+        if (requestCode == com.example.myapplication.map.MapLocationManager.getLocationPermissionRequestCode()) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(getContext(), "已获得位置权限", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(), "未授权位置权限，将无法准确显示定位", Toast.LENGTH_LONG).show();
+            }
+        }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
@@ -333,9 +398,10 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, co
             return;
         }
 
-        // 检查位置权限
-        if (!plantGardenMapManager.hasLocationPermission()) {
-            Toast.makeText(getContext(), "Location permission required to refresh data", Toast.LENGTH_SHORT).show();
+        // 仅在植物模式检查位置权限；花园模式不需要
+        if (plantGardenMapManager.isShowingPlants() && !plantGardenMapManager.hasLocationPermission()) {
+            Toast.makeText(getContext(), "Location permission required to refresh plants", Toast.LENGTH_SHORT).show();
+            checkAndRequestLocationPermission();
             return;
         }
 

@@ -24,6 +24,7 @@ import com.example.myapplication.network.ApiClient;
 import com.example.myapplication.network.ApiResponse;
 import com.example.myapplication.network.ApiService;
 import com.example.myapplication.network.PlantDto;
+import com.example.myapplication.myPlantsData.MyGardenDataManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -91,6 +92,8 @@ public class MyGardenFragment extends Fragment {
 
     /** Master list of all user's plants (cached to prevent unnecessary API calls) */
     private List<Plant> masterPlantList = new ArrayList<>();
+    /** Cached list for user's liked plants (from dedicated API) */
+    private List<Plant> likedPlantList = new ArrayList<>();
     
     /** Current filter state: true = show favourites only, false = show all */
     private boolean currentViewIsFavourites = false;
@@ -101,6 +104,9 @@ public class MyGardenFragment extends Fragment {
     /** Current search query text */
     private String currentSearchText = "";
 
+    /** Data manager for My Garden domain (liked plants, etc.) */
+    private MyGardenDataManager myGardenDataManager;
+
     /**
      * Fragment creation lifecycle method.
      * Data fetching moved to onViewCreated for better lifecycle management.
@@ -109,6 +115,38 @@ public class MyGardenFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Data is now fetched in onViewCreated, not here.
+    }
+
+    /** Loads liked plants from API and displays them in the list */
+    private void loadLikedPlantsAndDisplay() {
+        if (binding == null) return;
+        try {
+            binding.progressBar.setVisibility(View.VISIBLE);
+            binding.recyclerViewMyGardenPlants.setVisibility(View.GONE);
+        } catch (Exception ignored) {}
+
+        myGardenDataManager.fetchLikedPlants(new MyGardenDataManager.DataCallback<List<PlantDto>>() {
+            @Override
+            public void onSuccess(List<PlantDto> data) {
+                if (binding == null) return;
+                likedPlantList.clear();
+                if (data != null) {
+                    likedPlantList = data.stream().map(PlantDto::toPlant).collect(Collectors.toList());
+                }
+                binding.progressBar.setVisibility(View.GONE);
+                binding.recyclerViewMyGardenPlants.setVisibility(View.VISIBLE);
+                displayPlants();
+            }
+
+            @Override
+            public void onError(String message) {
+                if (binding == null) return;
+                binding.progressBar.setVisibility(View.GONE);
+                Toast.makeText(getContext(), "Failed to load liked plants: " + message, Toast.LENGTH_SHORT).show();
+                // Fallback to filter from master list
+                displayPlants();
+            }
+        });
     }
 
     /**
@@ -144,6 +182,8 @@ public class MyGardenFragment extends Fragment {
 
         // Initialize RecyclerView and adapter
         setupRecyclerView();
+        // Initialize MyGarden data manager
+        myGardenDataManager = new MyGardenDataManager(requireContext());
         
         // Setup all button and search listeners
         setupClickListeners();
@@ -295,7 +335,7 @@ public class MyGardenFragment extends Fragment {
 
         binding.button3.setOnClickListener(v -> { // "My Favourite"
             currentViewIsFavourites = true;
-            displayPlants();
+            loadLikedPlantsAndDisplay();
         });
 
         // Add plant button - navigate to AddPlantFragment with favourite flag
@@ -458,11 +498,16 @@ public class MyGardenFragment extends Fragment {
 
         List<Plant> plantsToShow;
 
-        // Step 1: Filter by Favourites (from the master list)
+        // Step 1: Source data based on current tab
         if (currentViewIsFavourites) {
-            plantsToShow = masterPlantList.stream()
-                    .filter(Plant::isFavourite)
-                    .collect(Collectors.toList());
+            // Prefer server-liked list if available; fallback to filtering master list
+            if (!likedPlantList.isEmpty()) {
+                plantsToShow = new ArrayList<>(likedPlantList);
+            } else {
+                plantsToShow = masterPlantList.stream()
+                        .filter(Plant::isFavourite)
+                        .collect(Collectors.toList());
+            }
         } else {
             plantsToShow = new ArrayList<>(masterPlantList);
         }

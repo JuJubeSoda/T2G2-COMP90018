@@ -16,6 +16,7 @@ import androidx.navigation.Navigation;
 import com.bumptech.glide.Glide;
 import com.example.myapplication.R;
 import com.example.myapplication.databinding.PlantdetailBinding;
+import com.example.myapplication.myPlantsData.MyGardenDataManager;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -67,6 +68,8 @@ public class PlantDetailFragment extends Fragment {
     
     /** Plant data to display */
     private Plant plant;
+    private MyGardenDataManager myGardenDataManager;
+    private Boolean currentLiked;
 
     /**
      * Fragment creation lifecycle method.
@@ -115,6 +118,9 @@ public class PlantDetailFragment extends Fragment {
         // Show loading indicator
         binding.progressBar.setVisibility(View.VISIBLE);
 
+        myGardenDataManager = new MyGardenDataManager(requireContext());
+        currentLiked = plant != null ? plant.isFavourite() : null;
+
         if (plant != null) {
             populateUi();
             binding.progressBar.setVisibility(View.GONE);
@@ -127,6 +133,15 @@ public class PlantDetailFragment extends Fragment {
         binding.backButtonDetail.setOnClickListener(v ->
                 Navigation.findNavController(v).navigateUp()
         );
+
+        // Setup like toggle button and show-on-map
+        if (binding.btnLikeToggle != null) {
+            updateLikeButtonUi();
+            binding.btnLikeToggle.setOnClickListener(v -> toggleLike());
+        }
+        if (binding.btnShowOnMap != null) {
+            binding.btnShowOnMap.setOnClickListener(v -> navigateToMap());
+        }
     }
 
     /**
@@ -228,6 +243,60 @@ public class PlantDetailFragment extends Fragment {
         } catch (Exception e) {
             Log.e(TAG, "Failed to decode or load image for plant: " + (plant.getName() != null ? plant.getName() : "Unknown"), e);
             binding.imageViewPlantPreview.setImageResource(R.drawable.plantbulb_foreground);
+        }
+    }
+
+    private void updateLikeButtonUi() {
+        if (currentLiked != null && currentLiked) {
+            binding.btnLikeToggle.setImageResource(R.drawable.ic_favorite_24);
+        } else {
+            binding.btnLikeToggle.setImageResource(R.drawable.ic_favorite_border_24);
+        }
+    }
+
+    private void toggleLike() {
+        if (plant == null) return;
+        boolean liked = currentLiked != null && currentLiked;
+        if (liked) {
+            // unlike
+            myGardenDataManager.unlikePlant(plant.getPlantId(), new MyGardenDataManager.DataCallback<String>() {
+                @Override
+                public void onSuccess(String data) {
+                    currentLiked = false;
+                    updateLikeButtonUi();
+                    Toast.makeText(getContext(), "Unliked", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onError(String message) {
+                    Toast.makeText(getContext(), "Failed: " + message, Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            myGardenDataManager.likePlant(plant.getPlantId(), new MyGardenDataManager.DataCallback<String>() {
+                @Override
+                public void onSuccess(String data) {
+                    currentLiked = true;
+                    updateLikeButtonUi();
+                    Toast.makeText(getContext(), "Liked", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onError(String message) {
+                    Toast.makeText(getContext(), "Failed: " + message, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
+
+    private void navigateToMap() {
+        if (plant == null) return;
+        try {
+            Bundle args = new Bundle();
+            args.putInt("plantId", plant.getPlantId());
+            Navigation.findNavController(requireView()).navigate(R.id.navigation_plant_map, args);
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "Failed to open map", Toast.LENGTH_SHORT).show();
         }
     }
 

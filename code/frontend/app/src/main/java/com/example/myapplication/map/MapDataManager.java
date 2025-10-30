@@ -107,9 +107,15 @@ public class MapDataManager {
             }
             
             // 修复：后端返回的JSON中没有success字段，只依赖code字段判断
-            if (apiResponse.getCode() == 200 && apiResponse.getData() != null) {
-                LogUtil.d(TAG, "Successfully received " + dataType + " data");
-                callback.onSuccess(apiResponse.getData());
+            // 对于like/unlike操作，即使data为空或为字符串"liked"/"unliked"，code=200即视为成功
+            if (apiResponse.getCode() == 200) {
+                if (apiResponse.getData() != null) {
+                    LogUtil.d(TAG, "Successfully received " + dataType + " data: " + apiResponse.getData());
+                    callback.onSuccess(apiResponse.getData());
+                } else {
+                    LogUtil.d(TAG, "Successfully " + dataType + " (code=200, no data)");
+                    callback.onSuccess(null);
+                }
             } else {
                 LogUtil.e(TAG, "API call failed for " + dataType + ": " + apiResponse.getMessage());
                 callback.onError(apiResponse.getMessage());
