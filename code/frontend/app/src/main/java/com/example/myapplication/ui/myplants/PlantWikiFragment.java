@@ -310,7 +310,6 @@ public class PlantWikiFragment extends Fragment {
                         // Log detailed conversion for debugging
                         Log.d(TAG, "Added wiki plant: " + plant.getName() + " (Scientific: " + plant.getScientificName() + ")");
                         Log.d(TAG, "Plant features: " + dto.getFeatures());
-                        Log.d(TAG, "Care guide: " + dto.getCareGuide());
                         Log.d(TAG, "Water needs: " + dto.getWaterNeeds());
                         Log.d(TAG, "Light needs: " + dto.getLightNeeds());
                         Log.d(TAG, "Difficulty: " + dto.getDifficulty());
