@@ -27,7 +27,10 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import com.example.myapplication.model.Garden;
 import com.example.myapplication.network.PlantDto;
+import com.example.myapplication.network.PlantMapDto;
 import com.example.myapplication.map.PlantGardenMapManager;
+import com.example.myapplication.map.MapDataManager;
+import androidx.navigation.Navigation;
 
 import java.util.List;
 
@@ -60,7 +63,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     private double currentLng = 0.0;
     
     // Current plant for like functionality
-    private PlantDto currentPlant = null;
+    private PlantMapDto currentPlant = null;
     
     // UI related fields
     private FloatingActionButton fabPlaces;
@@ -102,7 +105,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
         plantGardenMapManager = new PlantGardenMapManager(requireContext(), mMap);
         plantGardenMapManager.setOnPlantGardenMapInteractionListener(new PlantGardenMapManager.OnPlantGardenMapInteractionListener() {
             @Override
-            public void onPlantClick(PlantDto plant) {
+            public void onPlantClick(PlantMapDto plant) {
                 showPlantBottomSheet(plant);
             }
             
@@ -112,7 +115,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
             }
             
             @Override
-            public void onPlantsFound(List<PlantDto> plants) {
+            public void onPlantsFound(List<PlantMapDto> plants) {
                 Log.d(TAG, "=== onPlantsFound Callback Debug ===");
                 Log.d(TAG, "Received plants: " + (plants == null ? "null" : plants.size()));
                 if (plants != null && !plants.isEmpty()) {
@@ -193,8 +196,12 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
             btnMoreInfo.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    // Handle more info button click
-                    Toast.makeText(getContext(), "More info functionality", Toast.LENGTH_SHORT).show();
+                    // Handle more info button click - get full plant details and navigate to detail page
+                    if (currentPlant != null) {
+                        getFullPlantDetailsAndNavigate(currentPlant.getPlantId());
+                    } else {
+                        Toast.makeText(getContext(), "No plant selected", Toast.LENGTH_SHORT).show();
+                    }
                 }
             });
         }
@@ -245,12 +252,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
             btnRefreshData.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    // Refresh current data type
-                    if (plantGardenMapManager != null && plantGardenMapManager.hasLocationPermission()) {
-                        showCurrentPlace();
-                    } else {
-                        Toast.makeText(getContext(), "Location permission required to refresh data", Toast.LENGTH_SHORT).show();
-                    }
+                    refreshCurrentData();
                 }
             });
         }
@@ -371,19 +373,52 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     
 
     /**
-     * Show nearby data using unified map manager
+     * 刷新当前数据 - 直接调用现有方法
      */
-    private void showCurrentPlace() {
+    private void refreshCurrentData() {
         if (plantGardenMapManager == null) {
+            Toast.makeText(getContext(), "Map not ready", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Show loading message based on current data type
-        String loadingMessage = plantGardenMapManager.isShowingPlants() ? "Searching for nearby plants..." : "Searching for nearby gardens...";
-        Toast.makeText(getContext(), loadingMessage, Toast.LENGTH_SHORT).show();
+        // 检查位置权限
+        if (!plantGardenMapManager.hasLocationPermission()) {
+            Toast.makeText(getContext(), "Location permission required to refresh data", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 显示刷新消息
+        String refreshMessage = plantGardenMapManager.isShowingPlants() ? "Refreshing plants data..." : "Refreshing gardens data...";
+        Toast.makeText(getContext(), refreshMessage, Toast.LENGTH_SHORT).show();
         
-        // 使用统一的地图管理器搜索附近数据
+        Log.d(TAG, "Refreshing current data using existing searchNearbyData() method...");
+        
+        // 直接调用现有的搜索方法
         plantGardenMapManager.searchNearbyData();
+    }
+
+    /**
+     * 定位到当前位置 - 移动地图到用户位置
+     */
+    private void showCurrentPlace() {
+        if (plantGardenMapManager == null) {
+            Toast.makeText(getContext(), "Map not ready", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 检查位置权限
+        if (!plantGardenMapManager.hasLocationPermission()) {
+            Toast.makeText(getContext(), "Location permission required", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 显示定位消息
+        Toast.makeText(getContext(), "Moving to your current location...", Toast.LENGTH_SHORT).show();
+        
+        Log.d(TAG, "Moving map to current location...");
+        
+        // 移动地图到当前位置
+        plantGardenMapManager.getLocationManager().getCurrentLocationAndMove();
     }
     
     
@@ -391,9 +426,65 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
 
     
     /**
+     * 获取完整的植物详情并导航到详情页面
+     */
+    private void getFullPlantDetailsAndNavigate(int plantId) {
+        Log.d(TAG, "Getting full plant details for ID: " + plantId);
+        
+        // Show loading indicator
+        Toast.makeText(getContext(), "Loading plant details...", Toast.LENGTH_SHORT).show();
+        
+        // Get MapDataManager instance
+        MapDataManager dataManager = new MapDataManager(requireContext(), null);
+        
+        // Call API to get full plant details
+        dataManager.getPlantById(plantId, new MapDataManager.MapDataCallback<PlantDto>() {
+            @Override
+            public void onSuccess(PlantDto plantDto) {
+                Log.d(TAG, "Successfully retrieved plant details: " + plantDto.getName());
+                
+                // Convert PlantDto to Plant object
+                com.example.myapplication.ui.myplants.Plant plant = plantDto.toPlant();
+                
+                // Navigate to PlantDetailFragment
+                navigateToPlantDetail(plant);
+            }
+            
+            @Override
+            public void onError(String message) {
+                Log.e(TAG, "Failed to get plant details: " + message);
+                Toast.makeText(getContext(), "Failed to load plant details: " + message, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+    
+    /**
+     * 导航到植物详情页面
+     */
+    private void navigateToPlantDetail(com.example.myapplication.ui.myplants.Plant plant) {
+        try {
+            Log.d(TAG, "Navigating to plant detail for: " + plant.getName());
+            
+            // Create bundle with plant data
+            Bundle args = new Bundle();
+            args.putParcelable(PlantDetailFragment.ARG_PLANT, plant);
+            
+            // Navigate to PlantDetailFragment
+            Navigation.findNavController(requireView()).navigate(R.id.plantDetailFragment, args);
+            
+            // Hide bottom sheet after navigation
+            hideBottomSheet();
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to navigate to plant detail", e);
+            Toast.makeText(getContext(), "Failed to open plant details", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
      * 显示植物信息底部弹窗
      */
-    private void showPlantBottomSheet(PlantDto plant) {
+    private void showPlantBottomSheet(PlantMapDto plant) {
         Log.d(TAG, "showPlantBottomSheet called with: " + plant.getName());
 
         if (bottomSheetContainer != null) {
@@ -408,9 +499,6 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
             }
             if (tvDescription != null) {
                 String description = plant.getDescription() != null ? plant.getDescription() : "No description available";
-                if (plant.getScientificName() != null) {
-                    description += "\nScientific Name: " + plant.getScientificName();
-                }
                 tvDescription.setText(description);
             }
             if (tvTime != null) {

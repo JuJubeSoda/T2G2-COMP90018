@@ -5,7 +5,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.example.myapplication.model.Garden;
-import com.example.myapplication.network.PlantDto;
+import com.example.myapplication.network.PlantMapDto;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -37,7 +37,7 @@ public class MapDisplayManager {
     private GeoJsonLayer currentGeoJsonLayer;
     private List<Marker> currentPlantMarkers = new ArrayList<>();
     private List<Marker> currentGardenMarkers = new ArrayList<>();
-    private List<PlantDto> currentPlants = new ArrayList<>();
+    private List<PlantMapDto> currentPlants = new ArrayList<>();
     private List<Garden> currentGardens = new ArrayList<>();
     
     // 回调接口
@@ -46,7 +46,7 @@ public class MapDisplayManager {
     }
     
     public interface OnPlantMapClickListener {
-        void onPlantClick(PlantDto plant);
+        void onPlantClick(PlantMapDto plant);
     }
     
     private OnGardenMapClickListener gardenClickListener;
@@ -68,14 +68,14 @@ public class MapDisplayManager {
     /**
      * 在地图上显示植物列表 - 使用Marker方式（适合频繁刷新）
      */
-    public void displayPlantsOnMap(List<PlantDto> plants) {
+    public void displayPlantsOnMap(List<PlantMapDto> plants) {
         Log.d(TAG, "=== Display Plants Debug ===");
         Log.d(TAG, "Received plants list: " + (plants == null ? "null" : "size=" + plants.size()));
         Log.d(TAG, "GoogleMap instance: " + (googleMap == null ? "null" : "available"));
         
         if (plants != null) {
             for (int i = 0; i < plants.size(); i++) {
-                PlantDto plant = plants.get(i);
+                PlantMapDto plant = plants.get(i);
                 Log.d(TAG, "Plant " + i + ": " + plant.toString());
                 Log.d(TAG, "  - Name: " + plant.getName());
                 Log.d(TAG, "  - Latitude: " + plant.getLatitude());
@@ -90,7 +90,7 @@ public class MapDisplayManager {
         
         int validPlants = 0;
         if (plants != null) {
-            for (PlantDto plant : plants) {
+            for (PlantMapDto plant : plants) {
                 if (plant.getLatitude() != null && plant.getLongitude() != null) {
                     Log.d(TAG, "Adding marker for plant: " + plant.getName() + " at (" + plant.getLatitude() + ", " + plant.getLongitude() + ")");
                     try {
@@ -152,7 +152,7 @@ public class MapDisplayManager {
     /**
      * 添加单个植物标记
      */
-    private void addPlantMarker(PlantDto plant) {
+    private void addPlantMarker(PlantMapDto plant) {
         Log.d(TAG, "=== Add Plant Marker Debug ===");
         Log.d(TAG, "Plant: " + plant.getName());
         Log.d(TAG, "Coordinates: (" + plant.getLatitude() + ", " + plant.getLongitude() + ")");
@@ -194,10 +194,10 @@ public class MapDisplayManager {
     /**
      * 移除单个植物标记
      */
-    private void removePlantMarker(PlantDto plant) {
+    private void removePlantMarker(PlantMapDto plant) {
         for (int i = currentPlantMarkers.size() - 1; i >= 0; i--) {
             Marker marker = currentPlantMarkers.get(i);
-            PlantDto markerPlant = (PlantDto) marker.getTag();
+            PlantMapDto markerPlant = (PlantMapDto) marker.getTag();
             if (markerPlant != null && markerPlant.getPlantId() == plant.getPlantId()) {
                 marker.remove();
                 currentPlantMarkers.remove(i);
@@ -411,7 +411,7 @@ public class MapDisplayManager {
      * 处理植物标记点击事件
      */
     public boolean handlePlantMarkerClick(Marker marker) {
-        PlantDto plant = (PlantDto) marker.getTag();
+        PlantMapDto plant = (PlantMapDto) marker.getTag();
         if (plant != null && plantClickListener != null) {
             plantClickListener.onPlantClick(plant);
             return true;

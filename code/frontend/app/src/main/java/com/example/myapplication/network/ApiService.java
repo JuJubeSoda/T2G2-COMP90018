@@ -38,6 +38,15 @@ public interface ApiService {
     @GET("/api/plants/by-user")
     Call<ApiResponse<List<PlantDto>>> getPlantsByUser();
 
+    /**
+     * Fetches a single plant by its ID.
+     * Used for getting detailed plant information from map.
+     * @param plantId The ID of the plant to fetch
+     * @return Call containing ApiResponse with single PlantDto
+     */
+    @GET("/api/plants/{id}")
+    Call<ApiResponse<PlantDto>> getPlantById(@retrofit2.http.Path("id") int plantId);
+
     @GET("api/ai_bot/ask")
     Call<BaseResponse> askQuestion(@Query("q") String question);
 

@@ -2,9 +2,11 @@ package com.example.myapplication.map;
 
 import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.example.myapplication.model.Garden;
 import com.example.myapplication.network.PlantDto;
+import com.example.myapplication.network.PlantMapDto;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -75,7 +77,7 @@ public class PlantGardenMapManager {
     private void setupClickListeners() {
         displayManager.setOnPlantClickListener(new MapDisplayManager.OnPlantMapClickListener() {
             @Override
-            public void onPlantClick(PlantDto plant) {
+            public void onPlantClick(PlantMapDto plant) {
                 if (onPlantGardenMapInteractionListener != null) {
                     onPlantGardenMapInteractionListener.onPlantClick(plant);
                 }
@@ -161,12 +163,16 @@ public class PlantGardenMapManager {
                 
                 // 修复：先在地图上显示植物
                 Log.d(TAG, "Displaying plants on map...");
-                displayManager.displayPlantsOnMap(plants);
+                // display handled in data manager via PlantMapDto conversion
+                // no-op here
                 Log.d(TAG, "Plants displayed on map successfully");
                 
                 if (onPlantGardenMapInteractionListener != null) {
-                    Log.d(TAG, "Listener is not null, calling onPlantsFound");
-                    onPlantGardenMapInteractionListener.onPlantsFound(plants);
+                    Log.d(TAG, "Listener is not null, calling onPlantsFound (map dtos)");
+                    // convert for callback convenience if needed
+                    java.util.ArrayList<PlantMapDto> mapDtos = new java.util.ArrayList<>();
+                    for (PlantDto p : plants) mapDtos.add(PlantMapDto.fromPlantDto(p));
+                    onPlantGardenMapInteractionListener.onPlantsFound(mapDtos);
                     Log.d(TAG, "onPlantsFound called successfully");
                 } else {
                     Log.e(TAG, "onPlantGardenMapInteractionListener is null!");
@@ -229,7 +235,7 @@ public class PlantGardenMapManager {
     /**
      * 增量更新植物显示（添加新植物）
      */
-    public void addNewPlants(List<PlantDto> newPlants) {
+    public void addNewPlants(List<PlantMapDto> newPlants) {
         if (isShowingPlants) {
             displayManager.addNewPlants(newPlants);
         }
@@ -238,7 +244,7 @@ public class PlantGardenMapManager {
     /**
      * 移除植物显示
      */
-    public void removePlants(List<PlantDto> plantsToRemove) {
+    public void removePlants(List<PlantMapDto> plantsToRemove) {
         if (isShowingPlants) {
             displayManager.removePlants(plantsToRemove);
         }
@@ -247,7 +253,7 @@ public class PlantGardenMapManager {
     /**
      * 刷新植物显示（全量更新）
      */
-    public void refreshPlants(List<PlantDto> plants) {
+    public void refreshPlants(List<PlantMapDto> plants) {
         if (isShowingPlants) {
             displayManager.displayPlantsOnMap(plants);
         }
@@ -302,6 +308,7 @@ public class PlantGardenMapManager {
         locationManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
     
+
     /**
      * 清除当前显示
      */
@@ -328,6 +335,13 @@ public class PlantGardenMapManager {
     
     public android.location.Location getLastKnownLocation() {
         return locationManager.getLastKnownLocation();
+    }
+    
+    /**
+     * 获取位置管理器
+     */
+    public MapLocationManager getLocationManager() {
+        return locationManager;
     }
     
     // 交互监听器
@@ -359,9 +373,9 @@ public class PlantGardenMapManager {
      * 植物花园地图交互监听器接口
      */
     public interface OnPlantGardenMapInteractionListener {
-        void onPlantClick(PlantDto plant);
+        void onPlantClick(PlantMapDto plant);
         void onGardenClick(Garden garden);
-        void onPlantsFound(java.util.List<PlantDto> plants);
+        void onPlantsFound(java.util.List<PlantMapDto> plants);
         void onGardensFound(java.util.List<Garden> gardens);
         void onSearchError(String message);
         void onDataTypeChanged(boolean isShowingPlants);

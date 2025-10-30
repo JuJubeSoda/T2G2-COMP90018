@@ -6,6 +6,7 @@ import android.widget.Toast;
 
 import com.example.myapplication.model.Garden;
 import com.example.myapplication.network.PlantDto;
+import com.example.myapplication.network.PlantMapDto;
 import com.example.myapplication.network.ApiClient;
 import com.example.myapplication.network.ApiResponse;
 import com.example.myapplication.network.ApiService;
@@ -49,7 +50,12 @@ public class MapDataManager {
                     showToast("No plants found nearby");
                     return;
                 }
-                mapDisplayManager.displayPlantsOnMap(plants);
+                // Convert to PlantMapDto for map popup usage
+                java.util.ArrayList<PlantMapDto> mapDtos = new java.util.ArrayList<>();
+                for (PlantDto p : plants) {
+                    mapDtos.add(PlantMapDto.fromPlantDto(p));
+                }
+                mapDisplayManager.displayPlantsOnMap(mapDtos);
             }
             
             @Override
@@ -216,6 +222,27 @@ public class MapDataManager {
     public interface MapDataCallback<T> {
         void onSuccess(T data);
         void onError(String message);
+    }
+    
+    /**
+     * 根据植物ID获取完整的植物详情
+     */
+    public void getPlantById(int plantId, MapDataCallback<PlantDto> callback) {
+        Log.d(TAG, "Getting plant details for ID: " + plantId);
+        
+        Call<ApiResponse<PlantDto>> call = apiService.getPlantById(plantId);
+        call.enqueue(new Callback<ApiResponse<PlantDto>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<PlantDto>> call, Response<ApiResponse<PlantDto>> response) {
+                handleApiResponse(response, "plant details", callback);
+            }
+            
+            @Override
+            public void onFailure(Call<ApiResponse<PlantDto>> call, Throwable t) {
+                Log.e(TAG, "Network call failed for plant details", t);
+                callback.onError("Network error: " + t.getMessage());
+            }
+        });
     }
     
     /**
