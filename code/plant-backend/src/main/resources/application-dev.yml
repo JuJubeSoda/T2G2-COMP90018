@@ -5,12 +5,10 @@ spring:
     password: "DAb1239df0#!sd"
     driver-class-name: org.postgresql.Driver
 
+
+
 logging:
   level:
     org.unimelb: debug
     com.baomidou.mybatisplus: debug
     org.apache.ibatis: debug
-
-# OpenAI配置
-openai:
-  api-key: "sk-placeholder-key-for-testing"

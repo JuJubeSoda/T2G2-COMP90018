@@ -36,6 +36,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 && !uri.endsWith("/user/logout")
                 && !uri.endsWith("/user/reg")
                 && !uri.contains("/sms")
+                && !uri.contains("/api/plant-ai")
+                && !uri.contains("/health")
+                && !uri.contains("/test")
         ) {
 
             String token = request.getHeader("Authorization");

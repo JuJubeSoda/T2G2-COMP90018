@@ -1,6 +1,8 @@
 package com.example.myapplication.ui.home; // Or your package
 
 import android.content.Context;
+import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,12 +11,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.bumptech.glide.Glide;
 import com.example.myapplication.R;
 import com.example.myapplication.ui.home.DiscoveryItem;
 import java.util.List;
 
 public class DiscoveryAdapter extends RecyclerView.Adapter<DiscoveryAdapter.ViewHolder> {
 
+    private static final String TAG = "DiscoveryAdapter";
     private Context context;
     private List<DiscoveryItem> discoveryList;
 
@@ -38,8 +42,22 @@ public class DiscoveryAdapter extends RecyclerView.Adapter<DiscoveryAdapter.View
         holder.nameTextView.setText(item.getName());
         holder.distanceTextView.setText(item.getDistance());
 
-        // Ensure your item_discovery_card.xml has an ImageView with id image_discovery_photo
-        if (item.getImageResId() != 0) {
+        // Load image from Base64 if available, otherwise use resource ID
+        if (item.hasBase64Image()) {
+            try {
+                byte[] imageBytes = Base64.decode(item.getBase64Image(), Base64.DEFAULT);
+                Glide.with(context)
+                    .load(imageBytes)
+                    .placeholder(R.drawable.plantbulb_foreground)
+                    .error(R.drawable.plantbulb_foreground)
+                    .centerCrop()
+                    .into(holder.photoImageView);
+                Log.d(TAG, "Loaded Base64 image for: " + item.getName());
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to decode Base64 image for: " + item.getName(), e);
+                holder.photoImageView.setImageResource(R.drawable.plantbulb_foreground);
+            }
+        } else if (item.getImageResId() != 0) {
             holder.photoImageView.setImageResource(item.getImageResId());
         } else {
             holder.photoImageView.setImageResource(R.drawable.plantbulb_foreground); // Fallback

@@ -54,6 +54,12 @@
             app:destination="@id/mainActivity2" /> -->
     </fragment>
 
+    <fragment
+        android:id="@+id/plantwiki_maintab"
+        android:name="com.example.myapplication.ui.myplants.PlantWikiMainTabFragment"
+        android:label="Plant Wiki"
+        tools:layout="@layout/plantwiki_maintab" />
+
     <!--
         Upload Destination (CaptureFragment): Represents the first step in the plant upload process,
         likely for capturing an image of the plant.

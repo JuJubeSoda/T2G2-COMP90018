@@ -1,4 +1,3 @@
-
 package com.example.myapplication.ui.myplants;
 
 import android.os.Bundle;
@@ -7,6 +6,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -17,18 +17,81 @@ import com.bumptech.glide.Glide;
 import com.example.myapplication.R;
 import com.example.myapplication.databinding.PlantdetailBinding;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
+import java.util.stream.Collectors;
 
+/**
+ * PlantDetailFragment - Displays detailed information for user-collected plants.
+ * 
+ * Purpose:
+ * - Show comprehensive details for plants in My Garden
+ * - Display plant image, name, scientific name
+ * - Show location, discovery date, discovered by
+ * - Display tags and description
+ * - Handle date parsing from backend
+ * 
+ * User Flow:
+ * 1. User clicks plant tile in MyGardenFragment
+ * 2. Fragment displays full plant details
+ * 3. User can navigate back via back button
+ * 
+ * Key Features:
+ * - Base64 image decoding and display
+ * - Robust date parsing (multiple ISO 8601 formats)
+ * - Location coordinate formatting
+ * - Tag list display
+ * - Progress indicator during loading
+ * - Error handling with fallback text
+ * 
+ * Data Source:
+ * - Plant object passed from MyGardenFragment
+ * - Data from user uploads via UploadFragment
+ * - Stored in backend database
+ * 
+ * Navigation:
+ * - From: MyGardenFragment (plant tile click)
+ * - Back: Navigation up arrow
+ */
 public class PlantDetailFragment extends Fragment {
 
+    public static final String ARG_PLANT = "plant_argument";
     private static final String TAG = "PlantDetailFragment";
-    public static final String ARG_PLANT = "plant_object";
 
+    /** View binding for plantdetail.xml layout */
     private PlantdetailBinding binding;
-    private Plant currentPlant;
+    
+    /** Plant data to display */
+    private Plant plant;
 
+    /**
+     * Fragment creation lifecycle method.
+     * Retrieves Plant object and validates it.
+     * Navigates back if Plant is null (error state).
+     */
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        if (getArguments() != null) {
+            plant = getArguments().getParcelable(ARG_PLANT);
+        }
+
+        // Handle missing Plant data
+        if (plant == null) {
+            Log.e(TAG, "CRITICAL: Plant object is null. Cannot display details.");
+            Toast.makeText(getContext(), "Error: Could not load plant data.", Toast.LENGTH_LONG).show();
+            if (getParentFragmentManager().getBackStackEntryCount() > 0) {
+                getParentFragmentManager().popBackStack();
+            }
+        }
+    }
+
+    /** Inflates the layout using View Binding. */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -36,85 +99,139 @@ public class PlantDetailFragment extends Fragment {
         return binding.getRoot();
     }
 
+    /**
+     * Sets up UI after view is created.
+     * 
+     * Process:
+     * 1. Shows progress bar
+     * 2. Populates UI if Plant exists
+     * 3. Hides progress bar
+     * 4. Sets up back button navigation
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        binding.backButtonDetail.setOnClickListener(v -> {
-            Navigation.findNavController(v).popBackStack();
-        });
+        // Show loading indicator
+        binding.progressBar.setVisibility(View.VISIBLE);
 
-        if (getArguments() != null) {
-            currentPlant = getArguments().getParcelable(ARG_PLANT);
-            if (currentPlant != null) {
-                populateUI(currentPlant);
-            } else {
-                Log.e(TAG, "Plant object received from arguments is null.");
-            }
+        if (plant != null) {
+            populateUi();
+            binding.progressBar.setVisibility(View.GONE);
+        } else {
+            binding.progressBar.setVisibility(View.GONE);
+            Toast.makeText(getContext(), "Error: Could not load plant data.", Toast.LENGTH_LONG).show();
         }
+
+        // Setup back navigation
+        binding.backButtonDetail.setOnClickListener(v ->
+                Navigation.findNavController(v).navigateUp()
+        );
     }
 
-    private void populateUI(Plant plant) {
-        Log.d(TAG, "Populating UI for plant: " + plant.getName());
+    /**
+     * Populates all UI fields with plant data.
+     * 
+     * Displays:
+     * - Scientific name
+     * - Description/introduction
+     * - Location coordinates (latitude, longitude)
+     * - Tags (comma-separated list)
+     * - Discovered by (username)
+     * - Discovery date (formatted from ISO 8601)
+     * - Plant image (Base64 decoded)
+     * 
+     * Error Handling:
+     * - Null checks for all fields
+     * - Fallback text for missing data
+     * - Multiple date format parsing attempts
+     * - Image loading with placeholder on error
+     * - Try-catch blocks for robust error handling
+     */
+    private void populateUi() {
+        // Populate text fields with null safety
+        try {
+            binding.textViewScientificName.setText(plant.getScientificName() != null ? plant.getScientificName() : "Not available");
+            binding.textViewIntroduction.setText(plant.getDescription() != null ? plant.getDescription() : "No description available");
 
-        binding.textViewPageTitle.setText(plant.getName());
-        binding.textViewScientificName.setText(plant.getScientificName());
-        binding.textViewIntroduction.setText(plant.getIntroduction());
-        binding.textViewLocation.setText(plant.getLocation());
-        binding.textViewSearchTag.setText(plant.getSearchTag());
-        binding.textViewDiscoveredBy.setText(plant.getDiscoveredBy());
+            // Format location coordinates
+            String locationString = "Location not available";
+            if (plant.getLatitude() != null && plant.getLongitude() != null) {
+                locationString = String.format(Locale.getDefault(), "(%.4f, %.4f)", plant.getLatitude(), plant.getLongitude());
+            }
+            binding.textViewLocation.setText(locationString);
 
-        if (plant.getDiscoveredOn() > 0) {
-            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
-            String formattedDate = sdf.format(new Date(plant.getDiscoveredOn()));
-            binding.textViewDiscoveredOn.setText(formattedDate);
-        } else {
-            binding.textViewDiscoveredOn.setText("N/A");
+            // Format tags as comma-separated list
+            String tags = "No tags";
+            List<String> plantTags = plant.getTags();
+            if (plantTags != null && !plantTags.isEmpty()) {
+                tags = plantTags.stream().collect(Collectors.joining(", "));
+            }
+
+            // Display discovered by username
+            String discoveredBy = plant.getDiscoveredBy() != null ? plant.getDiscoveredBy() : "Unknown";
+            binding.textViewDiscoveredBy.setText(discoveredBy);
+        } catch (Exception e) {
+            Log.e(TAG, "Error populating UI with plant data", e);
+            Toast.makeText(getContext(), "Error displaying plant information", Toast.LENGTH_SHORT).show();
         }
 
-        // --- MODIFICATION: Handle Base64 image string for the detail view --- //
-        String base64Image = plant.getImageUrl();
+        // Parse and format discovery date
         try {
-            if (base64Image != null && !base64Image.isEmpty()) {
+            String createdAt = plant.getCreatedAt();
+            
+            if (createdAt == null || createdAt.isEmpty()) {
+                binding.textViewDiscoveredOn.setText("Date not available");
+            } else {
+                SimpleDateFormat displayFormat = new SimpleDateFormat("dd MMMM yyyy", Locale.getDefault());
+                String formattedDate;
+                
+                try {
+                    // Try ISO 8601 with milliseconds
+                    SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+                    isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+                    Date date = isoFormat.parse(createdAt);
+                    formattedDate = displayFormat.format(date);
+                } catch (ParseException e1) {
+                    try {
+                        // Try ISO 8601 without milliseconds
+                        SimpleDateFormat simpleIsoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
+                        simpleIsoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+                        Date date = simpleIsoFormat.parse(createdAt);
+                        formattedDate = displayFormat.format(date);
+                    } catch (ParseException e2) {
+                        // Fallback to raw string
+                        formattedDate = createdAt;
+                    }
+                }
+                
+                binding.textViewDiscoveredOn.setText(formattedDate);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to handle discovery date.", e);
+            binding.textViewDiscoveredOn.setText("Date not available");
+        }
+
+        // Load plant image with Base64 decoding
+        try {
+            String base64Image = plant.getImageUrl();
+            if (base64Image == null || base64Image.isEmpty()) {
+                binding.imageViewPlantPreview.setImageResource(R.drawable.plantbulb_foreground);
+            } else {
                 byte[] imageBytes = Base64.decode(base64Image, Base64.DEFAULT);
                 Glide.with(this)
                         .load(imageBytes)
                         .placeholder(R.drawable.plantbulb_foreground)
                         .error(R.drawable.plantbulb_foreground)
                         .into(binding.imageViewPlantPreview);
-            } else {
-                Glide.with(this)
-                        .load(R.drawable.plantbulb_foreground)
-                        .into(binding.imageViewPlantPreview);
             }
-        } catch (IllegalArgumentException e) {
-            Log.e(TAG, "Failed to decode Base64 string for plant detail view: " + plant.getName(), e);
-            Glide.with(this)
-                    .load(R.drawable.plantbulb_foreground)
-                    .into(binding.imageViewPlantPreview);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to decode or load image for plant: " + (plant.getName() != null ? plant.getName() : "Unknown"), e);
+            binding.imageViewPlantPreview.setImageResource(R.drawable.plantbulb_foreground);
         }
-
-        // TODO: Favourite button logic remains unchanged.
-        /*
-        updateFavouriteIcon(plant.isFavourite());
-        binding.favouriteButton.setOnClickListener(v -> {
-            plant.setFavourite(!plant.isFavourite());
-            updateFavouriteIcon(plant.isFavourite());
-            Log.d(TAG, "Favourite status changed to: " + plant.isFavourite());
-        });
-        */
     }
 
-    private void updateFavouriteIcon(boolean isFavourite) {
-        /*
-        if (isFavourite) {
-            binding.favouriteButton.setImageResource(R.drawable.ic_favourite_selected);
-        } else {
-            binding.favouriteButton.setImageResource(R.drawable.ic_favourite_unselected);
-        }
-        */
-    }
-
+    /** Cleans up view binding to prevent memory leaks. */
     @Override
     public void onDestroyView() {
         super.onDestroyView();

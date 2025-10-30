@@ -19,7 +19,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User user = userMapper.getUserByName(username);
 
         if(user == null){
-            throw  new UsernameNotFoundException("username does not exist");
+            throw  new UsernameNotFoundException("User not found: " + username);
         }
         return new SecurityUser(user);
     }
