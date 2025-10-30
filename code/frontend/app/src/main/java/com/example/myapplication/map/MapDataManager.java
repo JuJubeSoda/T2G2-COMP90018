@@ -2,7 +2,6 @@ package com.example.myapplication.map;
 
 import android.content.Context;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.example.myapplication.model.Garden;
 import com.example.myapplication.network.PlantDto;
@@ -10,7 +9,6 @@ import com.example.myapplication.network.PlantMapDto;
 import com.example.myapplication.network.ApiClient;
 import com.example.myapplication.network.ApiResponse;
 import com.example.myapplication.network.ApiService;
-import com.example.myapplication.map.MapDisplayManager;
 
 import java.util.List;
 
@@ -28,15 +26,13 @@ public class MapDataManager {
     
     private final Context context;
     private final ApiService apiService;
-    private final MapDisplayManager mapDisplayManager;
     
     // 搜索配置
     private static final int DEFAULT_SEARCH_RADIUS = 1000; // meters
     
-    public MapDataManager(Context context, MapDisplayManager mapDisplayManager) {
+    public MapDataManager(Context context) {
         this.context = context;
         this.apiService = ApiClient.create(context);
-        this.mapDisplayManager = mapDisplayManager;
     }
     
     // 便捷重载移除：统一由上层协调层处理数据与显示
@@ -167,10 +163,6 @@ public class MapDataManager {
                 callback.onError("Network error: " + t.getMessage());
             }
         });
-    }
-    
-    private void showToast(String message) {
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
     }
     
     /**

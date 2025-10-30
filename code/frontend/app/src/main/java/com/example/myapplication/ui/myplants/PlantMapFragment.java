@@ -434,8 +434,16 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
         // Show loading indicator
         Toast.makeText(getContext(), "Loading plant details...", Toast.LENGTH_SHORT).show();
         
-        // Get MapDataManager instance
-        MapDataManager dataManager = new MapDataManager(requireContext(), null);
+        // Use existing plantGardenMapManager's dataManager if available, otherwise create new instance
+        if (plantGardenMapManager == null) {
+            Log.e(TAG, "PlantGardenMapManager is null, cannot get plant details");
+            Toast.makeText(getContext(), "Map not ready", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Create a temporary MapDataManager for getting plant details
+        // Note: This is independent of the map display flow
+        MapDataManager dataManager = new MapDataManager(requireContext());
         
         // Call API to get full plant details
         dataManager.getPlantById(plantId, new MapDataManager.MapDataCallback<PlantDto>() {

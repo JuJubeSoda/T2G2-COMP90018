@@ -39,7 +39,7 @@ public class PlantGardenMapManager {
         // 初始化子管理器
         this.locationManager = new MapLocationManager(context, googleMap);
         this.displayManager = new MapDisplayManager(context, googleMap);
-        this.dataManager = new MapDataManager(context, displayManager);
+        this.dataManager = new MapDataManager(context);
         
         // 设置智能半径变化监听器
         setupSmartRadiusListener();
@@ -159,19 +159,20 @@ public class PlantGardenMapManager {
                 }
                 Log.d(TAG, "=== End Search Plants Success Debug ===");
                 
-                Log.d(TAG, "Calling onPlantsFound callback...");
+                // 先转换数据
+                java.util.ArrayList<PlantMapDto> mapDtos = new java.util.ArrayList<>();
+                for (PlantDto p : plants) {
+                    mapDtos.add(PlantMapDto.fromPlantDto(p));
+                }
                 
-                // 修复：先在地图上显示植物
-                Log.d(TAG, "Displaying plants on map...");
                 // 统一在协调层进行渲染
+                Log.d(TAG, "Displaying plants on map...");
                 displayManager.displayPlantsOnMap(mapDtos);
                 Log.d(TAG, "Plants displayed on map successfully");
                 
+                // 通知外部监听器
                 if (onPlantGardenMapInteractionListener != null) {
                     Log.d(TAG, "Listener is not null, calling onPlantsFound (map dtos)");
-                    // convert for callback convenience if needed
-                    java.util.ArrayList<PlantMapDto> mapDtos = new java.util.ArrayList<>();
-                    for (PlantDto p : plants) mapDtos.add(PlantMapDto.fromPlantDto(p));
                     onPlantGardenMapInteractionListener.onPlantsFound(mapDtos);
                     Log.d(TAG, "onPlantsFound called successfully");
                 } else {
@@ -201,6 +202,15 @@ public class PlantGardenMapManager {
         dataManager.searchNearbyGardens(latitude, longitude, radius, new MapDataManager.MapDataCallback<List<Garden>>() {
             @Override
             public void onSuccess(List<Garden> gardens) {
+                Log.d(TAG, "=== Search Gardens Success Debug ===");
+                Log.d(TAG, "Gardens found: " + (gardens == null ? "null" : gardens.size()));
+                
+                // 统一在协调层进行渲染
+                Log.d(TAG, "Displaying gardens on map...");
+                displayManager.displayGardensOnMap(gardens);
+                Log.d(TAG, "Gardens displayed on map successfully");
+                
+                // 通知外部监听器
                 if (onPlantGardenMapInteractionListener != null) {
                     onPlantGardenMapInteractionListener.onGardensFound(gardens);
                 }
@@ -208,6 +218,7 @@ public class PlantGardenMapManager {
             
             @Override
             public void onError(String message) {
+                Log.e(TAG, "Search Gardens Error: " + message);
                 if (onPlantGardenMapInteractionListener != null) {
                     onPlantGardenMapInteractionListener.onSearchError(message);
                 }
