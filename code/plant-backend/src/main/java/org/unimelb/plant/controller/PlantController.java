@@ -36,7 +36,7 @@ public class PlantController {
 
 
     @Operation(summary = "Search liked plants by User Id")
-    @GetMapping("/by-user")
+    @GetMapping("/liked-by-user")
     public Result<List<Plant>> listLikedByUser() {
 
         List<Plant> list= plantService.listLikedPlantsByUser();
