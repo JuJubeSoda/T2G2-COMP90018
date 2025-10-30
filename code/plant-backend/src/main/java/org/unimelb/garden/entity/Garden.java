@@ -30,11 +30,6 @@ public class Garden implements Serializable {
     private String name;
 
     /**
-     * description
-     */
-    private String description;
-
-    /**
      * postcode
      */
     private String postcode;
