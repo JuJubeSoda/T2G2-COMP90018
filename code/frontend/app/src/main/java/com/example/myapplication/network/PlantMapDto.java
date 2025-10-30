@@ -192,7 +192,6 @@ public class PlantMapDto implements Serializable {
                 ", name='" + name + '\'' +
                 ", latitude=" + latitude +
                 ", longitude=" + longitude +
-                ", isFavourite=" + isFavourite +
                 '}';
     }
 

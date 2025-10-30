@@ -17,6 +17,7 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.VisibleRegion;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.example.myapplication.util.LogUtil;
 
 /**
  * 地图位置管理器 - 负责处理地图位置相关的功能
@@ -100,7 +101,7 @@ public class MapLocationManager {
                 googleMap.setPadding(0, 0, 0, 0);
             }
         } catch (SecurityException e) {
-            Log.e(TAG, "Exception: " + e.getMessage(), e);
+            LogUtil.e(TAG, "Exception: " + e.getMessage(), e);
         }
     }
     
@@ -128,8 +129,8 @@ public class MapLocationManager {
                                 callback.onLocationError("Current location is null");
                             }
                         } else {
-                            Log.d(TAG, "Current location is null. Using defaults.");
-                            Log.e(TAG, "Exception: %s", task.getException());
+                            LogUtil.d(TAG, "Current location is null. Using defaults.");
+                            LogUtil.e(TAG, "Exception: %s", task.getException());
                             moveToDefaultLocation();
                             callback.onLocationError("Failed to get location: " + task.getException());
                         }
@@ -140,7 +141,7 @@ public class MapLocationManager {
                 callback.onLocationError("Location permission not granted");
             }
         } catch (SecurityException e) {
-            Log.e(TAG, "Exception: " + e.getMessage(), e);
+            LogUtil.e(TAG, "Exception: " + e.getMessage(), e);
             callback.onLocationError("Security exception: " + e.getMessage());
         }
     }
@@ -160,12 +161,12 @@ public class MapLocationManager {
         getDeviceLocation(new OnLocationResultCallback() {
             @Override
             public void onLocationSuccess(Location location) {
-                Log.d(TAG, "Successfully moved to current location");
+                LogUtil.d(TAG, "Successfully moved to current location");
             }
             
             @Override
             public void onLocationError(String error) {
-                Log.e(TAG, "Failed to get current location: " + error);
+                LogUtil.e(TAG, "Failed to get current location: " + error);
             }
         });
     }
@@ -248,11 +249,11 @@ public class MapLocationManager {
             // 设置合理的半径范围（最小100米，最大10000米）
             radius = Math.max(100, Math.min(radius, 10000));
             
-            Log.d(TAG, "Calculated map radius: " + radius + " meters");
+            LogUtil.d(TAG, "Calculated map radius: " + radius + " meters");
             return radius;
             
         } catch (Exception e) {
-            Log.e(TAG, "Failed to calculate map radius", e);
+            LogUtil.e(TAG, "Failed to calculate map radius", e);
             return getDefaultSearchRadius();
         }
     }
@@ -282,7 +283,7 @@ public class MapLocationManager {
             CameraPosition cameraPosition = googleMap.getCameraPosition();
             return getRadiusByZoom(cameraPosition.zoom);
         } catch (Exception e) {
-            Log.e(TAG, "Failed to get camera radius", e);
+            LogUtil.e(TAG, "Failed to get camera radius", e);
             return getDefaultSearchRadius();
         }
     }
@@ -299,11 +300,11 @@ public class MapLocationManager {
      * 若地图未就绪则返回默认位置
      */
     public LatLng getCameraCenter() {
-        Log.d(TAG, "=== getCameraCenter Debug ===");
+        LogUtil.d(TAG, "=== getCameraCenter Debug ===");
         
         if (googleMap == null) {
-            Log.w(TAG, "GoogleMap is null, using default location (Sydney)");
-            Log.d(TAG, "Default location: (" + defaultLocation.latitude + ", " + defaultLocation.longitude + ")");
+            LogUtil.w(TAG, "GoogleMap is null, using default location (Sydney)");
+            LogUtil.d(TAG, "Default location: (" + defaultLocation.latitude + ", " + defaultLocation.longitude + ")");
             return defaultLocation;
         }
         
@@ -312,7 +313,7 @@ public class MapLocationManager {
             VisibleRegion visibleRegion = googleMap.getProjection().getVisibleRegion();
             if (visibleRegion != null && visibleRegion.latLngBounds != null) {
                 LatLng center = visibleRegion.latLngBounds.getCenter();
-                Log.d(TAG, "Using visible region center: (" + center.latitude + ", " + center.longitude + ")");
+                LogUtil.d(TAG, "Using visible region center: (" + center.latitude + ", " + center.longitude + ")");
                 return center;
             }
             
@@ -320,15 +321,15 @@ public class MapLocationManager {
             CameraPosition cameraPosition = googleMap.getCameraPosition();
             if (cameraPosition != null && cameraPosition.target != null) {
                 LatLng target = cameraPosition.target;
-                Log.d(TAG, "Using camera position target: (" + target.latitude + ", " + target.longitude + ")");
+                LogUtil.d(TAG, "Using camera position target: (" + target.latitude + ", " + target.longitude + ")");
                 return target;
             }
             
-            Log.w(TAG, "Cannot get camera center from visible region or camera position, using default");
+            LogUtil.w(TAG, "Cannot get camera center from visible region or camera position, using default");
             return defaultLocation;
         } catch (Exception e) {
-            Log.e(TAG, "Failed to get camera center, fallback to default", e);
-            Log.d(TAG, "Default location: (" + defaultLocation.latitude + ", " + defaultLocation.longitude + ")");
+            LogUtil.e(TAG, "Failed to get camera center, fallback to default", e);
+            LogUtil.d(TAG, "Default location: (" + defaultLocation.latitude + ", " + defaultLocation.longitude + ")");
             return defaultLocation;
         }
     }
@@ -367,17 +368,17 @@ public class MapLocationManager {
      * 获取智能搜索半径（结合可见区域和缩放级别）
      */
     public int getSmartSearchRadius() {
-        Log.d(TAG, "=== getSmartSearchRadius Debug ===");
+        LogUtil.d(TAG, "=== getSmartSearchRadius Debug ===");
         
         if (googleMap == null) {
-            Log.w(TAG, "GoogleMap is null, using default radius: " + getDefaultSearchRadius() + "m");
+            LogUtil.w(TAG, "GoogleMap is null, using default radius: " + getDefaultSearchRadius() + "m");
             return getDefaultSearchRadius();
         }
         
         try {
             // 获取基于可见区域的半径
             int visibleRadius = getCurrentMapRadius();
-            Log.d(TAG, "Visible radius: " + visibleRadius + "m");
+            LogUtil.d(TAG, "Visible radius: " + visibleRadius + "m");
             
             // 获取基于缩放级别的半径
             int zoomRadius = getCurrentCameraRadius();
@@ -385,25 +386,25 @@ public class MapLocationManager {
             // 获取当前缩放级别用于调试
             CameraPosition cameraPosition = googleMap.getCameraPosition();
             if (cameraPosition != null) {
-                Log.d(TAG, "Current zoom level: " + cameraPosition.zoom);
+                LogUtil.d(TAG, "Current zoom level: " + cameraPosition.zoom);
             }
-            Log.d(TAG, "Zoom-based radius: " + zoomRadius + "m");
+            LogUtil.d(TAG, "Zoom-based radius: " + zoomRadius + "m");
             
             // 取两者的较小值，确保搜索范围合理
             int smartRadius = Math.min(visibleRadius, zoomRadius);
             
-            Log.d(TAG, "Final smart radius: " + smartRadius + "m (min of visible: " + visibleRadius + "m and zoom: " + zoomRadius + "m)");
+            LogUtil.d(TAG, "Final smart radius: " + smartRadius + "m (min of visible: " + visibleRadius + "m and zoom: " + zoomRadius + "m)");
             
             // 半径范围检查
             if (smartRadius > 50000) {
-                Log.w(TAG, "WARNING: Smart radius is very large: " + smartRadius + "m (>50km)!");
+                LogUtil.w(TAG, "WARNING: Smart radius is very large: " + smartRadius + "m (>50km)!");
             }
             
             return smartRadius;
             
         } catch (Exception e) {
-            Log.e(TAG, "Failed to calculate smart search radius", e);
-            Log.d(TAG, "Using default radius: " + getDefaultSearchRadius() + "m");
+            LogUtil.e(TAG, "Failed to calculate smart search radius", e);
+            LogUtil.d(TAG, "Using default radius: " + getDefaultSearchRadius() + "m");
             return getDefaultSearchRadius();
         }
     }

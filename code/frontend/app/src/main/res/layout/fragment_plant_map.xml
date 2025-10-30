@@ -71,19 +71,7 @@
         android:elevation="4dp" />
 
     <!-- Bottom sheet container -->
-    <LinearLayout
-        android:id="@+id/bottom_sheet_container"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:orientation="vertical"
-        android:visibility="gone"
-        android:background="@android:color/white"
-        android:elevation="8dp">
-
-        <!-- Placeholder for bottom sheet content -->
-        <include layout="@layout/bottom_sheet_earthquake_info" />
-
-    </LinearLayout>
+    <!-- Note: Bottom sheet content is dynamically managed by PlantMapFragment -->
+    <!-- using PlantBottomSheetDialogFragment and GardenBottomSheetDialogFragment -->
 
 </RelativeLayout>

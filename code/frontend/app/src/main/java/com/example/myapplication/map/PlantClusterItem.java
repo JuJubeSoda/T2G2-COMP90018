@@ -1,6 +1,7 @@
 package com.example.myapplication.map;
 
 import com.example.myapplication.network.PlantMapDto;
+import com.example.myapplication.util.LogUtil;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterItem;
 
@@ -34,6 +35,11 @@ public class PlantClusterItem implements ClusterItem {
     @Override
     public String getSnippet() {
         return snippet;
+    }
+
+    @Override
+    public Float getZIndex() {
+        return 0f;
     }
 
     public PlantMapDto getPlant() {

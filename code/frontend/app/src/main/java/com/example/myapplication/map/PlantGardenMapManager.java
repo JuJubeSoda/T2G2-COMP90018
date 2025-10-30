@@ -14,6 +14,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
 import java.util.List;
+import com.example.myapplication.util.LogUtil;
 
 /**
  * 植物花园地图管理器 - 统一管理植物和花园的地图功能
@@ -53,7 +54,7 @@ public class PlantGardenMapManager {
         // 设置智能半径变化监听器
         setupSmartRadiusListener();
         
-        Log.d(TAG, "PlantGardenMapManager initialized");
+        LogUtil.d(TAG, "PlantGardenMapManager initialized");
     }
     
     /**
@@ -70,12 +71,12 @@ public class PlantGardenMapManager {
         locationManager.getDeviceLocation(new MapLocationManager.OnLocationResultCallback() {
             @Override
             public void onLocationSuccess(android.location.Location location) {
-                Log.d(TAG, "Device location obtained successfully");
+                LogUtil.d(TAG, "Device location obtained successfully");
             }
             
             @Override
             public void onLocationError(String error) {
-                Log.e(TAG, "Failed to get device location: " + error);
+                LogUtil.e(TAG, "Failed to get device location: " + error);
             }
         });
     }
@@ -121,39 +122,39 @@ public class PlantGardenMapManager {
      * 搜索附近数据（根据当前模式搜索植物或花园）
      */
     public void searchNearbyData() {
-        Log.d(TAG, "=== Search Nearby Data Debug ===");
-        Log.d(TAG, "Current mode: " + (isShowingPlants ? "Plants" : "Gardens"));
+        LogUtil.d(TAG, "=== Search Nearby Data Debug ===");
+        LogUtil.d(TAG, "Current mode: " + (isShowingPlants ? "Plants" : "Gardens"));
 
         // 以相机中心作为查询中心
         com.google.android.gms.maps.model.LatLng center = locationManager.getCameraCenter();
         int radius = locationManager.getSmartSearchRadius();
 
-        Log.d(TAG, "Search parameters (camera center):");
-        Log.d(TAG, "  - Latitude: " + center.latitude);
-        Log.d(TAG, "  - Longitude: " + center.longitude);
-        Log.d(TAG, "  - Radius: " + radius + " meters");
-        Log.d(TAG, "  - Mode: " + (isShowingPlants ? "Plants" : "Gardens"));
+        LogUtil.d(TAG, "Search parameters (camera center):");
+        LogUtil.d(TAG, "  - Latitude: " + center.latitude);
+        LogUtil.d(TAG, "  - Longitude: " + center.longitude);
+        LogUtil.d(TAG, "  - Radius: " + radius + " meters");
+        LogUtil.d(TAG, "  - Mode: " + (isShowingPlants ? "Plants" : "Gardens"));
         
         // 检查是否使用了默认位置（悉尼）
         com.google.android.gms.maps.model.LatLng sydneyDefault = new com.google.android.gms.maps.model.LatLng(-33.8523341, 151.2106085);
         if (Math.abs(center.latitude - sydneyDefault.latitude) < 0.0001 && 
             Math.abs(center.longitude - sydneyDefault.longitude) < 0.0001) {
-            Log.w(TAG, "WARNING: Using default location (Sydney), likely map not ready yet!");
-            Log.w(TAG, "Skipping search to avoid querying wrong location");
+            LogUtil.w(TAG, "WARNING: Using default location (Sydney), likely map not ready yet!");
+            LogUtil.w(TAG, "Skipping search to avoid querying wrong location");
             if (onPlantGardenMapInteractionListener != null) {
                 onPlantGardenMapInteractionListener.onSearchError("Map not ready, please wait");
             }
-            Log.d(TAG, "=== End Search Nearby Data Debug (SKIPPED) ===");
+            LogUtil.d(TAG, "=== End Search Nearby Data Debug (SKIPPED) ===");
             return;
         }
 
         if (isShowingPlants) {
             searchNearbyPlants(center.latitude, center.longitude, radius);
         } else {
-            Log.d(TAG, "Garden mode: fetching all gardens (no nearby search)");
+            LogUtil.d(TAG, "Garden mode: fetching all gardens (no nearby search)");
             fetchAllGardens();
         }
-        Log.d(TAG, "=== End Search Nearby Data Debug ===");
+        LogUtil.d(TAG, "=== End Search Nearby Data Debug ===");
     }
     
     /**
@@ -171,26 +172,26 @@ public class PlantGardenMapManager {
     public void searchNearbyPlants(double latitude, double longitude, int radius) {
         SearchSignature sig = new SearchSignature(latitude, longitude, radius, true);
         if (lastSignature != null && lastSignature.equals(sig)) {
-            Log.d(TAG, "Deduped identical plants search; skipping network call");
+            LogUtil.d(TAG, "Deduped identical plants search; skipping network call");
             return;
         }
         lastSignature = sig;
         if (onPlantGardenMapInteractionListener != null) onPlantGardenMapInteractionListener.onLoading(true);
-        Log.d(TAG, "Searching for nearby plants with radius: " + radius + " meters");
+        LogUtil.d(TAG, "Searching for nearby plants with radius: " + radius + " meters");
         
         dataManager.searchNearbyPlants(latitude, longitude, radius, new MapDataManager.MapDataCallback<List<PlantDto>>() {
             @Override
             public void onSuccess(List<PlantDto> plants) {
-                Log.d(TAG, "=== Search Plants Success Debug ===");
-                Log.d(TAG, "Plants found: " + (plants == null ? "null" : plants.size()));
+                LogUtil.d(TAG, "=== Search Plants Success Debug ===");
+                LogUtil.d(TAG, "Plants found: " + (plants == null ? "null" : plants.size()));
                 if (plants != null && !plants.isEmpty()) {
-                    Log.d(TAG, "First plant details:");
+                    LogUtil.d(TAG, "First plant details:");
                     PlantDto firstPlant = plants.get(0);
-                    Log.d(TAG, "  - Name: " + firstPlant.getName());
-                    Log.d(TAG, "  - Coordinates: (" + firstPlant.getLatitude() + ", " + firstPlant.getLongitude() + ")");
-                    Log.d(TAG, "  - PlantId: " + firstPlant.getPlantId());
+                    LogUtil.d(TAG, "  - Name: " + firstPlant.getName());
+                    LogUtil.d(TAG, "  - Coordinates: (" + firstPlant.getLatitude() + ", " + firstPlant.getLongitude() + ")");
+                    LogUtil.d(TAG, "  - PlantId: " + firstPlant.getPlantId());
                 }
-                Log.d(TAG, "=== End Search Plants Success Debug ===");
+                LogUtil.d(TAG, "=== End Search Plants Success Debug ===");
                 
                 // 先转换数据
                 java.util.ArrayList<PlantMapDto> mapDtos = new java.util.ArrayList<>();
@@ -199,29 +200,29 @@ public class PlantGardenMapManager {
                 }
                 
                 // 统一在协调层进行渲染
-                Log.d(TAG, "Displaying plants on map...");
+                LogUtil.d(TAG, "Displaying plants on map...");
                 displayManager.displayPlantsOnMap(mapDtos);
-                Log.d(TAG, "Plants displayed on map successfully");
+                LogUtil.d(TAG, "Plants displayed on map successfully");
                 
                 // 通知外部监听器
                 if (onPlantGardenMapInteractionListener != null) {
-                    Log.d(TAG, "Listener is not null, calling onPlantsFound (map dtos)");
+                    LogUtil.d(TAG, "Listener is not null, calling onPlantsFound (map dtos)");
                     onPlantGardenMapInteractionListener.onPlantsFound(mapDtos);
-                    Log.d(TAG, "onPlantsFound called successfully");
+                    LogUtil.d(TAG, "onPlantsFound called successfully");
                     if (mapDtos.isEmpty()) {
                         onPlantGardenMapInteractionListener.onEmptyResult("plants");
                     }
                     onPlantGardenMapInteractionListener.onLoading(false);
                 } else {
-                    Log.e(TAG, "onPlantGardenMapInteractionListener is null!");
+                    LogUtil.e(TAG, "onPlantGardenMapInteractionListener is null!");
                 }
             }
             
             @Override
             public void onError(String message) {
-                Log.e(TAG, "=== Search Plants Error Debug ===");
-                Log.e(TAG, "Error message: " + message);
-                Log.e(TAG, "=== End Search Plants Error Debug ===");
+                LogUtil.e(TAG, "=== Search Plants Error Debug ===");
+                LogUtil.e(TAG, "Error message: " + message);
+                LogUtil.e(TAG, "=== End Search Plants Error Debug ===");
                 
                 if (onPlantGardenMapInteractionListener != null) {
                     onPlantGardenMapInteractionListener.onSearchError(message);
@@ -241,7 +242,7 @@ public class PlantGardenMapManager {
         dataManager.fetchAllGardens(new MapDataManager.MapDataCallback<List<GardenDto>>() {
             @Override
             public void onSuccess(List<GardenDto> gardens) {
-                Log.d(TAG, "Displaying gardens on map...");
+                LogUtil.d(TAG, "Displaying gardens on map...");
                 displayManager.displayGardensOnMap(gardens);
                 if (onPlantGardenMapInteractionListener != null) {
                     onPlantGardenMapInteractionListener.onGardensFound(gardens);
@@ -254,7 +255,7 @@ public class PlantGardenMapManager {
 
             @Override
             public void onError(String message) {
-                Log.e(TAG, "Fetch All Gardens Error: " + message);
+                LogUtil.e(TAG, "Fetch All Gardens Error: " + message);
                 if (onPlantGardenMapInteractionListener != null) {
                     onPlantGardenMapInteractionListener.onSearchError(message);
                     onPlantGardenMapInteractionListener.onLoading(false);
@@ -273,7 +274,7 @@ public class PlantGardenMapManager {
         displayManager.clearCurrentDisplay();
         
         String message = isShowingPlants ? "Switched to Plants view" : "Switched to Gardens view";
-        Log.d(TAG, message);
+        LogUtil.d(TAG, message);
         
         if (onPlantGardenMapInteractionListener != null) {
             onPlantGardenMapInteractionListener.onDataTypeChanged(isShowingPlants);
@@ -375,7 +376,7 @@ public class PlantGardenMapManager {
         }
         
         displayManager.destroy();
-        Log.d(TAG, "PlantGardenMapManager destroyed");
+        LogUtil.d(TAG, "PlantGardenMapManager destroyed");
     }
     
     // Getter方法
@@ -412,7 +413,7 @@ public class PlantGardenMapManager {
         locationManager.setOnMapRadiusChangeListener(new MapLocationManager.OnMapRadiusChangeListener() {
             @Override
             public void onMapRadiusChanged(int newRadius) {
-                Log.d(TAG, "Map radius changed to: " + newRadius + " meters");
+                LogUtil.d(TAG, "Map radius changed to: " + newRadius + " meters");
                 handleRadiusChangeWithDebounce();
             }
         });
@@ -426,7 +427,7 @@ public class PlantGardenMapManager {
         
         // 节流：如果距离上次搜索太近，忽略本次请求
         if (currentTime - lastSearchTime < THROTTLE_INTERVAL_MS) {
-            Log.d(TAG, "Throttled: too soon since last search");
+            LogUtil.d(TAG, "Throttled: too soon since last search");
             return;
         }
         
@@ -441,7 +442,7 @@ public class PlantGardenMapManager {
             @Override
             public void run() {
                 // 以相机中心为准，不再依赖设备定位权限
-                Log.d(TAG, "Auto-refreshing data with debounced smart radius (camera center)");
+                LogUtil.d(TAG, "Auto-refreshing data with debounced smart radius (camera center)");
                 lastSearchTime = System.currentTimeMillis();
                 searchNearbyData();
                 pendingSearchRunnable = null;
@@ -450,7 +451,7 @@ public class PlantGardenMapManager {
         
         // 防抖：延迟执行搜索
         debounceHandler.postDelayed(pendingSearchRunnable, DEBOUNCE_DELAY_MS);
-        Log.d(TAG, "Debounce timer started, will search in " + DEBOUNCE_DELAY_MS + "ms");
+        LogUtil.d(TAG, "Debounce timer started, will search in " + DEBOUNCE_DELAY_MS + "ms");
     }
     
     /**
