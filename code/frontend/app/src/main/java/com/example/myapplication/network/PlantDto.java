@@ -6,49 +6,114 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * Unified Plant model for network transmission and data persistence.
- * This class serves as both DTO and domain model.
+ * PlantDto - Data Transfer Object for user-uploaded plants from backend API.
+ * 
+ * Purpose:
+ * - Receives plant data from GET /api/plants endpoints
+ * - Parses JSON responses using Gson
+ * - Converts to domain model (Plant) for app usage
+ * 
+ * API Endpoints Using This DTO:
+ * - GET /api/plants/user - User's personal plant collection
+ * - GET /api/plants/nearby - Public plants from nearby users
+ * - GET /api/plants/{id} - Single plant details
+ * 
+ * Key Differences from PlantWikiDto:
+ * - Includes user-specific data (userId, gardenId, isFavourite)
+ * - Has GPS coordinates (latitude, longitude)
+ * - Contains timestamps (createdAt, updatedAt)
+ * - May have user-generated tags and discoveredBy field
+ * 
+ * Data Flow:
+ * 1. Backend sends JSON response
+ * 2. Gson deserializes to PlantDto
+ * 3. toPlant() converts to domain model
+ * 4. App uses Plant object for display and logic
  */
 public class PlantDto implements Serializable {
 
-    // All fields from your backend API response's "data" object
+    // ===== Core Plant Identity =====
+    
+    /** Unique database ID for this plant */
     @SerializedName("plantId")
     private int plantId;
+    
+    /** ID of user who uploaded this plant */
     @SerializedName("userId")
     private int userId;
+    
+    /** Common/display name of the plant */
     @SerializedName("name")
     private String name;
+    
+    /** Base64 encoded image string from backend */
     @SerializedName("image")
     private String image;
+    
+    /** User-provided description or notes */
     @SerializedName("description")
     private String description;
+    
+    // ===== Location Data =====
+    
+    /** GPS latitude where plant was discovered (nullable) */
     @SerializedName("latitude")
     private Double latitude;
+    
+    /** GPS longitude where plant was discovered (nullable) */
     @SerializedName("longitude")
     private Double longitude;
+    
+    // ===== Botanical Information =====
+    
+    /** Scientific/botanical name of the plant */
     @SerializedName("scientificName")
     private String scientificName;
+    
+    // ===== User Organization =====
+    
+    /** ID of garden this plant belongs to */
     @SerializedName("gardenId")
     private int gardenId;
+    
+    /** Whether user marked this plant as favourite */
     @SerializedName("isFavourite")
     private boolean isFavourite;
+    
+    // ===== Timestamps =====
+    
+    /** ISO 8601 timestamp when plant was created */
     @SerializedName("createdAt")
     private String createdAt;
+    
+    /** ISO 8601 timestamp when plant was last updated */
     @SerializedName("updatedAt")
     private String updatedAt;
 
-    // These fields are included for completeness based on previous errors.
-    // If your API doesn't send them, they will simply be null.
+    // ===== Optional/Extended Fields =====
+    // These fields may be null if not provided by backend
+    
+    /** User-generated tags for categorization */
     @SerializedName("tags")
     private List<String> tags;
+    
+    /** Username of person who discovered/uploaded plant */
     @SerializedName("discoveredBy")
     private String discoveredBy;
+    
+    /** Light requirement description (e.g., "Full Sun", "Partial Shade") */
     @SerializedName("lightRequirement")
     private String lightRequirement;
+    
+    /** Water requirement description (e.g., "Daily", "Weekly") */
     @SerializedName("waterRequirement")
     private String waterRequirement;
+    
+    /** Temperature requirement description */
     @SerializedName("temperatureRequirement")
     private String temperatureRequirement;
+    
+    /** Humidity requirement description */
     @SerializedName("humidityRequirement")
     private String humidityRequirement;
 
@@ -63,9 +128,14 @@ public class PlantDto implements Serializable {
     }
 
     /**
-     * Converts this Data Transfer Object (DTO) to the app's domain model object (Plant).
-     * This allows the rest of the app to work with a clean, Parcelable Plant object.
-     * @return A new Plant object populated with data from this DTO.
+     * Converts this DTO to the app's domain model (Plant).
+     * 
+     * Purpose:
+     * - Separates network layer from domain layer
+     * - Creates Parcelable Plant object for fragment navigation
+     * - Ensures all fields are properly mapped
+     * 
+     * @return New Plant object with all data from this DTO
      */
     public Plant toPlant() {
         return new Plant(
@@ -90,169 +160,17 @@ public class PlantDto implements Serializable {
         );
     }
 
-    // --- Getters ---
-    // The presence of this method will fix the "Cannot resolve method" error.
-    public String getScientificName() {
-        return scientificName;
-    }
-
-    // It's good practice to add getters for any other fields you might need to access directly.
-    public int getPlantId() {
-        return plantId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getImage() {
-        return image;
-    }
-
-    public String getCreatedAt() {
-        return createdAt;
-    }
-
-    public String getDiscoveredBy() {
-        return discoveredBy;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public boolean isFavourite() {
-        return isFavourite;
-    }
-
-    public Double getLatitude() {
-        return latitude;
-    }
-
-    public Double getLongitude() {
-        return longitude;
-    }
-
-    public int getUserId() {
-        return userId;
-    }
-
-    public int getGardenId() {
-        return gardenId;
-    }
-
-    public String getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public List<String> getTags() {
-        return tags;
-    }
-
-    public String getLightRequirement() {
-        return lightRequirement;
-    }
-
-    public String getWaterRequirement() {
-        return waterRequirement;
-    }
-
-    public String getTemperatureRequirement() {
-        return temperatureRequirement;
-    }
-
-    public String getHumidityRequirement() {
-        return humidityRequirement;
-    }
-
-    // --- Setters from model/Plant ---
-    public void setPlantId(int plantId) {
-        this.plantId = plantId;
-    }
-
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setImage(String image) {
-        this.image = image;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
-    }
-
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
-    }
-
-    public void setScientificName(String scientificName) {
-        this.scientificName = scientificName;
-    }
-
-    public void setGardenId(int gardenId) {
-        this.gardenId = gardenId;
-    }
-
-    public void setFavourite(boolean favourite) {
-        isFavourite = favourite;
-    }
-
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public void setUpdatedAt(String updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public void setTags(List<String> tags) {
-        this.tags = tags;
-    }
-
-    public void setDiscoveredBy(String discoveredBy) {
-        this.discoveredBy = discoveredBy;
-    }
-
-    public void setLightRequirement(String lightRequirement) {
-        this.lightRequirement = lightRequirement;
-    }
-
-    public void setWaterRequirement(String waterRequirement) {
-        this.waterRequirement = waterRequirement;
-    }
-
-    public void setTemperatureRequirement(String temperatureRequirement) {
-        this.temperatureRequirement = temperatureRequirement;
-    }
-
-    public void setHumidityRequirement(String humidityRequirement) {
-        this.humidityRequirement = humidityRequirement;
-    }
-
-    // --- toString method from model/Plant ---
-    @Override
-    public String toString() {
-        return "PlantDto{" +
-                "plantId=" + plantId +
-                ", userId=" + userId +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", latitude=" + latitude +
-                ", longitude=" + longitude +
-                ", scientificName='" + scientificName + '\'' +
-                ", createdAt='" + createdAt + '\'' +
-                ", updatedAt='" + updatedAt + '\'' +
-                ", gardenId=" + gardenId +
-                ", isFavourite=" + isFavourite +
-                '}';
-    }
+    // ===== Getters =====
+    // Provide access to DTO fields for direct usage (e.g., in adapters, nearby discoveries)
+    
+    public String getScientificName() { return scientificName; }
+    public int getPlantId() { return plantId; }
+    public String getName() { return name; }
+    public String getImage() { return image; }
+    public String getCreatedAt() { return createdAt; }
+    public String getDiscoveredBy() { return discoveredBy; }
+    public String getDescription() { return description; }
+    public boolean isFavourite() { return isFavourite; }
+    public Double getLatitude() { return latitude; }
+    public Double getLongitude() { return longitude; }
 }

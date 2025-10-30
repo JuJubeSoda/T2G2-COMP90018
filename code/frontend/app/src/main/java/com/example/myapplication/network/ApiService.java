@@ -82,18 +82,11 @@ public interface ApiService {
     // --- Map Data Endpoints ---
     
     /**
-     * Fetches nearby plants within a specified radius of the given coordinates.
-     * @param latitude The latitude coordinate
-     * @param longitude The longitude coordinate  
-     * @param radius The search radius in meters
-     * @return Call containing ApiResponse with list of nearby plants
+     * Fetches nearby plants based on user's location.
+     * The backend uses the authenticated user's location to find plants within a certain radius.
      */
-    @GET("api/plants/nearby")
-    Call<ApiResponse<List<PlantDto>>> getNearbyPlants(@Query("latitude") double latitude, 
-                                                      @Query("longitude") double longitude, 
-                                                      @Query("radius") int radius);
-    
-    // Removed: nearby gardens endpoint in favor of full list fetch
+    @GET("/api/plants/nearby")
+    Call<ApiResponse<List<PlantDto>>> getNearbyPlants();
 
     /**
      * Fetches all gardens without nearby search filtering.
@@ -116,5 +109,6 @@ public interface ApiService {
      */
     @POST("/api/plants/unlike")
     Call<ApiResponse<String>> unlikePlant(@Query("plantId") int plantId);
+
 
 }

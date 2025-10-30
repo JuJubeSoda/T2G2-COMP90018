@@ -13,7 +13,11 @@ import java.util.List;
 public interface PlantService extends IService<Plant> {
     public Page<Plant> pagePlants(PlantQuery query);
 
+    List<Plant> getAllPlants();
+
     List<Plant> listPlantsByUser();
+
+    List<Plant> listLikedPlantsByUser();
 
     List<Plant> listPlantsByGarden(Long gardenId);
 

@@ -17,7 +17,6 @@ import com.bumptech.glide.Glide;
 import com.example.myapplication.R;
 import com.example.myapplication.databinding.PlantdetailBinding;
 
-// FIX: Add required imports for date parsing and streams
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -27,17 +26,53 @@ import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 /**
- * PlantDetailFragment displays the details of a single plant collected by the user.
- * It is used by the MyGardenFragment and uses the simple plantdetail.xml layout.
+ * PlantDetailFragment - Displays detailed information for user-collected plants.
+ * 
+ * Purpose:
+ * - Show comprehensive details for plants in My Garden
+ * - Display plant image, name, scientific name
+ * - Show location, discovery date, discovered by
+ * - Display tags and description
+ * - Handle date parsing from backend
+ * 
+ * User Flow:
+ * 1. User clicks plant tile in MyGardenFragment
+ * 2. Fragment displays full plant details
+ * 3. User can navigate back via back button
+ * 
+ * Key Features:
+ * - Base64 image decoding and display
+ * - Robust date parsing (multiple ISO 8601 formats)
+ * - Location coordinate formatting
+ * - Tag list display
+ * - Progress indicator during loading
+ * - Error handling with fallback text
+ * 
+ * Data Source:
+ * - Plant object passed from MyGardenFragment
+ * - Data from user uploads via UploadFragment
+ * - Stored in backend database
+ * 
+ * Navigation:
+ * - From: MyGardenFragment (plant tile click)
+ * - Back: Navigation up arrow
  */
 public class PlantDetailFragment extends Fragment {
 
     public static final String ARG_PLANT = "plant_argument";
     private static final String TAG = "PlantDetailFragment";
 
+    /** View binding for plantdetail.xml layout */
     private PlantdetailBinding binding;
+    
+    /** Plant data to display */
     private Plant plant;
 
+    /**
+     * Fragment creation lifecycle method.
+     * Retrieves Plant object and validates it.
+     * Navigates back if Plant is null (error state).
+     */
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,6 +81,7 @@ public class PlantDetailFragment extends Fragment {
             plant = getArguments().getParcelable(ARG_PLANT);
         }
 
+        // Handle missing Plant data
         if (plant == null) {
             Log.e(TAG, "CRITICAL: Plant object is null. Cannot display details.");
             Toast.makeText(getContext(), "Error: Could not load plant data.", Toast.LENGTH_LONG).show();
@@ -55,6 +91,7 @@ public class PlantDetailFragment extends Fragment {
         }
     }
 
+    /** Inflates the layout using View Binding. */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -62,53 +99,76 @@ public class PlantDetailFragment extends Fragment {
         return binding.getRoot();
     }
 
+    /**
+     * Sets up UI after view is created.
+     * 
+     * Process:
+     * 1. Shows progress bar
+     * 2. Populates UI if Plant exists
+     * 3. Hides progress bar
+     * 4. Sets up back button navigation
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Show progress bar while loading
+        // Show loading indicator
         binding.progressBar.setVisibility(View.VISIBLE);
 
         if (plant != null) {
             populateUi();
-            // Hide progress bar after populating UI
             binding.progressBar.setVisibility(View.GONE);
         } else {
-            // Hide progress bar and show error
             binding.progressBar.setVisibility(View.GONE);
             Toast.makeText(getContext(), "Error: Could not load plant data.", Toast.LENGTH_LONG).show();
         }
 
+        // Setup back navigation
         binding.backButtonDetail.setOnClickListener(v ->
                 Navigation.findNavController(v).navigateUp()
         );
     }
 
     /**
-     * Populates the views in the layout with data from the 'plant' object.
+     * Populates all UI fields with plant data.
+     * 
+     * Displays:
+     * - Scientific name
+     * - Description/introduction
+     * - Location coordinates (latitude, longitude)
+     * - Tags (comma-separated list)
+     * - Discovered by (username)
+     * - Discovery date (formatted from ISO 8601)
+     * - Plant image (Base64 decoded)
+     * 
+     * Error Handling:
+     * - Null checks for all fields
+     * - Fallback text for missing data
+     * - Multiple date format parsing attempts
+     * - Image loading with placeholder on error
+     * - Try-catch blocks for robust error handling
      */
     private void populateUi() {
+        // Populate text fields with null safety
         try {
-            // --- Use correct and safe method calls based on the updated Plant model ---
             binding.textViewScientificName.setText(plant.getScientificName() != null ? plant.getScientificName() : "Not available");
             binding.textViewIntroduction.setText(plant.getDescription() != null ? plant.getDescription() : "No description available");
 
-            // Construct a location string from latitude and longitude, with null checks.
+            // Format location coordinates
             String locationString = "Location not available";
             if (plant.getLatitude() != null && plant.getLongitude() != null) {
                 locationString = String.format(Locale.getDefault(), "(%.4f, %.4f)", plant.getLatitude(), plant.getLongitude());
             }
             binding.textViewLocation.setText(locationString);
 
-            // Correctly handle the list of tags
+            // Format tags as comma-separated list
             String tags = "No tags";
             List<String> plantTags = plant.getTags();
             if (plantTags != null && !plantTags.isEmpty()) {
                 tags = plantTags.stream().collect(Collectors.joining(", "));
             }
-//            binding.textViewSearchTag.setText(tags);
 
-            // Set the discovered by user, with a null check.
+            // Display discovered by username
             String discoveredBy = plant.getDiscoveredBy() != null ? plant.getDiscoveredBy() : "Unknown";
             binding.textViewDiscoveredBy.setText(discoveredBy);
         } catch (Exception e) {
@@ -116,32 +176,31 @@ public class PlantDetailFragment extends Fragment {
             Toast.makeText(getContext(), "Error displaying plant information", Toast.LENGTH_SHORT).show();
         }
 
-        // --- FIX: Handle the date string from the backend ---
+        // Parse and format discovery date
         try {
             String createdAt = plant.getCreatedAt();
             
             if (createdAt == null || createdAt.isEmpty()) {
                 binding.textViewDiscoveredOn.setText("Date not available");
             } else {
-                // Try to parse the date string - handle different possible formats
                 SimpleDateFormat displayFormat = new SimpleDateFormat("dd MMMM yyyy", Locale.getDefault());
                 String formattedDate;
                 
                 try {
-                    // Try ISO 8601 format first
+                    // Try ISO 8601 with milliseconds
                     SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
                     isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
                     Date date = isoFormat.parse(createdAt);
                     formattedDate = displayFormat.format(date);
                 } catch (ParseException e1) {
                     try {
-                        // Try simpler ISO format
+                        // Try ISO 8601 without milliseconds
                         SimpleDateFormat simpleIsoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
                         simpleIsoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
                         Date date = simpleIsoFormat.parse(createdAt);
                         formattedDate = displayFormat.format(date);
                     } catch (ParseException e2) {
-                        // If all parsing fails, just display the raw string
+                        // Fallback to raw string
                         formattedDate = createdAt;
                     }
                 }
@@ -153,8 +212,7 @@ public class PlantDetailFragment extends Fragment {
             binding.textViewDiscoveredOn.setText("Date not available");
         }
 
-
-        // Load the plant image using Glide with added null safety.
+        // Load plant image with Base64 decoding
         try {
             String base64Image = plant.getImageUrl();
             if (base64Image == null || base64Image.isEmpty()) {
@@ -173,6 +231,7 @@ public class PlantDetailFragment extends Fragment {
         }
     }
 
+    /** Cleans up view binding to prevent memory leaks. */
     @Override
     public void onDestroyView() {
         super.onDestroyView();

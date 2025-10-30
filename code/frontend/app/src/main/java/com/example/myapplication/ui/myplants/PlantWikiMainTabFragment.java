@@ -1,4 +1,3 @@
-// /app/src/main/java/com/example/myapplication/ui/myplants/PlantWikiMainTabFragment.java
 package com.example.myapplication.ui.myplants;
 
 import android.os.Bundle;
@@ -21,22 +20,69 @@ import com.google.android.material.tabs.TabLayoutMediator;
 
 import java.util.Objects;
 
+/**
+ * PlantWikiMainTabFragment - Container for Plant Wiki detail tabs with header.
+ * 
+ * Purpose:
+ * - Display plant header (image, name, scientific name)
+ * - Host tabbed interface for plant details
+ * - Coordinate between three tab fragments
+ * - Provide tab switching functionality
+ * 
+ * User Flow:
+ * 1. User clicks plant in PlantWikiFragment
+ * 2. Fragment receives Plant object as argument
+ * 3. Displays header with plant image and names
+ * 4. Shows three tabs: Overview, Features, Care Guide
+ * 5. User can swipe or tap to switch tabs
+ * 
+ * Tab Structure:
+ * - Tab 0: PlantWikiOverview - Description, requirements, sensor data
+ * - Tab 1: PlantWikiFeatures - Physical characteristics, mature height
+ * - Tab 2: PlantWikiCareGuide - Detailed care instructions
+ * 
+ * Key Features:
+ * - Header with large plant image
+ * - Common name and scientific name display
+ * - ViewPager2 for smooth tab swiping
+ * - TabLayout integration with ViewPager2
+ * - Base64 image handling with error fallback
+ * - Public tab switching method for child fragments
+ * 
+ * Arguments:
+ * - ARG_PLANT: Plant object (Parcelable) from PlantWikiFragment
+ * 
+ * Navigation:
+ * - From: PlantWikiFragment (wiki plant tile click)
+ * - Contains: PlantWikiOverview, PlantWikiFeatures, PlantWikiCareGuide
+ */
 public class PlantWikiMainTabFragment extends Fragment {
 
-    // Argument key should be consistent
+    /** Argument key for Plant object */
     public static final String ARG_PLANT = "plant_argument";
     private static final String TAG = "PlantWikiMainTab";
 
+    /** View binding for plantwiki_maintab.xml layout */
     private PlantwikiMaintabBinding binding;
+    
+    /** Plant data to display across header and tabs */
     private Plant plant;
 
+    /**
+     * Fragment creation lifecycle method.
+     * Retrieves Plant object from arguments and validates it.
+     * Navigates back if Plant is null (error state).
+     */
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Get the Plant object passed from PlantWikiFragment
+        
+        // Get Plant object from arguments
         if (getArguments() != null) {
             plant = getArguments().getParcelable(ARG_PLANT);
         }
+        
+        // Handle missing Plant data
         if (plant == null) {
             Log.e(TAG, "Plant object is null. Cannot display wiki details.");
             Toast.makeText(getContext(), "Error: Wiki data not found.", Toast.LENGTH_LONG).show();
@@ -44,14 +90,22 @@ public class PlantWikiMainTabFragment extends Fragment {
         }
     }
 
+    /** Inflates the layout using View Binding. */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // Inflate the correct tabbed layout
         binding = PlantwikiMaintabBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
+    /**
+     * Sets up UI after view is created.
+     * 
+     * Initialization Order:
+     * 1. Populate header with plant data
+     * 2. Setup ViewPager2 with TabsPagerAdapter
+     * 3. Connect TabLayout to ViewPager2
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -61,31 +115,44 @@ public class PlantWikiMainTabFragment extends Fragment {
         setupViewPagerAndTabs();
     }
 
+    /**
+     * Populates header section with plant data.
+     * 
+     * Displays:
+     * - Plant common name
+     * - Scientific name
+     * - Large header image (Base64 decoded)
+     * 
+     * Image Handling:
+     * - Checks for null/empty Base64 string
+     * - Decodes Base64 to byte array
+     * - Uses Glide for efficient loading
+     * - Shows placeholder on error
+     */
     private void populateHeaderData() {
         binding.plantNameText.setText(plant.getName());
         binding.plantNicknameText.setText(plant.getScientificName());
 
         String base64Image = plant.getImageUrl();
 
-        // --- THIS IS THE FIX ---
-        // Check if the base64Image string is null or empty before trying to use it.
+        // Handle Base64 image with robust error handling
         if (TextUtils.isEmpty(base64Image)) {
-            // If there's no image, load the default placeholder directly.
+            // No image data - show placeholder
             Log.w(TAG, "Image data is missing for " + plant.getName() + ". Loading default placeholder.");
             Glide.with(this)
-                    .load(R.drawable.plantbulb_foreground) // Load placeholder resource
+                    .load(R.drawable.plantbulb_foreground)
                     .into(binding.landingimage);
         } else {
-            // If there is image data, try to decode and load it.
+            // Decode and load Base64 image
             try {
                 byte[] imageBytes = Base64.decode(base64Image, Base64.DEFAULT);
                 Glide.with(this)
                         .load(imageBytes)
-                        .placeholder(R.drawable.plantbulb_foreground) // Show while loading
-                        .error(R.drawable.plantbulb_foreground)     // Show on decode error
+                        .placeholder(R.drawable.plantbulb_foreground)
+                        .error(R.drawable.plantbulb_foreground)
                         .into(binding.landingimage);
             } catch (Exception e) {
-                // If decoding fails, log the error and load the placeholder.
+                // Decoding failed - show placeholder
                 Log.e(TAG, "Failed to decode or load Base64 image for " + plant.getName(), e);
                 Glide.with(this)
                         .load(R.drawable.plantbulb_foreground)
@@ -94,11 +161,26 @@ public class PlantWikiMainTabFragment extends Fragment {
         }
     }
 
+    /**
+     * Sets up ViewPager2 with tabs for plant details.
+     * 
+     * Setup:
+     * - Creates TabsPagerAdapter with Plant data
+     * - Connects ViewPager2 to adapter
+     * - Links TabLayout to ViewPager2 with TabLayoutMediator
+     * - Sets tab titles: Overview, Features, Care Guide
+     * 
+     * Tab Behavior:
+     * - User can swipe between tabs
+     * - User can tap tab titles to switch
+     * - Smooth animations between tabs
+     */
     private void setupViewPagerAndTabs() {
-        // This assumes you have a TabsPagerAdapter class to handle the fragments for each tab
+        // Create adapter with Plant data for all tabs
         TabsPagerAdapter pagerAdapter = new TabsPagerAdapter(getChildFragmentManager(), getLifecycle(), plant);
         binding.viewPager.setAdapter(pagerAdapter);
 
+        // Connect TabLayout to ViewPager2
         new TabLayoutMediator(binding.tabLayout, binding.viewPager, (tab, position) -> {
             switch (position) {
                 case 0: tab.setText("Overview"); break;
@@ -109,19 +191,20 @@ public class PlantWikiMainTabFragment extends Fragment {
     }
 
     /**
-     * Public method that allows child fragments to request a tab switch.
-     * This method belongs in the fragment that OWNS the ViewPager.
-     *
-     * @param tabIndex The index of the tab to switch to.
+     * Programmatically switches to specified tab.
+     * Can be called by child fragments to navigate between tabs.
+     * 
+     * @param tabIndex Tab position (0=Overview, 1=Features, 2=Care Guide)
      */
     public void switchToTab(int tabIndex) {
         if (binding != null && binding.viewPager.getAdapter() != null && tabIndex < binding.viewPager.getAdapter().getItemCount()) {
-            // This code will now work because `binding` is a PlantwikiMaintabBinding
-            // which contains the `viewPager`
-            binding.viewPager.setCurrentItem(tabIndex, true);
+            binding.viewPager.setCurrentItem(tabIndex, true); // true = smooth scroll
         }
     }
 
+    /**
+     * Cleans up view binding to prevent memory leaks.
+     */
     @Override
     public void onDestroyView() {
         super.onDestroyView();

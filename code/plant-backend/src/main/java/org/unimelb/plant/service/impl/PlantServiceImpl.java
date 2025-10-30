@@ -57,6 +57,11 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
         return this.baseMapper.selectPage(page, qw);
     }
 
+    @Override
+    public List<Plant> getAllPlants() {
+        return plantMapper.selectList(Wrappers.lambdaQuery());
+    }
+
 
     @Override
     public List<Plant> listPlantsByUser() {
@@ -77,6 +82,27 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
         list.forEach(p -> p.setIsFavourite(likedIds.contains(p.getPlantId())));
 
         return list;
+    }
+
+    @Override
+    public List<Plant> listLikedPlantsByUser() {
+        List<Long> likedPlantIds = userPlantLikeMapper.selectList(
+                        Wrappers.<UserPlantLike>lambdaQuery()
+                                .select(UserPlantLike::getPlantId) // 只查 plantId 字段
+                ).stream()
+                .map(UserPlantLike::getPlantId)
+                .distinct() // 去重，避免同一植物被多个用户点赞多次
+                .toList();
+
+        if (likedPlantIds.isEmpty()) {
+            return List.of();
+        }
+
+        return this.list(
+                Wrappers.<Plant>lambdaQuery()
+                        .in(Plant::getPlantId, likedPlantIds)
+                        .orderByDesc(Plant::getCreatedAt)
+        );
     }
 
     @Override

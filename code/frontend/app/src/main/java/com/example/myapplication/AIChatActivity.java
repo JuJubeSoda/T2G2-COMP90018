@@ -46,14 +46,21 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
     private static final String TAG = "AIChatActivity";
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 1002;
-    private static final int CAMERA_REQUEST_CODE = 1003;
-    private static final int GALLERY_REQUEST_CODE = 1004;
+    private static final int STORAGE_PERMISSION_REQUEST_CODE = 1003;
+    private static final int CAMERA_REQUEST_CODE = 1004;
+    private static final int GALLERY_REQUEST_CODE = 1005;
 
     private LinearLayout chatContainer;
     private ScrollView chatScrollView;
     private EditText inputMessage;
     private Button sendButton;
     private ImageButton cameraButton;
+    
+    // Image preview components
+    private RelativeLayout imagePreviewContainer;
+    private ImageView imagePreview;
+    private ImageButton removeImageButton;
+    private Uri pendingImageUri;
 
     private Markwon markwon;
 
@@ -67,6 +74,11 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
     
     // Camera functionality
     private Uri currentImageUri;
+    
+    // Timeout and retry functionality
+    private Call<BaseResponse> currentApiCall;
+    private Runnable currentTimeoutTask;
+    private TextView currentAiThinkingView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,6 +90,11 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
         inputMessage = findViewById(R.id.inputMessage);
         sendButton = findViewById(R.id.sendButton);
         cameraButton = findViewById(R.id.cameraButton);
+        
+        // Initialize image preview components
+        imagePreviewContainer = findViewById(R.id.imagePreviewContainer);
+        imagePreview = findViewById(R.id.imagePreview);
+        removeImageButton = findViewById(R.id.removeImageButton);
 
         apiService = ApiClient.create(this);
         sensorCollector = new SensorDataCollector(this);
@@ -86,6 +103,7 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
 
         sendButton.setOnClickListener(v -> sendMessage());
         cameraButton.setOnClickListener(v -> showImageSourceDialog());
+        removeImageButton.setOnClickListener(v -> clearImagePreview());
 
         ImageButton backButton = findViewById(R.id.backButton);
         backButton.setOnClickListener(v -> {
@@ -93,67 +111,118 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
             overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
         });
         
-        // Auto-start sensors for environmental data
-        initializeSensors();
-        
         // Add welcome message
         addMessage("🌱 Plant AI Assistant: Hello! I can help you:\n• 📷 Identify plants from photos\n• 🌍 Recommend plants for your area\n• 💬 Answer plant-related questions\n\nAsk me: 'What plants should I grow?' or upload a plant photo!", false);
     }
 
     private void sendMessage() {
         String message = inputMessage.getText().toString().trim();
-        if (message.isEmpty()) {
-            Toast.makeText(this, "Please enter a message", Toast.LENGTH_SHORT).show();
+        boolean hasImage = pendingImageUri != null;
+        
+        // Check if there's either a message or an image
+        if (message.isEmpty() && !hasImage) {
+            Toast.makeText(this, "Please enter a message or attach an image", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        addMessage("You: " + message, true);
-        inputMessage.setText("");
-
-        TextView aiThinking = addMessage("🌱 Plant AI: ...", false);
-
-        // Check if asking for plant recommendations based on location
-        if (isRecommendationQuestion(message)) {
-            handlePlantRecommendationRequest(message, aiThinking);
+        // If there's an image, send it with identification
+        if (hasImage) {
+            // Display user message with image
+            addUserMessageWithImage(message.isEmpty() ? "What plant is this?" : message, pendingImageUri);
+            
+            // Clear inputs
+            inputMessage.setText("");
+            Uri imageToSend = pendingImageUri;
+            clearImagePreview();
+            
+            // Send to AI for identification
+            identifyPlantFromImage(imageToSend);
         } else {
-            // Regular plant question
-            apiService.askPlantQuestion(message).enqueue(new Callback<BaseResponse>() {
-                @Override
-                public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
-                    handleAIResponse(response, aiThinking);
-                }
+            // Text-only message
+            addMessage("You: " + message, true);
+            inputMessage.setText("");
 
-                @Override
-                public void onFailure(Call<BaseResponse> call, Throwable t) {
-                    aiThinking.setText("❌ Connection failed: " + t.getMessage());
-                }
-            });
+            TextView aiThinking = addMessage("🌱 Plant AI: ...", false);
+
+            // Check if asking for plant recommendations based on location
+            if (isRecommendationQuestion(message)) {
+                handlePlantRecommendationRequest(message, aiThinking);
+            } else {
+                // Regular plant question with timeout and retry
+                Runnable retryAction = () -> {
+                    TextView newAiThinking = addMessage("🌱 Plant AI: ...", false);
+                    Call<BaseResponse> call = apiService.askPlantQuestion(message);
+                    executeWithTimeout(call, newAiThinking, null);
+                };
+                
+                Call<BaseResponse> call = apiService.askPlantQuestion(message);
+                executeWithTimeout(call, aiThinking, retryAction);
+            }
         }
     }
     
     private void handlePlantRecommendationRequest(String message, TextView aiThinking) {
-        // Auto-use sensor data for recommendations
-        if (currentSensorData != null && !currentSensorData.isEmpty()) {
+        // Check if sensors are already initialized
+        if (!sensorsInitialized) {
+            aiThinking.setText("🌱 Plant AI: Collecting environmental data... Please wait a moment.");
+            initializeSensors();
+            // Wait a bit for sensor data to be collected
+            new android.os.Handler().postDelayed(() -> {
+                if (currentSensorData != null && !currentSensorData.isEmpty()) {
+                    String location = sensorCollector.getLocationString();
+                    Runnable retryAction = () -> {
+                        TextView newAiThinking = addMessage("🌱 Plant AI: ...", false);
+                        Call<BaseResponse> call = apiService.getPlantRecommendations(location, currentSensorData);
+                        executeWithTimeout(call, newAiThinking, null);
+                    };
+                    Call<BaseResponse> call = apiService.getPlantRecommendations(location, currentSensorData);
+                    executeWithTimeout(call, aiThinking, retryAction);
+                } else {
+                    aiThinking.setText("🌱 Plant AI: Unable to collect sensor data. Using general recommendations...");
+                    // Fallback to general recommendations without sensor data
+                    Runnable retryAction = () -> {
+                        TextView newAiThinking = addMessage("🌱 Plant AI: ...", false);
+                        Call<BaseResponse> call = apiService.getPlantRecommendations("Unknown location", new java.util.HashMap<>());
+                        executeWithTimeout(call, newAiThinking, null);
+                    };
+                    Call<BaseResponse> call = apiService.getPlantRecommendations("Unknown location", new java.util.HashMap<>());
+                    executeWithTimeout(call, aiThinking, retryAction);
+                }
+            }, 3000); // Wait 3 seconds for sensor data
+        } else if (currentSensorData != null && !currentSensorData.isEmpty()) {
+            // Use existing sensor data
             String location = sensorCollector.getLocationString();
-            
-            // 直接调用API，不显示环境数据
-            apiService.getPlantRecommendations(location, currentSensorData).enqueue(new Callback<BaseResponse>() {
-                @Override
-                public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
-                    handleAIResponse(response, aiThinking);
-                }
-
-                @Override
-                public void onFailure(Call<BaseResponse> call, Throwable t) {
-                    aiThinking.setText("❌ Connection failed: " + t.getMessage());
-                }
-            });
+            Runnable retryAction = () -> {
+                TextView newAiThinking = addMessage("🌱 Plant AI: ...", false);
+                Call<BaseResponse> call = apiService.getPlantRecommendations(location, currentSensorData);
+                executeWithTimeout(call, newAiThinking, null);
+            };
+            Call<BaseResponse> call = apiService.getPlantRecommendations(location, currentSensorData);
+            executeWithTimeout(call, aiThinking, retryAction);
         } else {
-            aiThinking.setText("🌱 Plant AI: I need to collect environmental data first. Please wait a moment...");
-            // Try to initialize sensors if not done yet
-            if (!sensorsInitialized) {
-                initializeSensors();
-            }
+            // Sensors initialized but no data yet
+            aiThinking.setText("🌱 Plant AI: Waiting for sensor data... Please wait a moment.");
+            new android.os.Handler().postDelayed(() -> {
+                if (currentSensorData != null && !currentSensorData.isEmpty()) {
+                    String location = sensorCollector.getLocationString();
+                    Runnable retryAction = () -> {
+                        TextView newAiThinking = addMessage("🌱 Plant AI: ...", false);
+                        Call<BaseResponse> call = apiService.getPlantRecommendations(location, currentSensorData);
+                        executeWithTimeout(call, newAiThinking, null);
+                    };
+                    Call<BaseResponse> call = apiService.getPlantRecommendations(location, currentSensorData);
+                    executeWithTimeout(call, aiThinking, retryAction);
+                } else {
+                    aiThinking.setText("🌱 Plant AI: Using general recommendations...");
+                    Runnable retryAction = () -> {
+                        TextView newAiThinking = addMessage("🌱 Plant AI: ...", false);
+                        Call<BaseResponse> call = apiService.getPlantRecommendations("Unknown location", new java.util.HashMap<>());
+                        executeWithTimeout(call, newAiThinking, null);
+                    };
+                    Call<BaseResponse> call = apiService.getPlantRecommendations("Unknown location", new java.util.HashMap<>());
+                    executeWithTimeout(call, aiThinking, retryAction);
+                }
+            }, 2000);
         }
     }
     
@@ -174,18 +243,14 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
             
             String location = sensorCollector.getLocationString();
             
-            // Call plant identification API
-            apiService.identifyPlant(imagePart, location).enqueue(new Callback<BaseResponse>() {
-                @Override
-                public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
-                    handleAIResponse(response, aiThinking);
-                }
-
-                @Override
-                public void onFailure(Call<BaseResponse> call, Throwable t) {
-                    aiThinking.setText("❌ Plant identification failed: " + t.getMessage());
-                }
-            });
+            // Retry action for image identification
+            Runnable retryAction = () -> {
+                identifyPlantFromImage(imageUri);
+            };
+            
+            // Call plant identification API with timeout and retry
+            Call<BaseResponse> call = apiService.identifyPlant(imagePart, location);
+            executeWithTimeout(call, aiThinking, retryAction);
             
         } catch (Exception e) {
             aiThinking.setText("❌ Error processing image: " + e.getMessage());
@@ -194,6 +259,12 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
     }
     
     private void handleAIResponse(Response<BaseResponse> response, TextView aiThinking) {
+        Log.d(TAG, "=== API Response Debug ===");
+        Log.d(TAG, "Response successful: " + response.isSuccessful());
+        Log.d(TAG, "Response code: " + response.code());
+        Log.d(TAG, "Response message: " + response.message());
+        Log.d(TAG, "Response body null: " + (response.body() == null));
+        
         if (response.isSuccessful() && response.body() != null) {
             BaseResponse base = response.body();
             Log.d(TAG, "API Response: " + base.toString());
@@ -218,6 +289,9 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
                     } else if (dataObj.has("reply")) {
                         reply = dataObj.get("reply").getAsString();
                         Log.d(TAG, "Found reply: " + reply);
+                    } else if (dataObj.has("identification")) {
+                        reply = dataObj.get("identification").getAsString();
+                        Log.d(TAG, "Found identification: " + reply);
                     }
                 }
                 
@@ -232,8 +306,17 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
             }
         } else {
             Log.d(TAG, "Response not successful or body is null");
-            aiThinking.setText("⚠️ Plant AI: Server returned no data.");
+            Log.d(TAG, "Response details - Code: " + response.code() + ", Message: " + response.message());
+            if (response.errorBody() != null) {
+                try {
+                    Log.d(TAG, "Error body: " + response.errorBody().string());
+                } catch (Exception e) {
+                    Log.d(TAG, "Error reading error body: " + e.getMessage());
+                }
+            }
+            aiThinking.setText("⚠️ Plant AI: Server returned no data. Check logs for details.");
         }
+        Log.d(TAG, "=== End API Response Debug ===");
     }
     
     private boolean isRecommendationQuestion(String question) {
@@ -278,9 +361,67 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
     }
     
     private void requestCameraPermission() {
-        ActivityCompat.requestPermissions(this,
-            new String[]{Manifest.permission.CAMERA},
-            CAMERA_PERMISSION_REQUEST_CODE);
+        // Show rationale dialog
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("📷 Camera Permission")
+                .setMessage("This app needs camera access to take photos of plants for identification.")
+                .setPositiveButton("Grant", (dialog, which) -> {
+                    ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.CAMERA},
+                        CAMERA_PERMISSION_REQUEST_CODE);
+                })
+                .setNegativeButton("Deny", null)
+                .show();
+        } else {
+            ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.CAMERA},
+                CAMERA_PERMISSION_REQUEST_CODE);
+        }
+    }
+    
+    private boolean checkStoragePermission() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+ (API 33+)
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES)
+                == PackageManager.PERMISSION_GRANTED;
+        } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            // Android 6.0 to 12 (API 23-32)
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED;
+        }
+        return true; // No permission needed for older versions
+    }
+    
+    private void requestStoragePermission() {
+        String permission;
+        String message;
+        
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            permission = Manifest.permission.READ_MEDIA_IMAGES;
+            message = "This app needs access to your photos to select plant images for identification.";
+        } else {
+            permission = Manifest.permission.READ_EXTERNAL_STORAGE;
+            message = "This app needs storage access to select photos from your gallery.";
+        }
+        
+        // Show rationale dialog if needed
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("📁 Storage Permission")
+                .setMessage(message)
+                .setPositiveButton("Grant", (dialog, which) -> {
+                    ActivityCompat.requestPermissions(this,
+                        new String[]{permission},
+                        STORAGE_PERMISSION_REQUEST_CODE);
+                })
+                .setNegativeButton("Deny", null)
+                .show();
+        } else {
+            ActivityCompat.requestPermissions(this,
+                new String[]{permission},
+                STORAGE_PERMISSION_REQUEST_CODE);
+        }
     }
     
     private void openCamera() {
@@ -291,8 +432,13 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
     }
     
     private void openGallery() {
-        Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(galleryIntent, GALLERY_REQUEST_CODE);
+        // Check storage permission first
+        if (checkStoragePermission()) {
+            Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(galleryIntent, GALLERY_REQUEST_CODE);
+        } else {
+            requestStoragePermission();
+        }
     }
     
     private File createImageFile(Uri imageUri) {
@@ -375,8 +521,14 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
         }, delay);
     }
     
-    // Auto-initialize sensors
+    // Initialize sensors when needed
     private void initializeSensors() {
+        // Check if we need to show sensor notice (first time only)
+        if (!hasSensorNoticeBeenShown()) {
+            showSensorDataNotice();
+            return;
+        }
+        
         if (!hasLocationPermission()) {
             requestLocationPermission();
             return;
@@ -384,7 +536,51 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
         
         sensorCollector.startCollecting(this);
         sensorsInitialized = true;
-        addMessage("📡 Sensors: Ready to provide personalized plant recommendations!", false);
+        Log.d(TAG, "Sensors initialized for environmental data collection");
+    }
+    
+    // Check if sensor notice has been shown before
+    private boolean hasSensorNoticeBeenShown() {
+        android.content.SharedPreferences prefs = getSharedPreferences("AppPreferences", MODE_PRIVATE);
+        return prefs.getBoolean("sensor_notice_shown", false);
+    }
+    
+    // Mark sensor notice as shown
+    private void markSensorNoticeShown() {
+        android.content.SharedPreferences prefs = getSharedPreferences("AppPreferences", MODE_PRIVATE);
+        prefs.edit().putBoolean("sensor_notice_shown", true).apply();
+    }
+    
+    // Show sensor data collection notice (first time only)
+    private void showSensorDataNotice() {
+        new android.app.AlertDialog.Builder(this)
+            .setTitle("🌡️ Environmental Data Collection")
+            .setMessage("To provide accurate plant recommendations, this app will collect environmental data from your device:\n\n" +
+                    "• 🌡️ Temperature - Ambient temperature\n" +
+                    "• 💧 Humidity - Relative humidity level\n" +
+                    "• 💡 Light - Light intensity\n" +
+                    "• 🌪️ Pressure - Atmospheric pressure\n" +
+                    "• 📍 Location - Your geographic location\n\n" +
+                    "This data is used only to recommend plants suitable for your local environment. " +
+                    "No personal information is collected or stored.\n\n" +
+                    "Do you want to continue?")
+            .setPositiveButton("Continue", (dialog, which) -> {
+                markSensorNoticeShown();
+                // Now proceed with location permission
+                if (!hasLocationPermission()) {
+                    requestLocationPermission();
+                } else {
+                    sensorCollector.startCollecting(this);
+                    sensorsInitialized = true;
+                    Log.d(TAG, "Sensors initialized for environmental data collection");
+                }
+            })
+            .setNegativeButton("No Thanks", (dialog, which) -> {
+                markSensorNoticeShown();
+                addMessage("ℹ️ Environmental data collection disabled. Plant recommendations will be general.", false);
+            })
+            .setCancelable(false)
+            .show();
     }
     
     // SensorDataCallback implementation
@@ -419,9 +615,29 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
     }
     
     private void requestLocationPermission() {
-        ActivityCompat.requestPermissions(this,
-            new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-            LOCATION_PERMISSION_REQUEST_CODE);
+        // Show rationale dialog if needed
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("📍 Location Permission")
+                .setMessage("To provide accurate plant recommendations, this app needs access to your location to:\n\n" +
+                        "• Get your geographic location\n" +
+                        "• Collect environmental data (temperature, humidity)\n" +
+                        "• Recommend suitable plants for your area\n\n" +
+                        "This data will only be used to analyze plants suitable for your location.")
+                .setPositiveButton("Grant", (dialog, which) -> {
+                    ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        LOCATION_PERMISSION_REQUEST_CODE);
+                })
+                .setNegativeButton("Deny", (dialog, which) -> {
+                    addMessage("ℹ️ Location access denied. Plant recommendations will be general and may be less accurate.", false);
+                })
+                .show();
+        } else {
+            ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                LOCATION_PERMISSION_REQUEST_CODE);
+        }
     }
     
     @Override
@@ -435,15 +651,89 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
                     initializeSensors();
                 }
             } else {
-                addMessage("❌ Location permission denied", false);
+                addMessage("❌ Location permission denied. Plant recommendations will be general and may be less accurate.", false);
             }
         } else if (requestCode == CAMERA_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                addMessage("✅ Camera permission granted", false);
                 openCamera();
             } else {
-                addMessage("❌ Camera permission denied", false);
+                addMessage("❌ Camera permission denied. Cannot take photos.", false);
+            }
+        } else if (requestCode == STORAGE_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                addMessage("✅ Storage permission granted", false);
+                openGallery();
+            } else {
+                addMessage("❌ Storage permission denied. Cannot access photos from gallery.", false);
             }
         }
+    }
+    
+    // Show image preview without sending immediately
+    private void showImagePreview(Uri imageUri) {
+        try {
+            pendingImageUri = imageUri;
+            imagePreview.setImageURI(imageUri);
+            imagePreviewContainer.setVisibility(android.view.View.VISIBLE);
+            
+            // Focus on input field so user can add a message
+            inputMessage.requestFocus();
+            
+            Log.d(TAG, "Image preview shown: " + imageUri.toString());
+        } catch (Exception e) {
+            Log.e(TAG, "Error showing image preview", e);
+            Toast.makeText(this, "Error loading image", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    // Clear image preview
+    private void clearImagePreview() {
+        pendingImageUri = null;
+        imagePreview.setImageURI(null);
+        imagePreviewContainer.setVisibility(android.view.View.GONE);
+    }
+    
+    // Add user message with image to chat
+    private void addUserMessageWithImage(String message, Uri imageUri) {
+        // Create a container for the message
+        LinearLayout messageContainer = new LinearLayout(this);
+        messageContainer.setOrientation(LinearLayout.VERTICAL);
+        messageContainer.setPadding(20, 12, 20, 12);
+        messageContainer.setBackgroundResource(R.drawable.bg_user_message);
+        
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT);
+        params.gravity = Gravity.END;
+        params.setMargins(50, 8, 8, 8);
+        messageContainer.setLayoutParams(params);
+        
+        // Add the image
+        ImageView msgImage = new ImageView(this);
+        msgImage.setImageURI(imageUri);
+        msgImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        msgImage.setMaxWidth((int) (getResources().getDisplayMetrics().widthPixels * 0.6));
+        msgImage.setAdjustViewBounds(true);
+        
+        LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT);
+        imageParams.setMargins(0, 0, 0, 8);
+        msgImage.setLayoutParams(imageParams);
+        messageContainer.addView(msgImage);
+        
+        // Add the text message if not empty
+        if (!message.isEmpty()) {
+            TextView msgText = new TextView(this);
+            msgText.setText("You: " + message);
+            msgText.setTextSize(16);
+            msgText.setTextColor(Color.WHITE);
+            messageContainer.addView(msgText);
+        }
+        
+        chatContainer.addView(messageContainer);
+        chatScrollView.post(() -> chatScrollView.fullScroll(ScrollView.FOCUS_DOWN));
     }
     
     @Override
@@ -456,10 +746,10 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
                 if (data != null && data.getExtras() != null) {
                     Bitmap photo = (Bitmap) data.getExtras().get("data");
                     if (photo != null) {
-                        // Save bitmap to file and identify plant
+                        // Save bitmap to file and show preview
                         Uri imageUri = saveBitmapToFile(photo);
                         if (imageUri != null) {
-                            identifyPlantFromImage(imageUri);
+                            showImagePreview(imageUri);
                         }
                     }
                 }
@@ -467,7 +757,7 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
                 // Handle gallery result
                 if (data != null && data.getData() != null) {
                     Uri imageUri = data.getData();
-                    identifyPlantFromImage(imageUri);
+                    showImagePreview(imageUri);
                 }
             }
         }
@@ -492,6 +782,110 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
         if (sensorCollector != null) {
             sensorCollector.stopCollecting();
         }
+        // Cancel any pending API calls
+        cancelCurrentApiCall();
+    }
+    
+    // Cancel current API call if exists
+    private void cancelCurrentApiCall() {
+        if (currentApiCall != null && !currentApiCall.isCanceled()) {
+            currentApiCall.cancel();
+            Log.d(TAG, "API call cancelled");
+        }
+        if (currentTimeoutTask != null) {
+            handler.removeCallbacks(currentTimeoutTask);
+            currentTimeoutTask = null;
+        }
+    }
+    
+    // Execute API call with timeout and retry functionality
+    private void executeWithTimeout(Call<BaseResponse> call, TextView aiThinking, Runnable retryAction) {
+        // Cancel any previous call
+        cancelCurrentApiCall();
+        
+        currentApiCall = call;
+        currentAiThinkingView = aiThinking;
+        
+        // Set timeout handler (15 seconds)
+        currentTimeoutTask = () -> {
+            if (currentApiCall != null && !currentApiCall.isExecuted()) {
+                cancelCurrentApiCall();
+                showTimeoutMessage(aiThinking, retryAction);
+            }
+        };
+        handler.postDelayed(currentTimeoutTask, 15000); // 15 seconds timeout
+        
+        // Execute the API call
+        call.enqueue(new Callback<BaseResponse>() {
+            @Override
+            public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
+                // Cancel timeout since we got a response
+                if (currentTimeoutTask != null) {
+                    handler.removeCallbacks(currentTimeoutTask);
+                    currentTimeoutTask = null;
+                }
+                handleAIResponse(response, aiThinking);
+            }
+
+            @Override
+            public void onFailure(Call<BaseResponse> call, Throwable t) {
+                // Cancel timeout
+                if (currentTimeoutTask != null) {
+                    handler.removeCallbacks(currentTimeoutTask);
+                    currentTimeoutTask = null;
+                }
+                
+                if (call.isCanceled()) {
+                    Log.d(TAG, "API call was cancelled");
+                } else {
+                    showErrorWithRetry(aiThinking, "Connection failed: " + t.getMessage(), retryAction);
+                }
+            }
+        });
+    }
+    
+    // Show timeout message with retry button
+    private void showTimeoutMessage(TextView aiThinking, Runnable retryAction) {
+        runOnUiThread(() -> {
+            aiThinking.setText("⏱️ Plant AI: Request timed out (15s). The server is taking too long to respond.");
+            addRetryButton(retryAction);
+        });
+    }
+    
+    // Show error message with retry button
+    private void showErrorWithRetry(TextView aiThinking, String errorMsg, Runnable retryAction) {
+        runOnUiThread(() -> {
+            aiThinking.setText("❌ Plant AI: " + errorMsg);
+            addRetryButton(retryAction);
+        });
+    }
+    
+    // Add retry button to the chat
+    private void addRetryButton(Runnable retryAction) {
+        Button retryButton = new Button(this);
+        retryButton.setText("🔄 Retry");
+        retryButton.setTextColor(Color.WHITE);
+        retryButton.setBackgroundColor(Color.parseColor("#4CAF50"));
+        retryButton.setPadding(40, 20, 40, 20);
+        
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT);
+        params.gravity = Gravity.CENTER;
+        params.setMargins(0, 20, 0, 20);
+        retryButton.setLayoutParams(params);
+        
+        retryButton.setOnClickListener(v -> {
+            // Remove the retry button
+            chatContainer.removeView(retryButton);
+            // Execute the retry action
+            if (retryAction != null) {
+                retryAction.run();
+            }
+        });
+        
+        chatContainer.addView(retryButton);
+        chatScrollView.post(() -> chatScrollView.fullScroll(ScrollView.FOCUS_DOWN));
     }
 
 }
