@@ -7,7 +7,6 @@ import lombok.Data;
 @TableName("plant_wiki")
 public class PlantWiki {
 
-
     private Long plantWikiId;
 
     private String name;
@@ -18,15 +17,21 @@ public class PlantWiki {
 
     private String description;
 
-    private String features;
+    private Double temperature;
 
-    private String careGuide;
+    private Double humidity;
 
     private String waterNeeds;
 
     private String lightNeeds;
 
-    private String difficulty;
+    private String soil;
 
-    private String GrowthHeight;
+    private String fertilizing;
+
+    private String leafType;
+
+    private String Toxicity;
+
+    private String airPurifying;
 }

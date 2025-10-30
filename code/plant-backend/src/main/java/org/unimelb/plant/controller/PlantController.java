@@ -2,6 +2,7 @@ package org.unimelb.plant.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 
@@ -10,6 +11,7 @@ import org.unimelb.common.context.UserContext;
 import org.unimelb.common.vo.Result;
 import org.unimelb.garden.entity.Garden;
 import org.unimelb.plant.entity.Plant;
+import org.unimelb.plant.entity.PlantVO;
 import org.unimelb.plant.service.PlantService;
 
 import java.time.LocalDate;
@@ -32,6 +34,33 @@ public class PlantController {
         return Result.success(list);
     }
 
+
+    @Operation(summary = "Search liked plants by User Id")
+    @GetMapping("/by-user")
+    public Result<List<Plant>> listLikedByUser() {
+
+        List<Plant> list= plantService.listLikedPlantsByUser();
+
+        return Result.success(list);
+    }
+
+    @Operation(summary = "Get All Plants")
+    @GetMapping("/all")
+    public Result<List<PlantVO>> getAllPlants() {
+        List<Plant> list= plantService.getAllPlants();
+
+        List<PlantVO> voList = list.stream().map(plant -> {
+            PlantVO vo = new PlantVO();
+            BeanUtils.copyProperties(plant, vo);
+            return vo;
+        }).toList();
+
+        return Result.success(voList);
+    }
+
+
+
+
     @Operation(summary = "Search plants by Garden Id")
     @GetMapping("/by-garden")
     public Result<List<Plant>> listByGarden(@RequestParam Long gardenId) {
@@ -51,11 +80,18 @@ public class PlantController {
 
     @Operation(summary = "Get nearby plants")
     @GetMapping("/nearby")
-    public Result<List<Plant>> getNearbyPlants(
+    public Result<List<PlantVO>> getNearbyPlants(
             @RequestParam("latitude") Double latitude,
             @RequestParam("longitude") Double longitude,
             @RequestParam(name = "radius", defaultValue = "1000") int radius) {
-        return Result.success(plantService.getNearByPlants(latitude, longitude, radius));
+
+        List<Plant> list = plantService.getNearByPlants(latitude, longitude, radius);
+        List<PlantVO> voList = list.stream().map(plant -> {
+            PlantVO vo = new PlantVO();
+            BeanUtils.copyProperties(plant, vo);
+            return vo;
+        }).toList();
+        return Result.success(voList);
     }
 
     /**
