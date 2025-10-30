@@ -35,7 +35,7 @@ public class Plant implements Serializable {
 
     private Long gardenId;
 
-    private Boolean isSharable;
+    private Boolean shareable;
 
     @TableField(exist = false)
     private Boolean isFavourite;
