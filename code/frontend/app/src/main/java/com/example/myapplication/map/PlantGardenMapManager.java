@@ -1,10 +1,12 @@
 package com.example.myapplication.map;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.example.myapplication.model.Garden;
+import com.example.myapplication.network.GardenDto;
 import com.example.myapplication.network.PlantDto;
 import com.example.myapplication.network.PlantMapDto;
 import com.google.android.gms.maps.GoogleMap;
@@ -31,6 +33,13 @@ public class PlantGardenMapManager {
     
     // 当前状态
     private boolean isShowingPlants = true; // true = plants, false = gardens
+    
+    // 防抖和节流控制
+    private final Handler debounceHandler = new Handler(Looper.getMainLooper());
+    private Runnable pendingSearchRunnable = null;
+    private long lastSearchTime = 0;
+    private static final long DEBOUNCE_DELAY_MS = 800; // 防抖延迟800ms
+    private static final long THROTTLE_INTERVAL_MS = 2000; // 节流最小间隔2秒
     
     public PlantGardenMapManager(Context context, GoogleMap googleMap) {
         this.context = context;
@@ -86,7 +95,7 @@ public class PlantGardenMapManager {
         
         displayManager.setOnGardenClickListener(new MapDisplayManager.OnGardenMapClickListener() {
             @Override
-            public void onGardenClick(Garden garden) {
+            public void onGardenClick(GardenDto garden) {
                 if (onPlantGardenMapInteractionListener != null) {
                     onPlantGardenMapInteractionListener.onGardenClick(garden);
                 }
@@ -109,32 +118,36 @@ public class PlantGardenMapManager {
      */
     public void searchNearbyData() {
         Log.d(TAG, "=== Search Nearby Data Debug ===");
-        Log.d(TAG, "Location permission granted: " + locationManager.hasLocationPermission());
-        Log.d(TAG, "Last known location: " + (locationManager.getLastKnownLocation() != null ? "available" : "null"));
         Log.d(TAG, "Current mode: " + (isShowingPlants ? "Plants" : "Gardens"));
-        
-        if (!locationManager.hasLocationPermission() || locationManager.getLastKnownLocation() == null) {
-            Log.e(TAG, "Location permission or location not available");
-            if (onPlantGardenMapInteractionListener != null) {
-                onPlantGardenMapInteractionListener.onSearchError("Location permission required to search nearby data");
-            }
-            return;
-        }
-        
-        android.location.Location location = locationManager.getLastKnownLocation();
-        // 使用智能半径替代固定半径
+
+        // 以相机中心作为查询中心
+        com.google.android.gms.maps.model.LatLng center = locationManager.getCameraCenter();
         int radius = locationManager.getSmartSearchRadius();
-        
-        Log.d(TAG, "Search parameters:");
-        Log.d(TAG, "  - Latitude: " + location.getLatitude());
-        Log.d(TAG, "  - Longitude: " + location.getLongitude());
+
+        Log.d(TAG, "Search parameters (camera center):");
+        Log.d(TAG, "  - Latitude: " + center.latitude);
+        Log.d(TAG, "  - Longitude: " + center.longitude);
         Log.d(TAG, "  - Radius: " + radius + " meters");
         Log.d(TAG, "  - Mode: " + (isShowingPlants ? "Plants" : "Gardens"));
         
+        // 检查是否使用了默认位置（悉尼）
+        com.google.android.gms.maps.model.LatLng sydneyDefault = new com.google.android.gms.maps.model.LatLng(-33.8523341, 151.2106085);
+        if (Math.abs(center.latitude - sydneyDefault.latitude) < 0.0001 && 
+            Math.abs(center.longitude - sydneyDefault.longitude) < 0.0001) {
+            Log.w(TAG, "WARNING: Using default location (Sydney), likely map not ready yet!");
+            Log.w(TAG, "Skipping search to avoid querying wrong location");
+            if (onPlantGardenMapInteractionListener != null) {
+                onPlantGardenMapInteractionListener.onSearchError("Map not ready, please wait");
+            }
+            Log.d(TAG, "=== End Search Nearby Data Debug (SKIPPED) ===");
+            return;
+        }
+
         if (isShowingPlants) {
-            searchNearbyPlants(location.getLatitude(), location.getLongitude(), radius);
+            searchNearbyPlants(center.latitude, center.longitude, radius);
         } else {
-            searchNearbyGardens(location.getLatitude(), location.getLongitude(), radius);
+            Log.d(TAG, "Garden mode: fetching all gardens (no nearby search)");
+            fetchAllGardens();
         }
         Log.d(TAG, "=== End Search Nearby Data Debug ===");
     }
@@ -193,32 +206,25 @@ public class PlantGardenMapManager {
         });
     }
     
+    // Removed: searchNearbyGardens in favor of fetchAllGardens
+
     /**
-     * 搜索附近花园
+     * 拉取全部花园并渲染
      */
-    public void searchNearbyGardens(double latitude, double longitude, int radius) {
-        Log.d(TAG, "Searching for nearby gardens with radius: " + radius + " meters");
-        
-        dataManager.searchNearbyGardens(latitude, longitude, radius, new MapDataManager.MapDataCallback<List<Garden>>() {
+    public void fetchAllGardens() {
+        dataManager.fetchAllGardens(new MapDataManager.MapDataCallback<List<GardenDto>>() {
             @Override
-            public void onSuccess(List<Garden> gardens) {
-                Log.d(TAG, "=== Search Gardens Success Debug ===");
-                Log.d(TAG, "Gardens found: " + (gardens == null ? "null" : gardens.size()));
-                
-                // 统一在协调层进行渲染
+            public void onSuccess(List<GardenDto> gardens) {
                 Log.d(TAG, "Displaying gardens on map...");
                 displayManager.displayGardensOnMap(gardens);
-                Log.d(TAG, "Gardens displayed on map successfully");
-                
-                // 通知外部监听器
                 if (onPlantGardenMapInteractionListener != null) {
                     onPlantGardenMapInteractionListener.onGardensFound(gardens);
                 }
             }
-            
+
             @Override
             public void onError(String message) {
-                Log.e(TAG, "Search Gardens Error: " + message);
+                Log.e(TAG, "Fetch All Gardens Error: " + message);
                 if (onPlantGardenMapInteractionListener != null) {
                     onPlantGardenMapInteractionListener.onSearchError(message);
                 }
@@ -331,6 +337,12 @@ public class PlantGardenMapManager {
      * 销毁管理器
      */
     public void destroy() {
+        // 清理防抖待执行任务
+        if (pendingSearchRunnable != null) {
+            debounceHandler.removeCallbacks(pendingSearchRunnable);
+            pendingSearchRunnable = null;
+        }
+        
         displayManager.destroy();
         Log.d(TAG, "PlantGardenMapManager destroyed");
     }
@@ -363,21 +375,51 @@ public class PlantGardenMapManager {
     }
     
     /**
-     * 设置智能半径变化监听器
+     * 设置智能半径变化监听器（带防抖和节流）
      */
     private void setupSmartRadiusListener() {
         locationManager.setOnMapRadiusChangeListener(new MapLocationManager.OnMapRadiusChangeListener() {
             @Override
             public void onMapRadiusChanged(int newRadius) {
                 Log.d(TAG, "Map radius changed to: " + newRadius + " meters");
-                
-                // 如果用户有位置权限且已获取位置，自动重新搜索
-                if (locationManager.hasLocationPermission() && locationManager.getLastKnownLocation() != null) {
-                    Log.d(TAG, "Auto-refreshing data with new smart radius");
-                    searchNearbyData();
-                }
+                handleRadiusChangeWithDebounce();
             }
         });
+    }
+    
+    /**
+     * 处理半径变化的防抖和节流逻辑
+     */
+    private void handleRadiusChangeWithDebounce() {
+        long currentTime = System.currentTimeMillis();
+        
+        // 节流：如果距离上次搜索太近，忽略本次请求
+        if (currentTime - lastSearchTime < THROTTLE_INTERVAL_MS) {
+            Log.d(TAG, "Throttled: too soon since last search");
+            return;
+        }
+        
+        // 取消之前的待执行搜索
+        if (pendingSearchRunnable != null) {
+            debounceHandler.removeCallbacks(pendingSearchRunnable);
+            pendingSearchRunnable = null;
+        }
+        
+        // 创建新的延迟搜索任务
+        pendingSearchRunnable = new Runnable() {
+            @Override
+            public void run() {
+                // 以相机中心为准，不再依赖设备定位权限
+                Log.d(TAG, "Auto-refreshing data with debounced smart radius (camera center)");
+                lastSearchTime = System.currentTimeMillis();
+                searchNearbyData();
+                pendingSearchRunnable = null;
+            }
+        };
+        
+        // 防抖：延迟执行搜索
+        debounceHandler.postDelayed(pendingSearchRunnable, DEBOUNCE_DELAY_MS);
+        Log.d(TAG, "Debounce timer started, will search in " + DEBOUNCE_DELAY_MS + "ms");
     }
     
     /**
@@ -385,9 +427,9 @@ public class PlantGardenMapManager {
      */
     public interface OnPlantGardenMapInteractionListener {
         void onPlantClick(PlantMapDto plant);
-        void onGardenClick(Garden garden);
+        void onGardenClick(GardenDto garden);
         void onPlantsFound(java.util.List<PlantMapDto> plants);
-        void onGardensFound(java.util.List<Garden> gardens);
+        void onGardensFound(java.util.List<GardenDto> gardens);
         void onSearchError(String message);
         void onDataTypeChanged(boolean isShowingPlants);
         void onPlantLiked(boolean liked);

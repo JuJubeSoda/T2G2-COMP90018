@@ -293,6 +293,45 @@ public class MapLocationManager {
     public int getDefaultSearchRadius() {
         return DEFAULT_SEARCH_RADIUS;
     }
+
+    /**
+     * 获取当前相机中心点坐标（用于以相机中心作为查询中心）
+     * 若地图未就绪则返回默认位置
+     */
+    public LatLng getCameraCenter() {
+        Log.d(TAG, "=== getCameraCenter Debug ===");
+        
+        if (googleMap == null) {
+            Log.w(TAG, "GoogleMap is null, using default location (Sydney)");
+            Log.d(TAG, "Default location: (" + defaultLocation.latitude + ", " + defaultLocation.longitude + ")");
+            return defaultLocation;
+        }
+        
+        try {
+            // 尝试从可见区域获取中心
+            VisibleRegion visibleRegion = googleMap.getProjection().getVisibleRegion();
+            if (visibleRegion != null && visibleRegion.latLngBounds != null) {
+                LatLng center = visibleRegion.latLngBounds.getCenter();
+                Log.d(TAG, "Using visible region center: (" + center.latitude + ", " + center.longitude + ")");
+                return center;
+            }
+            
+            // 退回到相机位置的target
+            CameraPosition cameraPosition = googleMap.getCameraPosition();
+            if (cameraPosition != null && cameraPosition.target != null) {
+                LatLng target = cameraPosition.target;
+                Log.d(TAG, "Using camera position target: (" + target.latitude + ", " + target.longitude + ")");
+                return target;
+            }
+            
+            Log.w(TAG, "Cannot get camera center from visible region or camera position, using default");
+            return defaultLocation;
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to get camera center, fallback to default", e);
+            Log.d(TAG, "Default location: (" + defaultLocation.latitude + ", " + defaultLocation.longitude + ")");
+            return defaultLocation;
+        }
+    }
     
     /**
      * 设置地图半径变化监听器
@@ -304,21 +343,18 @@ public class MapLocationManager {
     
     /**
      * 设置地图半径变化监听器
+     * 只使用setOnCameraIdleListener，避免相机移动过程中的频繁触发
      */
     private void setupMapRadiusListeners() {
         if (googleMap == null) {
             return;
         }
         
-        // 监听地图相机移动
-        googleMap.setOnCameraMoveListener(() -> {
-            if (radiusChangeListener != null) {
-                int newRadius = getCurrentMapRadius();
-                radiusChangeListener.onMapRadiusChanged(newRadius);
-            }
-        });
+        // 移除相机移动监听器，只保留相机空闲监听器
+        // 这样可以减少不必要的触发，配合上层防抖机制效果更好
+        googleMap.setOnCameraMoveListener(null);
         
-        // 监听地图相机移动完成
+        // 监听地图相机移动完成（用户停止操作后触发）
         googleMap.setOnCameraIdleListener(() -> {
             if (radiusChangeListener != null) {
                 int newRadius = getCurrentMapRadius();
@@ -331,25 +367,43 @@ public class MapLocationManager {
      * 获取智能搜索半径（结合可见区域和缩放级别）
      */
     public int getSmartSearchRadius() {
+        Log.d(TAG, "=== getSmartSearchRadius Debug ===");
+        
         if (googleMap == null) {
+            Log.w(TAG, "GoogleMap is null, using default radius: " + getDefaultSearchRadius() + "m");
             return getDefaultSearchRadius();
         }
         
         try {
             // 获取基于可见区域的半径
             int visibleRadius = getCurrentMapRadius();
+            Log.d(TAG, "Visible radius: " + visibleRadius + "m");
             
             // 获取基于缩放级别的半径
             int zoomRadius = getCurrentCameraRadius();
             
+            // 获取当前缩放级别用于调试
+            CameraPosition cameraPosition = googleMap.getCameraPosition();
+            if (cameraPosition != null) {
+                Log.d(TAG, "Current zoom level: " + cameraPosition.zoom);
+            }
+            Log.d(TAG, "Zoom-based radius: " + zoomRadius + "m");
+            
             // 取两者的较小值，确保搜索范围合理
             int smartRadius = Math.min(visibleRadius, zoomRadius);
             
-            Log.d(TAG, "Smart search radius: " + smartRadius + " meters (visible: " + visibleRadius + ", zoom: " + zoomRadius + ")");
+            Log.d(TAG, "Final smart radius: " + smartRadius + "m (min of visible: " + visibleRadius + "m and zoom: " + zoomRadius + "m)");
+            
+            // 半径范围检查
+            if (smartRadius > 50000) {
+                Log.w(TAG, "WARNING: Smart radius is very large: " + smartRadius + "m (>50km)!");
+            }
+            
             return smartRadius;
             
         } catch (Exception e) {
             Log.e(TAG, "Failed to calculate smart search radius", e);
+            Log.d(TAG, "Using default radius: " + getDefaultSearchRadius() + "m");
             return getDefaultSearchRadius();
         }
     }

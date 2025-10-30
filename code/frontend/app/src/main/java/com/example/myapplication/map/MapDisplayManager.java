@@ -4,7 +4,7 @@ import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.example.myapplication.model.Garden;
+import com.example.myapplication.network.GardenDto;
 import com.example.myapplication.network.PlantMapDto;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptor;
@@ -38,11 +38,11 @@ public class MapDisplayManager {
     private List<Marker> currentPlantMarkers = new ArrayList<>();
     private List<Marker> currentGardenMarkers = new ArrayList<>();
     private List<PlantMapDto> currentPlants = new ArrayList<>();
-    private List<Garden> currentGardens = new ArrayList<>();
+    private List<GardenDto> currentGardens = new ArrayList<>();
     
     // 回调接口
     public interface OnGardenMapClickListener {
-        void onGardenClick(Garden garden);
+        void onGardenClick(GardenDto garden);
     }
     
     public interface OnPlantMapClickListener {
@@ -216,7 +216,7 @@ public class MapDisplayManager {
     /**
      * 在地图上显示花园列表 - 使用GeoJSON方式（适合静态数据）
      */
-    public void displayGardensOnMap(List<Garden> gardens) {
+    public void displayGardensOnMap(List<GardenDto> gardens) {
         try {
             clearGardenLayer();
             currentGardens.clear();
@@ -261,13 +261,13 @@ public class MapDisplayManager {
     /**
      * 将花园列表转换为GeoJSON格式
      */
-    private JSONObject convertGardensToGeoJson(List<Garden> gardens) throws JSONException {
+    private JSONObject convertGardensToGeoJson(List<GardenDto> gardens) throws JSONException {
         JSONObject geoJson = new JSONObject();
         geoJson.put("type", "FeatureCollection");
         
         JSONArray features = new JSONArray();
         
-        for (Garden garden : gardens) {
+        for (GardenDto garden : gardens) {
             if (garden.getLatitude() != null && garden.getLongitude() != null) {
                 JSONObject feature = createGardenFeature(garden);
                 features.put(feature);
@@ -282,7 +282,7 @@ public class MapDisplayManager {
     /**
      * 创建花园GeoJSON特征
      */
-    private JSONObject createGardenFeature(Garden garden) throws JSONException {
+    private JSONObject createGardenFeature(GardenDto garden) throws JSONException {
         JSONObject feature = new JSONObject();
         feature.put("type", "Feature");
         
@@ -343,7 +343,7 @@ public class MapDisplayManager {
     /**
      * 从GeoJSON特征创建Garden对象
      */
-    private Garden createGardenFromFeature(Feature feature) {
+    private GardenDto createGardenFromFeature(Feature feature) {
         try {
             String gardenIdStr = feature.getProperty("gardenId");
             String name = feature.getProperty("name");
@@ -352,7 +352,7 @@ public class MapDisplayManager {
             String longitudeStr = feature.getProperty("longitude");
             
             if (gardenIdStr != null && latitudeStr != null && longitudeStr != null) {
-                Garden garden = new Garden();
+                GardenDto garden = new GardenDto();
                 garden.setGardenId(Long.parseLong(gardenIdStr));
                 garden.setName(name);
                 garden.setDescription(description);

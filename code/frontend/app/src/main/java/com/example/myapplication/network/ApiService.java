@@ -2,7 +2,7 @@ package com.example.myapplication.network;
 
 import com.example.myapplication.auth.model.LoginRequest;
 import com.example.myapplication.auth.model.RegisterRequest;
-import com.example.myapplication.model.Garden;
+import com.example.myapplication.network.GardenDto;
 import com.example.myapplication.network.PlantDto;
 import com.example.myapplication.network.ApiResponse;
 import java.util.List;
@@ -93,17 +93,13 @@ public interface ApiService {
                                                       @Query("longitude") double longitude, 
                                                       @Query("radius") int radius);
     
+    // Removed: nearby gardens endpoint in favor of full list fetch
+
     /**
-     * Fetches nearby gardens within a specified radius of the given coordinates.
-     * @param latitude The latitude coordinate
-     * @param longitude The longitude coordinate
-     * @param radius The search radius in meters  
-     * @return Call containing ApiResponse with list of nearby gardens
+     * Fetches all gardens without nearby search filtering.
      */
-    @GET("/api/garden/nearby")
-    Call<ApiResponse<List<Garden>>> getNearbyGardens(@Query("latitude") double latitude,
-                                                     @Query("longitude") double longitude,
-                                                     @Query("radius") int radius);
+    @GET("/api/garden/all")
+    Call<ApiResponse<List<GardenDto>>> getAllGardens();
     
     /**
      * Likes a plant by its ID.

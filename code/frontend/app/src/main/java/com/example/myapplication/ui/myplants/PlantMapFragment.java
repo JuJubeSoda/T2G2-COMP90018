@@ -25,7 +25,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import com.example.myapplication.model.Garden;
+import com.example.myapplication.network.GardenDto;
 import com.example.myapplication.network.PlantDto;
 import com.example.myapplication.network.PlantMapDto;
 import com.example.myapplication.map.PlantGardenMapManager;
@@ -64,6 +64,8 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     
     // Current plant for like functionality
     private PlantMapDto currentPlant = null;
+    // Local like state (null = unknown, true = liked, false = not liked)
+    private Boolean currentLiked = null;
     
     // UI related fields
     private FloatingActionButton fabPlaces;
@@ -110,7 +112,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
             }
             
             @Override
-            public void onGardenClick(Garden garden) {
+            public void onGardenClick(GardenDto garden) {
                 showGardenBottomSheet(garden);
             }
             
@@ -128,7 +130,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
             }
             
             @Override
-            public void onGardensFound(List<Garden> gardens) {
+            public void onGardensFound(List<GardenDto> gardens) {
                 // 花园数据已由MapDisplayManager自动显示在地图上
             }
             
@@ -147,6 +149,9 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
             public void onPlantLiked(boolean liked) {
                 String message = liked ? "Plant liked! ❤️" : "Plant unliked";
                 Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                // sync local state with server result
+                currentLiked = liked;
+                updateLikeButton();
             }
             
             @Override
@@ -529,9 +534,11 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
                 btnNavigate.setVisibility(View.VISIBLE);
             }
             
-            // Show and update like button for plants
+            // 恢复点赞按钮：基于本地状态切换调用 like/unlike API
             if (btnLike != null) {
                 btnLike.setVisibility(View.VISIBLE);
+                // reset local like state when opening a new plant popup
+                currentLiked = null;
                 updateLikeButton();
             }
 
@@ -550,7 +557,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     /**
      * 显示花园信息底部弹窗
      */
-    private void showGardenBottomSheet(Garden garden) {
+    private void showGardenBottomSheet(GardenDto garden) {
         Log.d(TAG, "showGardenBottomSheet called with: " + garden.getName());
 
         if (bottomSheetContainer != null) {
@@ -611,14 +618,18 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
             Toast.makeText(getContext(), "No plant selected", Toast.LENGTH_SHORT).show();
             return;
         }
-        
-        if (currentPlant.isFavourite()) {
-            // Unlike the plant
+        // Toggle based on local state; if unknown/null, treat as not liked
+        boolean liked = currentLiked != null && currentLiked;
+        if (liked) {
             unlikePlant(currentPlant.getPlantId());
+            // optimistically update UI
+            currentLiked = false;
         } else {
-            // Like the plant
             likePlant(currentPlant.getPlantId());
+            // optimistically update UI
+            currentLiked = true;
         }
+        updateLikeButton();
     }
     
     /**
@@ -627,9 +638,6 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     private void likePlant(int plantId) {
         if (plantGardenMapManager != null) {
             plantGardenMapManager.likePlant(plantId);
-            // Update UI immediately for better UX
-            currentPlant.setFavourite(true);
-            updateLikeButton();
         } else {
             Toast.makeText(getContext(), "Map manager not available", Toast.LENGTH_SHORT).show();
         }
@@ -641,9 +649,6 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
     private void unlikePlant(int plantId) {
         if (plantGardenMapManager != null) {
             plantGardenMapManager.unlikePlant(plantId);
-            // Update UI immediately for better UX
-            currentPlant.setFavourite(false);
-            updateLikeButton();
         } else {
             Toast.makeText(getContext(), "Map manager not available", Toast.LENGTH_SHORT).show();
         }
@@ -653,16 +658,17 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback {
      * Update like button appearance based on current state
      */
     private void updateLikeButton() {
-        if (btnLike != null && currentPlant != null) {
-            if (currentPlant.isFavourite()) {
-                btnLike.setText("❤️ Liked");
-                btnLike.setBackgroundColor(getResources().getColor(android.R.color.holo_red_light));
-                btnLike.setTextColor(getResources().getColor(android.R.color.white));
-            } else {
-                btnLike.setText("❤️ Like");
-                btnLike.setBackgroundColor(getResources().getColor(android.R.color.transparent));
-                btnLike.setTextColor(getResources().getColor(android.R.color.black));
-            }
+        if (btnLike == null) return;
+        btnLike.setVisibility(View.VISIBLE);
+        boolean liked = currentLiked != null && currentLiked;
+        if (liked) {
+            btnLike.setText("❤️ Liked");
+            btnLike.setBackgroundColor(getResources().getColor(android.R.color.holo_red_light));
+            btnLike.setTextColor(getResources().getColor(android.R.color.white));
+        } else {
+            btnLike.setText("❤️ Like");
+            btnLike.setBackgroundColor(getResources().getColor(android.R.color.transparent));
+            btnLike.setTextColor(getResources().getColor(android.R.color.black));
         }
     }
     

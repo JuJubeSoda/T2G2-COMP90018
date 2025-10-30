@@ -34,15 +34,7 @@ public class PlantMapDto implements Serializable {
     @SerializedName("gardenId")
     private int gardenId;
     
-    // Status fields
-    @SerializedName("isFavourite")
-    private boolean isFavourite;
-    
-    @SerializedName("createdAt")
-    private String createdAt;
-    
-    @SerializedName("updatedAt")
-    private String updatedAt;
+    // Status/time fields已移除：isFavourite/createdAt/updatedAt
 
     // Additional info for map display
     @SerializedName("tags")
@@ -59,8 +51,7 @@ public class PlantMapDto implements Serializable {
     }
 
     public PlantMapDto(int plantId, int userId, String name, String description, 
-                      Double latitude, Double longitude, int gardenId, 
-                      boolean isFavourite, String createdAt, String updatedAt) {
+                      Double latitude, Double longitude, int gardenId) {
         this.plantId = plantId;
         this.userId = userId;
         this.name = name;
@@ -68,9 +59,6 @@ public class PlantMapDto implements Serializable {
         this.latitude = latitude;
         this.longitude = longitude;
         this.gardenId = gardenId;
-        this.isFavourite = isFavourite;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 
     // Getters
@@ -100,18 +88,6 @@ public class PlantMapDto implements Serializable {
 
     public int getGardenId() {
         return gardenId;
-    }
-
-    public boolean isFavourite() {
-        return isFavourite;
-    }
-
-    public String getCreatedAt() {
-        return createdAt;
-    }
-
-    public String getUpdatedAt() {
-        return updatedAt;
     }
 
     public List<String> getTags() {
@@ -147,18 +123,6 @@ public class PlantMapDto implements Serializable {
         this.gardenId = gardenId;
     }
 
-    public void setFavourite(boolean favourite) {
-        isFavourite = favourite;
-    }
-
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public void setUpdatedAt(String updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
     public void setTags(List<String> tags) {
         this.tags = tags;
     }
@@ -176,9 +140,6 @@ public class PlantMapDto implements Serializable {
         plantDto.setLatitude(this.latitude);
         plantDto.setLongitude(this.longitude);
         plantDto.setGardenId(this.gardenId);
-        plantDto.setFavourite(this.isFavourite);
-        plantDto.setCreatedAt(this.createdAt);
-        plantDto.setUpdatedAt(this.updatedAt);
         plantDto.setTags(this.tags);
         // image and scientificName remain null
         return plantDto;
@@ -197,9 +158,6 @@ public class PlantMapDto implements Serializable {
         plantMapDto.setLatitude(plantDto.getLatitude());
         plantMapDto.setLongitude(plantDto.getLongitude());
         plantMapDto.setGardenId(plantDto.getGardenId());
-        plantMapDto.setFavourite(plantDto.isFavourite());
-        plantMapDto.setCreatedAt(plantDto.getCreatedAt());
-        plantMapDto.setUpdatedAt(plantDto.getUpdatedAt());
         plantMapDto.setTags(plantDto.getTags());
         return plantMapDto;
     }

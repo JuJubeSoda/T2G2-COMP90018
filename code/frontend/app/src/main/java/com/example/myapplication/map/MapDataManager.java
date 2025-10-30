@@ -3,7 +3,7 @@ package com.example.myapplication.map;
 import android.content.Context;
 import android.util.Log;
 
-import com.example.myapplication.model.Garden;
+import com.example.myapplication.network.GardenDto;
 import com.example.myapplication.network.PlantDto;
 import com.example.myapplication.network.PlantMapDto;
 import com.example.myapplication.network.ApiClient;
@@ -60,22 +60,23 @@ public class MapDataManager {
         });
     }
     
+    // Removed: searchNearbyGardens in favor of fetchAllGardens
+
     /**
-     * 搜索附近的花园（带回调）
+     * 拉取全部花园列表（不做附近搜索），用于本地转换为GeoJSON整层渲染
      */
-    public void searchNearbyGardens(double latitude, double longitude, int radius, MapDataCallback<List<Garden>> callback) {
-        Log.d(TAG, "Searching for nearby gardens at: " + latitude + ", " + longitude + " radius: " + radius);
-        
-        Call<ApiResponse<List<Garden>>> call = apiService.getNearbyGardens(latitude, longitude, radius);
-        call.enqueue(new Callback<ApiResponse<List<Garden>>>() {
+    public void fetchAllGardens(MapDataCallback<List<GardenDto>> callback) {
+        Log.d(TAG, "Fetching all gardens");
+        Call<ApiResponse<List<GardenDto>>> call = apiService.getAllGardens();
+        call.enqueue(new Callback<ApiResponse<List<GardenDto>>>() {
             @Override
-            public void onResponse(Call<ApiResponse<List<Garden>>> call, Response<ApiResponse<List<Garden>>> response) {
+            public void onResponse(Call<ApiResponse<List<GardenDto>>> call, Response<ApiResponse<List<GardenDto>>> response) {
                 handleApiResponse(response, "gardens", callback);
             }
-            
+
             @Override
-            public void onFailure(Call<ApiResponse<List<Garden>>> call, Throwable t) {
-                Log.e(TAG, "Network call failed for gardens", t);
+            public void onFailure(Call<ApiResponse<List<GardenDto>>> call, Throwable t) {
+                Log.e(TAG, "Network call failed for all gardens", t);
                 callback.onError("Network error: " + t.getMessage());
             }
         });
