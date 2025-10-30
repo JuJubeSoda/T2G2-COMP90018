@@ -215,7 +215,10 @@ public class HomeFragment extends Fragment {
         
         // Create API service and make request
         ApiService apiService = ApiClient.create(requireContext());
-        Call<ApiResponse<List<PlantDto>>> call = apiService.getNearbyPlants();
+        double latitude = 0.0; // TODO: replace with actual user latitude
+        double longitude = 0.0; // TODO: replace with actual user longitude
+        Integer radius = 1000; // meters
+        Call<ApiResponse<List<PlantDto>>> call = apiService.getNearbyPlants(latitude, longitude, radius);
         
         call.enqueue(new Callback<ApiResponse<List<PlantDto>>>() {
             @Override
