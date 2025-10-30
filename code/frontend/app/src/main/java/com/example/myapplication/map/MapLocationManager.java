@@ -154,6 +154,23 @@ public class MapLocationManager {
     }
     
     /**
+     * 获取当前位置并移动地图到该位置（不带回调的便捷方法）
+     */
+    public void getCurrentLocationAndMove() {
+        getDeviceLocation(new OnLocationResultCallback() {
+            @Override
+            public void onLocationSuccess(Location location) {
+                Log.d(TAG, "Successfully moved to current location");
+            }
+            
+            @Override
+            public void onLocationError(String error) {
+                Log.e(TAG, "Failed to get current location: " + error);
+            }
+        });
+    }
+    
+    /**
      * 检查是否有位置权限
      */
     public boolean hasLocationPermission() {

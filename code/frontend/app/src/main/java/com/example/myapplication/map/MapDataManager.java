@@ -39,52 +39,9 @@ public class MapDataManager {
         this.mapDisplayManager = mapDisplayManager;
     }
     
-    /**
-     * 搜索附近的植物
-     */
-    public void searchNearbyPlants(double latitude, double longitude, int radius) {
-        searchNearbyPlants(latitude, longitude, radius, new MapDataCallback<List<PlantDto>>() {
-            @Override
-            public void onSuccess(List<PlantDto> plants) {
-                if (plants.isEmpty()) {
-                    showToast("No plants found nearby");
-                    return;
-                }
-                // Convert to PlantMapDto for map popup usage
-                java.util.ArrayList<PlantMapDto> mapDtos = new java.util.ArrayList<>();
-                for (PlantDto p : plants) {
-                    mapDtos.add(PlantMapDto.fromPlantDto(p));
-                }
-                mapDisplayManager.displayPlantsOnMap(mapDtos);
-            }
-            
-            @Override
-            public void onError(String message) {
-                showToast("Failed to load nearby plants: " + message);
-            }
-        });
-    }
+    // 便捷重载移除：统一由上层协调层处理数据与显示
     
-    /**
-     * 搜索附近的花园
-     */
-    public void searchNearbyGardens(double latitude, double longitude, int radius) {
-        searchNearbyGardens(latitude, longitude, radius, new MapDataCallback<List<Garden>>() {
-            @Override
-            public void onSuccess(List<Garden> gardens) {
-                if (gardens.isEmpty()) {
-                    showToast("No gardens found nearby");
-                    return;
-                }
-                mapDisplayManager.displayGardensOnMap(gardens);
-            }
-            
-            @Override
-            public void onError(String message) {
-                showToast("Failed to load nearby gardens: " + message);
-            }
-        });
-    }
+    // 便捷重载移除：统一由上层协调层处理数据与显示
     
     /**
      * 搜索附近的植物（带回调）

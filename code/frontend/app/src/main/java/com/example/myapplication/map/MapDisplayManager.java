@@ -126,8 +126,8 @@ public class MapDisplayManager {
     /**
      * 增量更新植物显示（添加新植物）
      */
-    public void addNewPlants(List<PlantDto> newPlants) {
-        for (PlantDto plant : newPlants) {
+    public void addNewPlants(List<PlantMapDto> newPlants) {
+        for (PlantMapDto plant : newPlants) {
             if (plant.getLatitude() != null && plant.getLongitude() != null && !currentPlants.contains(plant)) {
                 addPlantMarker(plant);
                 currentPlants.add(plant);
@@ -140,8 +140,8 @@ public class MapDisplayManager {
     /**
      * 移除植物标记
      */
-    public void removePlants(List<PlantDto> plantsToRemove) {
-        for (PlantDto plant : plantsToRemove) {
+    public void removePlants(List<PlantMapDto> plantsToRemove) {
+        for (PlantMapDto plant : plantsToRemove) {
             removePlantMarker(plant);
             currentPlants.remove(plant);
         }

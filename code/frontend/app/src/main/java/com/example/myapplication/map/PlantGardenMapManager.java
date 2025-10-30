@@ -163,8 +163,8 @@ public class PlantGardenMapManager {
                 
                 // 修复：先在地图上显示植物
                 Log.d(TAG, "Displaying plants on map...");
-                // display handled in data manager via PlantMapDto conversion
-                // no-op here
+                // 统一在协调层进行渲染
+                displayManager.displayPlantsOnMap(mapDtos);
                 Log.d(TAG, "Plants displayed on map successfully");
                 
                 if (onPlantGardenMapInteractionListener != null) {
