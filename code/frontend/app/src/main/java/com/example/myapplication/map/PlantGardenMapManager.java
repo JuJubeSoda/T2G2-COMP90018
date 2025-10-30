@@ -102,15 +102,19 @@ public class PlantGardenMapManager {
             }
         });
         
-        // 设置地图标记点击监听器（用于植物标记）
-        googleMap.setOnMarkerClickListener(marker -> {
-            // 尝试处理植物标记点击
-            if (displayManager.handlePlantMarkerClick(marker)) {
-                return true; // 植物标记点击已处理
-            }
-            // 如果不是植物标记，返回false让其他监听器处理
-            return false;
-        });
+        // 由ClusterManager处理Marker点击；由协调层组合CameraIdle事件
+        if (displayManager.getPlantClusterManager() != null) {
+            com.google.maps.android.clustering.ClusterManager<PlantClusterItem> cm = displayManager.getPlantClusterManager();
+            googleMap.setOnMarkerClickListener(cm);
+            googleMap.setOnCameraIdleListener(new com.google.android.gms.maps.GoogleMap.OnCameraIdleListener() {
+                @Override
+                public void onCameraIdle() {
+                    cm.onCameraIdle();
+                    // 触发半径变化的去抖刷新
+                    handleRadiusChangeWithDebounce();
+                }
+            });
+        }
     }
     
     /**
@@ -155,7 +159,23 @@ public class PlantGardenMapManager {
     /**
      * 搜索附近植物
      */
+    // Request de-dup signature
+    private static class SearchSignature {
+        final double lat; final double lng; final int radius; final boolean showPlants;
+        SearchSignature(double lat, double lng, int radius, boolean showPlants) { this.lat = lat; this.lng = lng; this.radius = radius; this.showPlants = showPlants; }
+        @Override public boolean equals(Object o) { if (!(o instanceof SearchSignature)) return false; SearchSignature s = (SearchSignature) o; return Math.abs(s.lat-lat) < 1e-6 && Math.abs(s.lng-lng) < 1e-6 && s.radius==radius && s.showPlants==showPlants; }
+        @Override public int hashCode() { return (int)(lat*1000) ^ (int)(lng*1000) ^ radius ^ (showPlants?1:0); }
+    }
+    private SearchSignature lastSignature = null;
+
     public void searchNearbyPlants(double latitude, double longitude, int radius) {
+        SearchSignature sig = new SearchSignature(latitude, longitude, radius, true);
+        if (lastSignature != null && lastSignature.equals(sig)) {
+            Log.d(TAG, "Deduped identical plants search; skipping network call");
+            return;
+        }
+        lastSignature = sig;
+        if (onPlantGardenMapInteractionListener != null) onPlantGardenMapInteractionListener.onLoading(true);
         Log.d(TAG, "Searching for nearby plants with radius: " + radius + " meters");
         
         dataManager.searchNearbyPlants(latitude, longitude, radius, new MapDataManager.MapDataCallback<List<PlantDto>>() {
@@ -188,6 +208,10 @@ public class PlantGardenMapManager {
                     Log.d(TAG, "Listener is not null, calling onPlantsFound (map dtos)");
                     onPlantGardenMapInteractionListener.onPlantsFound(mapDtos);
                     Log.d(TAG, "onPlantsFound called successfully");
+                    if (mapDtos.isEmpty()) {
+                        onPlantGardenMapInteractionListener.onEmptyResult("plants");
+                    }
+                    onPlantGardenMapInteractionListener.onLoading(false);
                 } else {
                     Log.e(TAG, "onPlantGardenMapInteractionListener is null!");
                 }
@@ -201,6 +225,7 @@ public class PlantGardenMapManager {
                 
                 if (onPlantGardenMapInteractionListener != null) {
                     onPlantGardenMapInteractionListener.onSearchError(message);
+                    onPlantGardenMapInteractionListener.onLoading(false);
                 }
             }
         });
@@ -212,6 +237,7 @@ public class PlantGardenMapManager {
      * 拉取全部花园并渲染
      */
     public void fetchAllGardens() {
+        if (onPlantGardenMapInteractionListener != null) onPlantGardenMapInteractionListener.onLoading(true);
         dataManager.fetchAllGardens(new MapDataManager.MapDataCallback<List<GardenDto>>() {
             @Override
             public void onSuccess(List<GardenDto> gardens) {
@@ -219,6 +245,10 @@ public class PlantGardenMapManager {
                 displayManager.displayGardensOnMap(gardens);
                 if (onPlantGardenMapInteractionListener != null) {
                     onPlantGardenMapInteractionListener.onGardensFound(gardens);
+                    if (gardens == null || gardens.isEmpty()) {
+                        onPlantGardenMapInteractionListener.onEmptyResult("gardens");
+                    }
+                    onPlantGardenMapInteractionListener.onLoading(false);
                 }
             }
 
@@ -227,6 +257,7 @@ public class PlantGardenMapManager {
                 Log.e(TAG, "Fetch All Gardens Error: " + message);
                 if (onPlantGardenMapInteractionListener != null) {
                     onPlantGardenMapInteractionListener.onSearchError(message);
+                    onPlantGardenMapInteractionListener.onLoading(false);
                 }
             }
         });
@@ -434,5 +465,7 @@ public class PlantGardenMapManager {
         void onDataTypeChanged(boolean isShowingPlants);
         void onPlantLiked(boolean liked);
         void onPlantLikeError(String message);
+        default void onLoading(boolean show) {}
+        default void onEmptyResult(String type) {}
     }
 }

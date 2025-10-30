@@ -16,6 +16,8 @@ import com.google.maps.android.data.Feature;
 import com.google.maps.android.data.geojson.GeoJsonFeature;
 import com.google.maps.android.data.geojson.GeoJsonLayer;
 import com.google.maps.android.data.geojson.GeoJsonPointStyle;
+import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -35,7 +37,10 @@ public class MapDisplayManager {
     private final Context context;
     private final GoogleMap googleMap;
     private GeoJsonLayer currentGeoJsonLayer;
-    private List<Marker> currentPlantMarkers = new ArrayList<>();
+    // Clustering for plants
+    private ClusterManager<PlantClusterItem> plantClusterManager;
+    private DefaultClusterRenderer<PlantClusterItem> plantClusterRenderer;
+    private List<PlantClusterItem> currentPlantItems = new ArrayList<>();
     private List<Marker> currentGardenMarkers = new ArrayList<>();
     private List<PlantMapDto> currentPlants = new ArrayList<>();
     private List<GardenDto> currentGardens = new ArrayList<>();
@@ -55,6 +60,7 @@ public class MapDisplayManager {
     public MapDisplayManager(Context context, GoogleMap googleMap) {
         this.context = context;
         this.googleMap = googleMap;
+        setupClusterManagerIfNeeded();
     }
     
     public void setOnGardenClickListener(OnGardenMapClickListener listener) {
@@ -84,9 +90,10 @@ public class MapDisplayManager {
             }
         }
         
-        Log.d(TAG, "Clearing existing markers...");
+        Log.d(TAG, "Clearing existing plant items...");
         clearPlantMarkers();
         currentPlants.clear();
+        currentPlantItems.clear();
         
         int validPlants = 0;
         if (plants != null) {
@@ -94,7 +101,7 @@ public class MapDisplayManager {
                 if (plant.getLatitude() != null && plant.getLongitude() != null) {
                     Log.d(TAG, "Adding marker for plant: " + plant.getName() + " at (" + plant.getLatitude() + ", " + plant.getLongitude() + ")");
                     try {
-                        addPlantMarker(plant);
+                        addPlantClusterItem(plant);
                         currentPlants.add(plant);
                         validPlants++;
                         Log.d(TAG, "Successfully added marker for: " + plant.getName());
@@ -107,7 +114,7 @@ public class MapDisplayManager {
             }
         }
         
-        Log.d(TAG, "Final marker count: " + currentPlantMarkers.size());
+        Log.d(TAG, "Final cluster item count: " + currentPlantItems.size());
         Log.d(TAG, "Valid plants: " + validPlants + " out of " + (plants != null ? plants.size() : 0));
         Log.d(TAG, "Current plants list size: " + currentPlants.size());
         
@@ -119,7 +126,7 @@ public class MapDisplayManager {
             Log.e(TAG, "GoogleMap is null! Cannot display markers.");
         }
         
-        Toast.makeText(context, "Displayed " + currentPlantMarkers.size() + " plants", Toast.LENGTH_SHORT).show();
+        // UI feedback should be handled at higher layer
         Log.d(TAG, "=== End Display Plants Debug ===");
     }
     
@@ -129,7 +136,7 @@ public class MapDisplayManager {
     public void addNewPlants(List<PlantMapDto> newPlants) {
         for (PlantMapDto plant : newPlants) {
             if (plant.getLatitude() != null && plant.getLongitude() != null && !currentPlants.contains(plant)) {
-                addPlantMarker(plant);
+                addPlantClusterItem(plant);
                 currentPlants.add(plant);
             }
         }
@@ -179,8 +186,7 @@ public class MapDisplayManager {
         
         if (marker != null) {
             marker.setTag(plant);
-            currentPlantMarkers.add(marker);
-            Log.d(TAG, "Marker added to list. Total markers: " + currentPlantMarkers.size());
+            // Legacy path (kept for potential fallback)
             
             // 设置点击监听器
             setupPlantMarkerClickListener(marker);
@@ -190,20 +196,34 @@ public class MapDisplayManager {
         }
         Log.d(TAG, "=== End Add Plant Marker Debug ===");
     }
+
+    /**
+     * 添加Cluster item并刷新聚合
+     */
+    private void addPlantClusterItem(PlantMapDto plant) {
+        if (plantClusterManager == null) {
+            setupClusterManagerIfNeeded();
+        }
+        PlantClusterItem item = new PlantClusterItem(plant);
+        currentPlantItems.add(item);
+        plantClusterManager.addItem(item);
+        plantClusterManager.cluster();
+    }
     
     /**
      * 移除单个植物标记
      */
     private void removePlantMarker(PlantMapDto plant) {
-        for (int i = currentPlantMarkers.size() - 1; i >= 0; i--) {
-            Marker marker = currentPlantMarkers.get(i);
-            PlantMapDto markerPlant = (PlantMapDto) marker.getTag();
-            if (markerPlant != null && markerPlant.getPlantId() == plant.getPlantId()) {
-                marker.remove();
-                currentPlantMarkers.remove(i);
+        if (plantClusterManager == null || currentPlantItems.isEmpty()) return;
+        for (int i = currentPlantItems.size() - 1; i >= 0; i--) {
+            PlantClusterItem item = currentPlantItems.get(i);
+            if (item.getPlant().getPlantId() == plant.getPlantId()) {
+                currentPlantItems.remove(i);
+                plantClusterManager.removeItem(item);
                 break;
             }
         }
+        plantClusterManager.cluster();
     }
     
     /**
@@ -229,11 +249,9 @@ public class MapDisplayManager {
             currentGardens.addAll(gardens);
             
             Log.d(TAG, "Successfully displayed " + gardens.size() + " gardens on map");
-            Toast.makeText(context, "Displayed " + gardens.size() + " gardens", Toast.LENGTH_SHORT).show();
             
         } catch (JSONException e) {
             Log.e(TAG, "Failed to display gardens on map", e);
-            Toast.makeText(context, "Failed to display gardens", Toast.LENGTH_SHORT).show();
         }
     }
     
@@ -241,10 +259,12 @@ public class MapDisplayManager {
      * 清除植物标记
      */
     public void clearPlantMarkers() {
-        for (Marker marker : currentPlantMarkers) {
-            marker.remove();
+        // Clear clustering items
+        if (plantClusterManager != null) {
+            plantClusterManager.clearItems();
         }
-        currentPlantMarkers.clear();
+        currentPlantItems.clear();
+        // Legacy markers list is no longer used
     }
     
     /**
@@ -330,7 +350,7 @@ public class MapDisplayManager {
      */
     private void handleGardenFeatureClick(Feature feature) {
         try {
-            Garden garden = createGardenFromFeature(feature);
+            GardenDto garden = createGardenFromFeature(feature);
             if (garden != null && gardenClickListener != null) {
                 gardenClickListener.onGardenClick(garden);
             }
@@ -424,5 +444,39 @@ public class MapDisplayManager {
      */
     public void destroy() {
         clearCurrentDisplay();
+    }
+
+    /**
+     * 初始化ClusterManager并绑定点击监听
+     */
+    private void setupClusterManagerIfNeeded() {
+        if (googleMap == null || plantClusterManager != null) return;
+
+        plantClusterManager = new ClusterManager<>(context, googleMap);
+        plantClusterRenderer = new DefaultClusterRenderer<>(context, googleMap, plantClusterManager) {
+            @Override
+            protected void onBeforeClusterItemRendered(PlantClusterItem item, MarkerOptions markerOptions) {
+                markerOptions.title(item.getTitle())
+                        .snippet(item.getSnippet())
+                        .icon(createPlantIcon());
+            }
+        };
+        plantClusterManager.setRenderer(plantClusterRenderer);
+
+        // Marker点击：传递到回调，让上层展示BottomSheet
+        plantClusterManager.setOnClusterItemClickListener(clusterItem -> {
+            if (plantClickListener != null) {
+                plantClickListener.onPlantClick(clusterItem.getPlant());
+                return true;
+            }
+            return false;
+        });
+
+        // 将地图的各种事件委托给ClusterManager
+        // Do not set listeners here; coordinator will attach composite listeners
+    }
+
+    public ClusterManager<PlantClusterItem> getPlantClusterManager() {
+        return plantClusterManager;
     }
 }
