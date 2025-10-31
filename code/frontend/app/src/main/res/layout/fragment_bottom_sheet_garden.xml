@@ -73,19 +73,7 @@
             android:layout_height="wrap_content"
             android:text="Navigate" />
 
-        <Button
-            android:id="@+id/btn_garden_more"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="More"
-            android:layout_marginStart="12dp" />
-
-        <Button
-            android:id="@+id/btn_garden_share"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Share"
-            android:layout_marginStart="12dp" />
+        <!-- Removed More and Share buttons -->
 
         <Button
             android:id="@+id/btn_garden_view_plants"

@@ -33,6 +33,8 @@ public class PlantGardenMapManager {
     
     // 当前状态
     private boolean isShowingPlants = true; // true = plants, false = gardens
+    // 锁定：当从Garden进入Plant列表或显示单个Plant时，阻止相机驱动的附近搜索
+    private boolean plantViewLocked = false;
     
     // 防抖和节流控制
     private static final long DEBOUNCE_DELAY_MS = 800; // 防抖延迟800ms
@@ -117,12 +119,24 @@ public class PlantGardenMapManager {
         final com.google.maps.android.clustering.ClusterManager<GardenClusterItem> gardenCM = displayManager.getGardenClusterManager();
 
         if (isShowingPlants && plantCM != null) {
-            clusterBinder.bind(plantCM, new Runnable() {
-                @Override
-                public void run() {
-                    handleRadiusChangeWithDebounce();
-                }
-            });
+            if (plantViewLocked) {
+                clusterBinder.bind(plantCM, new Runnable() {
+                    @Override
+                    public void run() {
+                        // 锁定时不触发自动刷新
+                        LogUtil.d(TAG, "applyModeListeners: plant mode LOCKED, suppressing camera idle refresh");
+                    }
+                });
+                LogUtil.d(TAG, "applyModeListeners: bound to plantCM (LOCKED)");
+            } else {
+                clusterBinder.bind(plantCM, new Runnable() {
+                    @Override
+                    public void run() {
+                        handleRadiusChangeWithDebounce();
+                    }
+                });
+                LogUtil.d(TAG, "applyModeListeners: bound to plantCM");
+            }
         } else if (!isShowingPlants && gardenCM != null) {
             clusterBinder.bind(gardenCM, new Runnable() {
                 @Override
@@ -132,8 +146,8 @@ public class PlantGardenMapManager {
                     handleRadiusChangeWithDebounce();
                 }
             });
+            LogUtil.d(TAG, "applyModeListeners: bound to gardenCM");
         }
-        LogUtil.d(TAG, "applyModeListeners: bound to " + (isShowingPlants ? "plantCM" : "gardenCM"));
     }
     
     /**
@@ -142,6 +156,10 @@ public class PlantGardenMapManager {
     public void searchNearbyData() {
         LogUtil.d(TAG, "=== Search Nearby Data Debug ===");
         LogUtil.d(TAG, "Current mode: " + (isShowingPlants ? "Plants" : "Gardens"));
+        if (isShowingPlants && plantViewLocked) {
+            LogUtil.d(TAG, "searchNearbyData: suppressed due to plantViewLocked");
+            return;
+        }
 
         // 以相机中心作为查询中心
         com.google.android.gms.maps.model.LatLng center = locationManager.getCameraCenter();
@@ -304,6 +322,7 @@ public class PlantGardenMapManager {
             @Override
             public void onSuccess(List<PlantDto> plants) {
                 enterPlantsMode();
+                plantViewLocked = true;
                 java.util.ArrayList<PlantMapDto> mapDtos = new java.util.ArrayList<>();
                 if (plants != null) {
                     for (PlantDto p : plants) {
@@ -486,6 +505,8 @@ public class PlantGardenMapManager {
                 }
                 PlantMapDto mapDto = PlantMapDto.fromPlantDto(plantDto);
                 displayManager.displayAndFocusSinglePlant(mapDto, 17f);
+                plantViewLocked = true;
+                applyModeListeners();
             }
 
             @Override
@@ -518,10 +539,34 @@ public class PlantGardenMapManager {
         schedulers.schedule(new Runnable() {
             @Override
             public void run() {
+                if (isShowingPlants && plantViewLocked) {
+                    LogUtil.d(TAG, "Debounced refresh suppressed (plantViewLocked)");
+                    return;
+                }
                 LogUtil.d(TAG, "Auto-refreshing data with debounced smart radius (camera center)");
                 searchNearbyData();
             }
         });
+    }
+
+    /** 锁定/解锁 Plant 视图 */
+    public void unlockPlantView() {
+        if (plantViewLocked) {
+            plantViewLocked = false;
+            LogUtil.d(TAG, "unlockPlantView: unlocking and re-binding listeners");
+            applyModeListeners();
+            searchNearbyData();
+        }
+    }
+
+    public void lockPlantView() {
+        plantViewLocked = true;
+        LogUtil.d(TAG, "lockPlantView: locked");
+        applyModeListeners();
+    }
+
+    public boolean isPlantViewLocked() {
+        return plantViewLocked;
     }
     
     /**

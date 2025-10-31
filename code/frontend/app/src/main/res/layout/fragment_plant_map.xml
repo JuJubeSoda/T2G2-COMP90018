@@ -40,7 +40,7 @@
         android:name="com.google.android.gms.maps.SupportMapFragment"
         tools:layout="@layout/fragment_plant_map" />
 
-    <!-- Refresh Controls Container -->
+    <!-- Controls Container -->
     <LinearLayout
         android:id="@+id/refresh_controls_container"
         android:layout_width="wrap_content"
@@ -52,21 +52,7 @@
         android:background="@android:color/white"
         android:elevation="4dp"
         android:padding="8dp">
-
-        <!-- Manual Refresh Button -->
-        <Button
-            android:id="@+id/btn_refresh_data"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Refresh"
-            android:textSize="12sp"
-            android:padding="8dp"
-            android:minWidth="0dp"
-            android:minHeight="0dp"
-            android:background="@android:color/holo_blue_bright"
-            android:textColor="@android:color/white" />
-
-
+        
         <!-- Data Type Toggle Button -->
         <Button
             android:id="@+id/btn_toggle_data_type"
@@ -93,7 +79,8 @@
             android:minHeight="0dp"
             android:layout_marginTop="4dp"
             android:background="@android:color/holo_green_light"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:visibility="gone" />
 
     </LinearLayout>
 

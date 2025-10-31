@@ -45,8 +45,6 @@ public class GardenBottomSheetDialogFragment extends BottomSheetDialogFragment {
             TextView tvDesc = view.findViewById(R.id.tv_garden_desc);
             TextView tvCoords = view.findViewById(R.id.tv_garden_coords);
             View btnNavigate = view.findViewById(R.id.btn_garden_navigate);
-            View btnMore = view.findViewById(R.id.btn_garden_more);
-            View btnShare = view.findViewById(R.id.btn_garden_share);
             View btnViewPlants = view.findViewById(R.id.btn_garden_view_plants);
 
             tvTitle.setText("Garden Information");
@@ -75,21 +73,7 @@ public class GardenBottomSheetDialogFragment extends BottomSheetDialogFragment {
                 });
             }
 
-            if (btnMore != null) {
-                btnMore.setOnClickListener(v -> {
-                    // optional: delegate to parent
-                });
-            }
-
-            if (btnShare != null) {
-                btnShare.setOnClickListener(v -> {
-                    if (garden.getLatitude() != null && garden.getLongitude() != null) {
-                        String url = String.format("https://www.google.com/maps/search/?api=1&query=%f,%f", garden.getLatitude(), garden.getLongitude());
-                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                        startActivity(intent);
-                    }
-                });
-            }
+            // Removed More and Share buttons and their logic
 
             if (btnViewPlants != null) {
                 btnViewPlants.setOnClickListener(v -> {

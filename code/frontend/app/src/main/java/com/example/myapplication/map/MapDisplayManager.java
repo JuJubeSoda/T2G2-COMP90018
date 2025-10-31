@@ -265,6 +265,7 @@ public class MapDisplayManager {
         // Clear clustering items
         if (plantClusterManager != null) {
             plantClusterManager.clearItems();
+            plantClusterManager.cluster();
         }
         currentPlantItems.clear();
         // Legacy markers list is no longer used
@@ -276,6 +277,7 @@ public class MapDisplayManager {
     public void clearGardenMarkers() {
         if (gardenClusterManager != null) {
             gardenClusterManager.clearItems();
+            gardenClusterManager.cluster();
         }
         currentGardenItems.clear();
     }
@@ -373,6 +375,7 @@ public class MapDisplayManager {
         // 清除数据缓存
         currentPlants.clear();
         currentGardens.clear();
+        LogUtil.d(TAG, "clearCurrentDisplay: plants and gardens cleared and clusters refreshed");
     }
     
     /**

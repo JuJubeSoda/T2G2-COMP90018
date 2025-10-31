@@ -53,7 +53,6 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
     // GardenBottomSheetDialogFragment.newInstance(garden).show(getChildFragmentManager(), "garden_sheet");
     
     // Refresh control buttons
-    private Button btnRefreshData;
     private Button btnToggleDataType;
     private Button btnBackToGardens;
     
@@ -315,18 +314,8 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
      * Initialize refresh control buttons
      */
     private void initializeRefreshControls(View view) {
-        btnRefreshData = view.findViewById(R.id.btn_refresh_data);
         btnToggleDataType = view.findViewById(R.id.btn_toggle_data_type);
         btnBackToGardens = view.findViewById(R.id.btn_back_to_gardens);
-        
-        if (btnRefreshData != null) {
-            btnRefreshData.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    refreshCurrentData();
-                }
-            });
-        }
         
         
         if (btnToggleDataType != null) {
