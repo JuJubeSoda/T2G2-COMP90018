@@ -13,6 +13,7 @@ public class MapSchedulers {
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Runnable pendingRunnable = null;
+    private Runnable trailingRunnable = null;
     private long lastExecutionTime = 0;
 
     private final long debounceDelayMs;
@@ -32,8 +33,24 @@ public class MapSchedulers {
         long currentTime = System.currentTimeMillis();
 
         // Throttle: ignore if called too soon
-        if (currentTime - lastExecutionTime < throttleIntervalMs) {
-            LogUtil.d(TAG, "Throttled: too soon since last execution");
+        long elapsed = currentTime - lastExecutionTime;
+        if (elapsed < throttleIntervalMs) {
+            // Trailing: schedule one execution at the end of the throttle window (plus debounce)
+            long delay = (throttleIntervalMs - elapsed) + debounceDelayMs;
+            if (trailingRunnable != null) {
+                handler.removeCallbacks(trailingRunnable);
+                trailingRunnable = null;
+            }
+            trailingRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    lastExecutionTime = System.currentTimeMillis();
+                    task.run();
+                    trailingRunnable = null;
+                }
+            };
+            handler.postDelayed(trailingRunnable, Math.max(debounceDelayMs, delay));
+            LogUtil.d(TAG, "Throttled: schedule trailing execution in " + delay + "ms");
             return;
         }
 
@@ -63,6 +80,10 @@ public class MapSchedulers {
         if (pendingRunnable != null) {
             handler.removeCallbacks(pendingRunnable);
             pendingRunnable = null;
+        }
+        if (trailingRunnable != null) {
+            handler.removeCallbacks(trailingRunnable);
+            trailingRunnable = null;
         }
     }
 

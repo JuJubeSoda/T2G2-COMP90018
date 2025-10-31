@@ -166,6 +166,11 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
                 Log.d(TAG, "PlantGardenMapManager instance: " + (plantGardenMapManager == null ? "null" : "available"));
                 Log.d(TAG, "=== End onPlantsFound Callback Debug ===");
                 // 植物数据已由MapDisplayManager自动显示在地图上
+                if (plants == null || plants.isEmpty()) {
+                    Toast.makeText(getContext(), "No nearby plants in this area", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "Found " + plants.size() + " plants", Toast.LENGTH_SHORT).show();
+                }
                 // 更新 BackToGardens 可见性（Garden→View Plants 进入锁定后应显示）
                 updateLockButtonVisibility();
             }

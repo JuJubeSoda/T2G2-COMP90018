@@ -40,6 +40,9 @@ public class PlantGardenMapManager {
     private static final long DEBOUNCE_DELAY_MS = 800; // 防抖延迟800ms
     private static final long THROTTLE_INTERVAL_MS = 2000; // 节流最小间隔2秒
     private final MapSchedulers schedulers = new MapSchedulers(DEBOUNCE_DELAY_MS, THROTTLE_INTERVAL_MS);
+    // 调试：请求序号（仅日志，不改变行为）
+    private long requestSeq = 0L;
+    private long lastIssuedPlantsReqId = 0L;
     
     public PlantGardenMapManager(Context context, GoogleMap googleMap) {
         this.context = context;
@@ -198,12 +201,15 @@ public class PlantGardenMapManager {
      */
     public void searchNearbyPlants(double latitude, double longitude, int radius) {
         if (onPlantGardenMapInteractionListener != null) onPlantGardenMapInteractionListener.onLoading(true);
-        LogUtil.d(TAG, "Searching for nearby plants with radius: " + radius + " meters");
+        long reqId = ++requestSeq;
+        lastIssuedPlantsReqId = reqId;
+        LogUtil.d(TAG, "ISSUE plants reqId=" + reqId + ", radius=" + radius + ", lat=" + latitude + ", lng=" + longitude);
         
         plantsController.searchNearbyPlants(latitude, longitude, radius, new MapDataManager.MapDataCallback<List<PlantMapDto>>() {
             @Override
             public void onSuccess(List<PlantMapDto> plants) {
-                LogUtil.d(TAG, "=== Search Plants Success Debug ===");
+                LogUtil.d(TAG, "=== Search Plants Success Debug (reqId=" + reqId + ") ===");
+                LogUtil.d(TAG, "Returned reqId=" + reqId + ", lastIssuedPlantsReqId=" + lastIssuedPlantsReqId);
                 LogUtil.d(TAG, "Plants found: " + (plants == null ? "null" : plants.size()));
                 if (plants != null && !plants.isEmpty()) {
                     LogUtil.d(TAG, "First plant details:");
@@ -212,7 +218,7 @@ public class PlantGardenMapManager {
                     LogUtil.d(TAG, "  - Coordinates: (" + firstPlant.getLatitude() + ", " + firstPlant.getLongitude() + ")");
                     LogUtil.d(TAG, "  - PlantId: " + firstPlant.getPlantId());
                 }
-                LogUtil.d(TAG, "=== End Search Plants Success Debug ===");
+                LogUtil.d(TAG, "=== End Search Plants Success Debug (reqId=" + reqId + ") ===");
                 
                 // 直接渲染返回的 PlantMapDto 列表
                 plantsController.displayPlants(plants);
@@ -236,9 +242,9 @@ public class PlantGardenMapManager {
             
             @Override
             public void onError(String message) {
-                LogUtil.e(TAG, "=== Search Plants Error Debug ===");
+                LogUtil.e(TAG, "=== Search Plants Error Debug (reqId=" + reqId + ") ===");
                 LogUtil.e(TAG, "Error message: " + message);
-                LogUtil.e(TAG, "=== End Search Plants Error Debug ===");
+                LogUtil.e(TAG, "=== End Search Plants Error Debug (reqId=" + reqId + ") ===");
                 
                 if (onPlantGardenMapInteractionListener != null) {
                     onPlantGardenMapInteractionListener.onSearchError(message);

@@ -88,6 +88,12 @@ public class MapDisplayManager {
         LogUtil.d(TAG, "Received plants list: " + (plants == null ? "null" : "size=" + plants.size()));
         LogUtil.d(TAG, "GoogleMap instance: " + (googleMap == null ? "null" : "available"));
         
+        if (plants == null || plants.isEmpty()) {
+            LogUtil.d(TAG, "Empty result: preserve existing markers (no clear)");
+            LogUtil.d(TAG, "=== End Display Plants Debug ===");
+            return;
+        }
+
         if (plants != null) {
             for (int i = 0; i < plants.size(); i++) {
                 PlantMapDto plant = plants.get(i);

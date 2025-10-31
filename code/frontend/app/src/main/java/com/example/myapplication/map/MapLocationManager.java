@@ -379,21 +379,9 @@ public class MapLocationManager {
             // 获取基于可见区域的半径
             int visibleRadius = getCurrentMapRadius();
             LogUtil.d(TAG, "Visible radius: " + visibleRadius + "m");
-            
-            // 获取基于缩放级别的半径
-            int zoomRadius = getCurrentCameraRadius();
-            
-            // 获取当前缩放级别用于调试
-            CameraPosition cameraPosition = googleMap.getCameraPosition();
-            if (cameraPosition != null) {
-                LogUtil.d(TAG, "Current zoom level: " + cameraPosition.zoom);
-            }
-            LogUtil.d(TAG, "Zoom-based radius: " + zoomRadius + "m");
-            
-            // 取两者的较小值，确保搜索范围合理
-            int smartRadius = Math.min(visibleRadius, zoomRadius);
-            
-            LogUtil.d(TAG, "Final smart radius: " + smartRadius + "m (min of visible: " + visibleRadius + "m and zoom: " + zoomRadius + "m)");
+            // 直接使用可见区域半径作为最终半径（禁用缩放级别上限）
+            int smartRadius = visibleRadius;
+            LogUtil.d(TAG, "Final smart radius: " + smartRadius + "m (use visible radius only)");
             
             // 半径范围检查
             if (smartRadius > 50000) {
