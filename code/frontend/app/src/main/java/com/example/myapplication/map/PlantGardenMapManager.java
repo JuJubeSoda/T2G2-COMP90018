@@ -511,7 +511,8 @@ public class PlantGardenMapManager {
                 }
                 PlantMapDto mapDto = PlantMapDto.fromPlantDto(plantDto);
                 displayManager.displayAndFocusSinglePlant(mapDto, 17f);
-                plantViewLocked = true;
+                // Do NOT lock for search-by-id; allow normal map interactions to resume
+                plantViewLocked = false;
                 applyModeListeners();
             }
 
