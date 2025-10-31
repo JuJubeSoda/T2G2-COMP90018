@@ -1,20 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Root ScrollView enables vertical scrolling for long content. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    tools:context=".ui.myplants.PlantDetailFragment">
+    tools:context=".ui.myplants.LikedPlantDetailFragment">
 
-    <!-- Main ConstraintLayout holding all content. Padding is moved here. -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp">
 
-        <!-- Progress Bar for loading plant details -->
         <ProgressBar
             android:id="@+id/progressBar"
             style="?android:attr/progressBarStyle"
@@ -26,7 +23,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Back Button (Optional but good for UX) -->
         <ImageButton
             android:id="@+id/backButtonDetail"
             android:layout_width="wrap_content"
@@ -38,7 +34,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- TextView displaying the main title of the page. -->
         <TextView
             android:id="@+id/textViewPageTitle"
             android:layout_width="wrap_content"
@@ -51,7 +46,6 @@
             app:layout_constraintStart_toEndOf="@+id/backButtonDetail"
             app:layout_constraintTop_toTopOf="@+id/backButtonDetail" />
 
-        <!-- ImageView for showing a preview of the plant image. -->
         <ImageView
             android:id="@+id/imageViewPlantPreview"
             android:layout_width="0dp"
@@ -64,7 +58,6 @@
             app:layout_constraintTop_toBottomOf="@+id/backButtonDetail"
             tools:src="@tools:sample/backgrounds/scenic" />
 
-        <!-- Guideline to vertically align labels and their values. -->
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guidelineLabelEnd"
             android:layout_width="wrap_content"
@@ -72,7 +65,6 @@
             android:orientation="vertical"
             app:layout_constraintGuide_percent="0.35" />
 
-        <!-- Row 1: Scientific Name -->
         <TextView
             android:id="@+id/labelScientificName"
             android:layout_width="0dp"
@@ -94,7 +86,6 @@
             app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
             tools:text="Quercus robur" />
 
-        <!-- Row 2: Introduction -->
         <TextView
             android:id="@+id/labelIntroduction"
             android:layout_width="0dp"
@@ -114,9 +105,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
             app:layout_constraintTop_toTopOf="@+id/labelIntroduction"
-            tools:text="A large deciduous tree, native to most of Europe west of the Caucasus. Can grow quite large and live for many centuries." />
+            tools:text="A large deciduous tree ..." />
 
-        <!-- Row 3: Location -->
         <TextView
             android:id="@+id/labelLocation"
             android:layout_width="0dp"
@@ -138,11 +128,6 @@
             app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
             tools:text="Royal Botanic Gardens" />
 
-        <!-- Row 4: Search Tags (REMOVED) -->
-        <!-- TextView android:id="@+id/labelSearchTag" ... -->
-        <!-- TextView android:id="@+id/textViewSearchTag" ... -->
-
-        <!-- Row 5: Discovered By - FIX: Top constraint now connects to labelLocation -->
         <TextView
             android:id="@+id/labelDiscoveredBy"
             android:layout_width="0dp"
@@ -164,7 +149,6 @@
             app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
             tools:text="User 1" />
 
-        <!-- Row 6: Discovered On - FIX: Top constraint now connects to labelDiscoveredBy -->
         <TextView
             android:id="@+id/labelDiscoveredOn"
             android:layout_width="0dp"
@@ -186,7 +170,32 @@
             app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
             tools:text="31/12/2024" />
 
-        <!-- Bottom actions removed: PlantDetailFragment is display-only -->
+        <LinearLayout
+            android:id="@+id/layoutBottomActions"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:layout_marginTop="24dp"
+            app:layout_constraintTop_toBottomOf="@+id/textViewDiscoveredOn"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <Button
+                android:id="@+id/btn_like_toggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Unlike"/>
+
+            <Button
+                android:id="@+id/btn_show_on_map"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Show it on map"
+                android:layout_marginStart="16dp"/>
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>
+
+

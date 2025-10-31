@@ -11,8 +11,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 
 public class ApiClient {
-    //private static final String BASE_URL = "http://192.168.1.210:9999/";
-    private static final String BASE_URL = "https://mobile.kevinauhome.com/";
+    //private static final String BASE_URL = "http://localhost:9999/";
+    private static final String BASE_URL = "https://mobile.kevinauhome.com";
 
     public static ApiService create(Context context) {
 

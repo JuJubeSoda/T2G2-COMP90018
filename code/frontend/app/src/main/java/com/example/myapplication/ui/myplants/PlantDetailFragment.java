@@ -16,6 +16,7 @@ import androidx.navigation.Navigation;
 import com.bumptech.glide.Glide;
 import com.example.myapplication.R;
 import com.example.myapplication.databinding.PlantdetailBinding;
+// Removed interactive dependencies; display-only fragment
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -67,6 +68,7 @@ public class PlantDetailFragment extends Fragment {
     
     /** Plant data to display */
     private Plant plant;
+    // Display-only: no like/unlike state
 
     /**
      * Fragment creation lifecycle method.
@@ -115,6 +117,8 @@ public class PlantDetailFragment extends Fragment {
         // Show loading indicator
         binding.progressBar.setVisibility(View.VISIBLE);
 
+        // No interactive manager/state
+
         if (plant != null) {
             populateUi();
             binding.progressBar.setVisibility(View.GONE);
@@ -127,6 +131,8 @@ public class PlantDetailFragment extends Fragment {
         binding.backButtonDetail.setOnClickListener(v ->
                 Navigation.findNavController(v).navigateUp()
         );
+
+        // No like/unlike or navigation buttons in display-only fragment
     }
 
     /**
@@ -230,6 +236,8 @@ public class PlantDetailFragment extends Fragment {
             binding.imageViewPlantPreview.setImageResource(R.drawable.plantbulb_foreground);
         }
     }
+
+    // No interactive methods
 
     /** Cleans up view binding to prevent memory leaks. */
     @Override

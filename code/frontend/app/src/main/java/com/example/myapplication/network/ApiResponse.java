@@ -7,7 +7,8 @@ import com.google.gson.annotations.SerializedName;
  * {
  *   "code": 200,
  *   "message": "Success",
- *   "data": { ... } or [ ... ]
+ *   "data": { ... } or [ ... ],
+ *   "success": true
  * }
  * @param <T> The type of the data payload.
  */
@@ -22,16 +23,59 @@ public class ApiResponse<T> {
     @SerializedName("data")
     private T data;
 
-    // Getters
+    @SerializedName("success")
+    private boolean success;
+
+    // Default constructor
+    public ApiResponse() {}
+
+    // Getters and Setters
     public int getCode() {
         return code;
+    }
+
+    public void setCode(int code) {
+        this.code = code;
     }
 
     public String getMessage() {
         return message;
     }
 
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
     public T getData() {
         return data;
+    }
+
+    public void setData(T data) {
+        this.data = data;
+    }
+
+    public boolean isSuccess() {
+        return success;
+    }
+
+    public void setSuccess(boolean success) {
+        this.success = success;
+    }
+
+    /**
+     * Check if the API call was successful
+     */
+    public boolean isSuccessful() {
+        return success && code == 200;
+    }
+
+    @Override
+    public String toString() {
+        return "ApiResponse{" +
+                "code=" + code +
+                ", message='" + message + '\'' +
+                ", data=" + data +
+                ", success=" + success +
+                '}';
     }
 }

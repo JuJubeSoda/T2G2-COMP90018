@@ -2,6 +2,7 @@ package com.example.myapplication.network;
 
 import com.example.myapplication.ui.myplants.Plant;
 import com.google.gson.annotations.SerializedName;
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -29,7 +30,7 @@ import java.util.List;
  * 3. toPlant() converts to domain model
  * 4. App uses Plant object for display and logic
  */
-public class PlantDto {
+public class PlantDto implements Serializable {
 
     // ===== Core Plant Identity =====
     
@@ -116,6 +117,16 @@ public class PlantDto {
     @SerializedName("humidityRequirement")
     private String humidityRequirement;
 
+    // Constructors from model/Plant
+    public PlantDto() {}
+
+    public PlantDto(String name, String description, Double latitude, Double longitude) {
+        this.name = name;
+        this.description = description;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
     /**
      * Converts this DTO to the app's domain model (Plant).
      * 
@@ -162,4 +173,15 @@ public class PlantDto {
     public boolean isFavourite() { return isFavourite; }
     public Double getLatitude() { return latitude; }
     public Double getLongitude() { return longitude; }
+    public int getUserId() { return userId; }
+    public int getGardenId() { return gardenId; }
+
+    // ===== Setters (needed for conversions from PlantMapDto) =====
+    public void setPlantId(int plantId) { this.plantId = plantId; }
+    public void setUserId(int userId) { this.userId = userId; }
+    public void setName(String name) { this.name = name; }
+    public void setDescription(String description) { this.description = description; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
+    public void setGardenId(int gardenId) { this.gardenId = gardenId; }
 }

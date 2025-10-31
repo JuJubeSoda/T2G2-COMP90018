@@ -53,7 +53,7 @@ import com.example.myapplication.ui.home.DiscoveryItem;
 import com.example.myapplication.network.ApiClient;
 import com.example.myapplication.network.ApiResponse;
 import com.example.myapplication.network.ApiService;
-import com.example.myapplication.network.PlantDto;
+import com.example.myapplication.network.PlantMapDto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -215,12 +215,15 @@ public class HomeFragment extends Fragment {
         
         // Create API service and make request
         ApiService apiService = ApiClient.create(requireContext());
-        Call<ApiResponse<List<PlantDto>>> call = apiService.getNearbyPlants();
+        double latitude = 0.0; // TODO: replace with actual user latitude
+        double longitude = 0.0; // TODO: replace with actual user longitude
+        Integer radius = 1000; // meters
+        Call<ApiResponse<List<PlantMapDto>>> call = apiService.getNearbyPlants(latitude, longitude, radius);
         
-        call.enqueue(new Callback<ApiResponse<List<PlantDto>>>() {
+        call.enqueue(new Callback<ApiResponse<List<PlantMapDto>>>() {
             @Override
-            public void onResponse(@NonNull Call<ApiResponse<List<PlantDto>>> call, 
-                                 @NonNull Response<ApiResponse<List<PlantDto>>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<List<PlantMapDto>>> call, 
+                                 @NonNull Response<ApiResponse<List<PlantMapDto>>> response) {
                 // Safety check: Ensure fragment is still attached
                 if (binding == null) return;
                 
@@ -229,12 +232,12 @@ public class HomeFragment extends Fragment {
                 Log.d(TAG, "Response successful: " + response.isSuccessful());
                 
                 if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<List<PlantDto>> apiResponse = response.body();
+                    ApiResponse<List<PlantMapDto>> apiResponse = response.body();
                     Log.d(TAG, "API Response code: " + apiResponse.getCode());
                     Log.d(TAG, "API Response message: " + apiResponse.getMessage());
                     
                     if (apiResponse.getData() != null) {
-                        List<PlantDto> nearbyPlants = apiResponse.getData();
+                        List<PlantMapDto> nearbyPlants = apiResponse.getData();
                         Log.d(TAG, "Successfully fetched " + nearbyPlants.size() + " nearby plants.");
                         
                         // Handle empty results with helpful message
@@ -249,7 +252,7 @@ public class HomeFragment extends Fragment {
                         
                         // Convert PlantDto objects to DiscoveryItem objects for display
                         List<DiscoveryItem> discoveryItems = new ArrayList<>();
-                        for (PlantDto plant : nearbyPlants) {
+                        for (PlantMapDto plant : nearbyPlants) {
                             Log.d(TAG, "Processing plant: " + plant.getName());
                             
                             // Calculate distance (placeholder for now, TODO: use actual GPS calculation)
@@ -265,7 +268,7 @@ public class HomeFragment extends Fragment {
                                 distance,
                                 R.drawable.map_foreground, // Placeholder resource ID
                                 description,
-                                plant.getImage() // Base64 image string (handled by adapter)
+                                null // no image in PlantMapDto; adapter should handle null
                             ));
                         }
                         
@@ -301,7 +304,7 @@ public class HomeFragment extends Fragment {
             }
             
             @Override
-            public void onFailure(@NonNull Call<ApiResponse<List<PlantDto>>> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<ApiResponse<List<PlantMapDto>>> call, @NonNull Throwable t) {
                 // Network error (no response from server)
                 if (binding == null) return;
                 
@@ -319,7 +322,7 @@ public class HomeFragment extends Fragment {
      * Calculates a display-friendly distance string from plant location data.
      * If latitude/longitude are null, returns "Unknown distance".
      */
-    private String calculateDistance(PlantDto plant) {
+    private String calculateDistance(PlantMapDto plant) {
         if (plant.getLatitude() != null && plant.getLongitude() != null) {
             // TODO: Calculate actual distance from user's location
             // For now, return a placeholder
