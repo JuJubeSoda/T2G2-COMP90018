@@ -141,12 +141,14 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, co
         plantGardenMapManager.setOnPlantGardenMapInteractionListener(new PlantGardenMapManager.OnPlantGardenMapInteractionListener() {
             @Override
             public void onPlantClick(PlantMapDto plant) {
+                Log.d(TAG, "onPlantClick fired for: " + plant.getName() + " (" + plant.getLatitude() + ", " + plant.getLongitude() + ")");
                 // 使用BottomSheetDialogFragment展示植物信息
                 PlantBottomSheetDialogFragment.newInstance(plant).show(getChildFragmentManager(), "plant_sheet");
             }
             
             @Override
             public void onGardenClick(GardenDto garden) {
+                Log.d(TAG, "onGardenClick fired for: " + garden.getName());
                 // 使用BottomSheetDialogFragment展示花园信息
                 GardenBottomSheetDialogFragment.newInstance(garden).show(getChildFragmentManager(), "garden_sheet");
             }

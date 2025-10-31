@@ -56,6 +56,7 @@ public class MapDisplayManager {
     public MapDisplayManager(Context context, GoogleMap googleMap) {
         this.context = context;
         this.googleMap = googleMap;
+        LogUtil.d(TAG, "Initializing MapDisplayManager");
         setupClusterManagerIfNeeded();
         setupGardenClusterManagerIfNeeded();
         // 禁用InfoWindow
@@ -387,20 +388,43 @@ public class MapDisplayManager {
         plantClusterRenderer = new DefaultClusterRenderer<>(context, googleMap, plantClusterManager) {
             @Override
             protected void onBeforeClusterItemRendered(PlantClusterItem item, MarkerOptions markerOptions) {
-                markerOptions.title(item.getTitle())
-                        .snippet(item.getSnippet())
-                        .icon(createPlantIcon());
+                // 不设置 title/snippet，以彻底避免默认 InfoWindow 弹出
+                markerOptions.icon(createPlantIcon());
+            }
+
+            @Override
+            protected void onClusterItemUpdated(PlantClusterItem item, Marker marker) {
+                // 确保更新时也不带有 title/snippet，防止默认 InfoWindow 出现
+                marker.setTitle(null);
+                marker.setSnippet(null);
+                marker.setIcon(createPlantIcon());
+                super.onClusterItemUpdated(item, marker);
+            }
+
+            @Override
+            protected void onClusterItemRendered(PlantClusterItem clusterItem, Marker marker) {
+                // 渲染完成后再清一次，防止默认渲染器写回
+                marker.setTitle(null);
+                marker.setSnippet(null);
+                super.onClusterItemRendered(clusterItem, marker);
             }
         };
         plantClusterManager.setRenderer(plantClusterRenderer);
 
         // Marker点击：传递到回调，让上层展示BottomSheet
         plantClusterManager.setOnClusterItemClickListener(clusterItem -> {
+            LogUtil.d(TAG, "Plant cluster ITEM clicked: " + clusterItem.getPosition());
             if (plantClickListener != null) {
                 plantClickListener.onPlantClick(clusterItem.getPlant());
                 return true;
             }
             return false;
+        });
+
+        // 仅日志，不改变既有行为
+        plantClusterManager.setOnClusterClickListener(cluster -> {
+            LogUtil.d(TAG, "Plant CLUSTER clicked, size=" + cluster.getSize());
+            return false; // 不拦截，保持默认放大行为
         });
 
         // 将地图的各种事件委托给ClusterManager
@@ -421,18 +445,39 @@ public class MapDisplayManager {
         gardenClusterRenderer = new DefaultClusterRenderer<>(context, googleMap, gardenClusterManager) {
             @Override
             protected void onBeforeClusterItemRendered(GardenClusterItem item, MarkerOptions markerOptions) {
-                markerOptions.title(item.getTitle())
-                        .snippet(item.getSnippet())
-                        .icon(createGardenIcon());
+                // 不设置 title/snippet，以彻底避免默认 InfoWindow 弹出
+                markerOptions.icon(createGardenIcon());
+            }
+
+            @Override
+            protected void onClusterItemUpdated(GardenClusterItem item, Marker marker) {
+                // 确保更新时也不带有 title/snippet，防止默认 InfoWindow 出现
+                marker.setTitle(null);
+                marker.setSnippet(null);
+                marker.setIcon(createGardenIcon());
+                super.onClusterItemUpdated(item, marker);
+            }
+
+            @Override
+            protected void onClusterItemRendered(GardenClusterItem clusterItem, Marker marker) {
+                marker.setTitle(null);
+                marker.setSnippet(null);
+                super.onClusterItemRendered(clusterItem, marker);
             }
         };
         gardenClusterManager.setRenderer(gardenClusterRenderer);
 
         gardenClusterManager.setOnClusterItemClickListener(clusterItem -> {
+            LogUtil.d(TAG, "Garden cluster ITEM clicked: " + clusterItem.getPosition());
             if (gardenClickListener != null) {
                 gardenClickListener.onGardenClick(clusterItem.getGarden());
                 return true;
             }
+            return false;
+        });
+
+        gardenClusterManager.setOnClusterClickListener(cluster -> {
+            LogUtil.d(TAG, "Garden CLUSTER clicked, size=" + cluster.getSize());
             return false;
         });
     }
