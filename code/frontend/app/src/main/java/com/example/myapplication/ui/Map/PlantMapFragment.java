@@ -171,8 +171,9 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
                 } else {
                     Toast.makeText(getContext(), "Found " + plants.size() + " plants", Toast.LENGTH_SHORT).show();
                 }
-                // 更新 BackToGardens 可见性（Garden→View Plants 进入锁定后应显示）
+                // 更新 BackToGardens & 搜索栏可见性
                 updateLockButtonVisibility();
+                updateSearchBarVisibility();
             }
             
             @Override
@@ -189,11 +190,8 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
             public void onDataTypeChanged(boolean isShowingPlants) {
                 String message = isShowingPlants ? "Switched to Plants view" : "Switched to Gardens view";
                 Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
-                View searchBar = getView() != null ? getView().findViewById(R.id.plant_id_search_bar) : null;
-                if (searchBar != null) {
-                    searchBar.setVisibility(isShowingPlants ? View.VISIBLE : View.GONE);
-                }
                 updateLockButtonVisibility();
+                updateSearchBarVisibility();
             }
             
             @Override
@@ -314,9 +312,10 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
             });
         }
 
-        // 初始可见性由当前模式决定
+        // 初始可见性：仅在 Plant 非锁定状态显示
         if (searchBar != null && plantGardenMapManager != null) {
-            searchBar.setVisibility(plantGardenMapManager.isShowingPlants() ? View.VISIBLE : View.GONE);
+            boolean show = plantGardenMapManager.isShowingPlants() && !plantGardenMapManager.isPlantViewLocked();
+            searchBar.setVisibility(show ? View.VISIBLE : View.GONE);
         }
     }
     
@@ -379,6 +378,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
             // 自动触发一次加载，Garden 模式会全量拉取
             plantGardenMapManager.searchNearbyData();
             updateLockButtonVisibility();
+            updateSearchBarVisibility();
         }
     }
 
@@ -484,6 +484,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
         // 直接调用现有的搜索方法
         plantGardenMapManager.searchNearbyData();
         updateLockButtonVisibility();
+        updateSearchBarVisibility();
     }
 
     // 根据当前模式与锁定状态，控制“Back to Gardens”按钮可见性
@@ -516,6 +517,16 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
         
         // 移动地图到当前位置
         plantGardenMapManager.getLocationManager().getCurrentLocationAndMove();
+    }
+    
+    private void updateSearchBarVisibility() {
+        View root = getView();
+        if (root == null || plantGardenMapManager == null) return;
+        View searchBar = root.findViewById(R.id.plant_id_search_bar);
+        if (searchBar == null) return;
+        boolean show = plantGardenMapManager.isShowingPlants() && !plantGardenMapManager.isPlantViewLocked();
+        searchBar.setVisibility(show ? View.VISIBLE : View.GONE);
+        Log.d(TAG, "updateSearchBarVisibility: show=" + show);
     }
     
     
