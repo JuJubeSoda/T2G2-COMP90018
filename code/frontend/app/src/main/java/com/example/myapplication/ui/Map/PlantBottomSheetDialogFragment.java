@@ -18,12 +18,23 @@ import com.example.myapplication.R;
 
 public class PlantBottomSheetDialogFragment extends BottomSheetDialogFragment {
     private static final String ARG_PLANT = "plant_arg";
+    private static final String ARG_INITIAL_LIKED = "initial_liked";
     private PlantMapDto plant;
+    private boolean initialLiked = false;
 
     public static PlantBottomSheetDialogFragment newInstance(PlantMapDto plantDto) {
         PlantBottomSheetDialogFragment fragment = new PlantBottomSheetDialogFragment();
         Bundle args = new Bundle();
         args.putSerializable(ARG_PLANT, plantDto);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    public static PlantBottomSheetDialogFragment newInstance(PlantMapDto plantDto, boolean initialLiked) {
+        PlantBottomSheetDialogFragment fragment = new PlantBottomSheetDialogFragment();
+        Bundle args = new Bundle();
+        args.putSerializable(ARG_PLANT, plantDto);
+        args.putBoolean(ARG_INITIAL_LIKED, initialLiked);
         fragment.setArguments(args);
         return fragment;
     }
@@ -35,27 +46,26 @@ public class PlantBottomSheetDialogFragment extends BottomSheetDialogFragment {
 
         if (getArguments() != null) {
             plant = (PlantMapDto) getArguments().getSerializable(ARG_PLANT);
+            initialLiked = getArguments().getBoolean(ARG_INITIAL_LIKED, false);
         }
 
         if (plant != null) {
             TextView tvTitle = view.findViewById(R.id.tv_plant_title);
             TextView tvName = view.findViewById(R.id.tv_plant_name);
             TextView tvDesc = view.findViewById(R.id.tv_plant_desc);
-            TextView tvCoords = view.findViewById(R.id.tv_plant_coords);
+            TextView tvSci = view.findViewById(R.id.tv_plant_scientific_name);
             View btnNavigate = view.findViewById(R.id.btn_plant_navigate);
             View btnMore = view.findViewById(R.id.btn_plant_more);
-            View btnLike = view.findViewById(R.id.btn_plant_like);
+            android.widget.Button btnLike = view.findViewById(R.id.btn_plant_like);
             View btnShare = view.findViewById(R.id.btn_plant_share);
 
             tvTitle.setText("Plant Information");
             tvName.setText(plant.getName());
             String description = plant.getDescription();
             tvDesc.setText(description == null || description.isEmpty() ? "No description available" : description);
-            if (plant.getLatitude() != null && plant.getLongitude() != null) {
-                tvCoords.setText(String.format("Location: %.4f, %.4f", plant.getLatitude(), plant.getLongitude()));
-            } else {
-                tvCoords.setText("Location: Not available");
-            }
+            // Scientific name: display directly from PlantMapDto (no lazy load)
+            String sci = plant.getScientificName();
+            tvSci.setText(sci != null && !sci.isEmpty() ? ("Scientific Name: " + sci) : "Scientific Name: N/A");
 
             if (btnNavigate != null) {
                 btnNavigate.setOnClickListener(v -> {
@@ -76,15 +86,17 @@ public class PlantBottomSheetDialogFragment extends BottomSheetDialogFragment {
             if (btnMore != null) {
                 btnMore.setOnClickListener(v -> {
                     if (getParentFragment() instanceof OnPlantActionListener) {
-                        ((OnPlantActionListener) getParentFragment()).onMoreInfo(plant.getPlantId());
+                        ((OnPlantActionListener) getParentFragment()).onMoreInfo(plant.getPlantId() != null ? plant.getPlantId().intValue() : 0);
                     }
                 });
             }
 
             if (btnLike != null) {
+                // Default state: if来自“我点赞”列表则显示 Unlike
+                btnLike.setText(initialLiked ? "Unlike" : "Like");
                 btnLike.setOnClickListener(v -> {
                     if (getParentFragment() instanceof OnPlantActionListener) {
-                        ((OnPlantActionListener) getParentFragment()).onToggleLike(plant.getPlantId());
+                        ((OnPlantActionListener) getParentFragment()).onToggleLike(plant.getPlantId() != null ? plant.getPlantId().intValue() : 0);
                     }
                 });
             }
@@ -98,6 +110,7 @@ public class PlantBottomSheetDialogFragment extends BottomSheetDialogFragment {
                     }
                 });
             }
+            // No lazy loading here by requirement
         }
 
         return view;
@@ -106,6 +119,22 @@ public class PlantBottomSheetDialogFragment extends BottomSheetDialogFragment {
     public interface OnPlantActionListener {
         void onMoreInfo(int plantId);
         void onToggleLike(int plantId);
+    }
+
+    public void setLikedState(boolean liked) {
+        View root = getView();
+        if (root == null) return;
+        View btnLike = root.findViewById(R.id.btn_plant_like);
+        if (btnLike instanceof android.widget.Button) {
+            ((android.widget.Button) btnLike).setText(liked ? "Unlike" : "Like");
+        }
+    }
+
+    public void setLikeButtonEnabled(boolean enabled) {
+        View root = getView();
+        if (root == null) return;
+        View btnLike = root.findViewById(R.id.btn_plant_like);
+        if (btnLike != null) btnLike.setEnabled(enabled);
     }
 }
 

@@ -192,6 +192,16 @@
             app:argType="com.example.myapplication.ui.myplants.Plant" />
     </fragment>
 
+    <fragment
+        android:id="@+id/likedPlantDetailFragment"
+        android:name="com.example.myapplication.ui.myplants.LikedPlantDetailFragment"
+        android:label="Liked Plant Details"
+        tools:layout="@layout/liked_plant_detail">
+        <argument
+            android:name="plant_object"
+            app:argType="com.example.myapplication.ui.myplants.Plant" />
+    </fragment>
+
     <!--
         AddPlantFragment Destination: Represents the screen where users can manually add
         a new plant to their collection by filling out a form.

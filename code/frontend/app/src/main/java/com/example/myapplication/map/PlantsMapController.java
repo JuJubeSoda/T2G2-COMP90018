@@ -2,7 +2,6 @@ package com.example.myapplication.map;
 
 import android.content.Context;
 
-import com.example.myapplication.network.PlantDto;
 import com.example.myapplication.network.PlantMapDto;
 import com.example.myapplication.util.LogUtil;
 import com.google.android.gms.maps.GoogleMap;
@@ -39,7 +38,7 @@ public class PlantsMapController {
         this.dataManager = dataManager;
     }
 
-    public void searchNearbyPlants(double latitude, double longitude, int radius, MapDataManager.MapDataCallback<List<PlantDto>> callback) {
+    public void searchNearbyPlants(double latitude, double longitude, int radius, MapDataManager.MapDataCallback<List<PlantMapDto>> callback) {
         SearchSignature sig = new SearchSignature(latitude, longitude, radius);
         if (lastSignature != null && lastSignature.equals(sig)) {
             LogUtil.d(TAG, "Deduped identical plants search; skipping network call");
@@ -53,16 +52,7 @@ public class PlantsMapController {
         displayManager.displayPlantsOnMap(plants);
     }
 
-    public void showPlantsFromDtos(List<PlantDto> plantDtos) {
-        ArrayList<PlantMapDto> mapDtos = new ArrayList<>();
-        if (plantDtos != null) {
-            for (PlantDto p : plantDtos) {
-                mapDtos.add(PlantMapDto.fromPlantDto(p));
-            }
-        }
-        LogUtil.d(TAG, "Rendering plants count=" + mapDtos.size());
-        displayPlants(mapDtos);
-    }
+    // No longer needed to convert from PlantDto; API returns PlantMapDto directly
 
     public ClusterManager<PlantClusterItem> getClusterManager() {
         return displayManager.getPlantClusterManager();

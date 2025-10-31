@@ -68,6 +68,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
     
     // UI related fields
     private FloatingActionButton fabPlaces;
+    private PlantBottomSheetDialogFragment currentPlantSheet;
     
 
     @Nullable
@@ -142,8 +143,10 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
             @Override
             public void onPlantClick(PlantMapDto plant) {
                 Log.d(TAG, "onPlantClick fired for: " + plant.getName() + " (" + plant.getLatitude() + ", " + plant.getLongitude() + ")");
-                // 使用BottomSheetDialogFragment展示植物信息
-                PlantBottomSheetDialogFragment.newInstance(plant).show(getChildFragmentManager(), "plant_sheet");
+                // 使用BottomSheetDialogFragment展示植物信息（默认未点赞，MyFavourite页会单独处理）
+                PlantBottomSheetDialogFragment sheet = PlantBottomSheetDialogFragment.newInstance(plant, false);
+                sheet.show(getChildFragmentManager(), "plant_sheet");
+                currentPlantSheet = sheet;
             }
             
             @Override
@@ -192,12 +195,25 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
                 Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
                 // sync local state with server result
                 currentLiked = liked;
-                updateLikeButton();
+                if (currentPlantSheet != null) {
+                    currentPlantSheet.setLikedState(liked);
+                    currentPlantSheet.setLikeButtonEnabled(true);
+                }
+                // If unliked, notify MyGarden (MyFavourite) to update list
+                if (!liked) {
+                    try {
+                        Bundle result = new Bundle();
+                        result.putInt("plantId", currentPlant != null && currentPlant.getPlantId() != null ? currentPlant.getPlantId().intValue() : -1);
+                        result.putString("action", "unliked");
+                        getParentFragmentManager().setFragmentResult("favourite_change", result);
+                    } catch (Exception ignored) {}
+                }
             }
             
             @Override
             public void onPlantLikeError(String message) {
                 Toast.makeText(getContext(), "Failed to like plant: " + message, Toast.LENGTH_SHORT).show();
+                if (currentPlantSheet != null) currentPlantSheet.setLikeButtonEnabled(true);
             }
             
             public void onMapRadiusChanged(int newRadius) {
@@ -564,10 +580,18 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
     public void onToggleLike(int plantId) {
         boolean liked = currentLiked != null && currentLiked;
         if (liked) {
-            unlikePlant(plantId);
+            if (currentPlantSheet != null) currentPlantSheet.setLikeButtonEnabled(false);
+            Toast.makeText(getContext(), "Unliking...", Toast.LENGTH_SHORT).show();
+            if (plantGardenMapManager != null) {
+                plantGardenMapManager.unlikePlant(plantId);
+            }
             currentLiked = false;
         } else {
-            likePlant(plantId);
+            if (currentPlantSheet != null) currentPlantSheet.setLikeButtonEnabled(false);
+            Toast.makeText(getContext(), "Liking...", Toast.LENGTH_SHORT).show();
+            if (plantGardenMapManager != null) {
+                plantGardenMapManager.likePlant(plantId);
+            }
             currentLiked = true;
         }
     }

@@ -43,18 +43,18 @@ public class MapDataManager {
     /**
      * 搜索附近的植物（带回调）
      */
-    public void searchNearbyPlants(double latitude, double longitude, int radius, MapDataCallback<List<PlantDto>> callback) {
+    public void searchNearbyPlants(double latitude, double longitude, int radius, MapDataCallback<List<PlantMapDto>> callback) {
         LogUtil.d(TAG, "Searching for nearby plants at: " + latitude + ", " + longitude + " radius: " + radius);
         
-        Call<ApiResponse<List<PlantDto>>> call = apiService.getNearbyPlants(latitude, longitude, radius);
-        call.enqueue(new Callback<ApiResponse<List<PlantDto>>>() {
+        Call<ApiResponse<List<PlantMapDto>>> call = apiService.getNearbyPlants(latitude, longitude, radius);
+        call.enqueue(new Callback<ApiResponse<List<PlantMapDto>>>() {
             @Override
-            public void onResponse(Call<ApiResponse<List<PlantDto>>> call, Response<ApiResponse<List<PlantDto>>> response) {
+            public void onResponse(Call<ApiResponse<List<PlantMapDto>>> call, Response<ApiResponse<List<PlantMapDto>>> response) {
                 handleApiResponse(response, "plants", callback);
             }
             
             @Override
-            public void onFailure(Call<ApiResponse<List<PlantDto>>> call, Throwable t) {
+            public void onFailure(Call<ApiResponse<List<PlantMapDto>>> call, Throwable t) {
                 LogUtil.e(TAG, "Network call failed for plants", t);
                 callback.onError("Network error: " + t.getMessage());
             }

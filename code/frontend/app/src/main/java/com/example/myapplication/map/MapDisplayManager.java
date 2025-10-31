@@ -2,6 +2,8 @@ package com.example.myapplication.map;
 
 import android.content.Context;
 import android.view.View;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.widget.Toast;
 
 import com.example.myapplication.network.GardenDto;
@@ -224,7 +226,7 @@ public class MapDisplayManager {
         if (plantClusterManager == null || currentPlantItems.isEmpty()) return;
         for (int i = currentPlantItems.size() - 1; i >= 0; i--) {
             PlantClusterItem item = currentPlantItems.get(i);
-            if (item.getPlant().getPlantId() == plant.getPlantId()) {
+            if (item.getPlant() != null && java.util.Objects.equals(item.getPlant().getPlantId(), plant.getPlantId())) {
                 currentPlantItems.remove(i);
                 plantClusterManager.removeItem(item);
                 break;
@@ -341,6 +343,20 @@ public class MapDisplayManager {
      * 创建花园图标
      */
     private BitmapDescriptor createGardenIcon() {
+        // Ensure garden icon matches plant icon visual size
+        try {
+            // Decode plant icon to get target dimensions
+            Bitmap plantBmp = BitmapFactory.decodeResource(context.getResources(), com.example.myapplication.R.drawable.flower);
+            int targetW = plantBmp != null ? plantBmp.getWidth() : 0;
+            int targetH = plantBmp != null ? plantBmp.getHeight() : 0;
+
+            Bitmap gardenBmp = BitmapFactory.decodeResource(context.getResources(), com.example.myapplication.R.drawable.gardon);
+            if (gardenBmp != null && targetW > 0 && targetH > 0) {
+                Bitmap scaled = Bitmap.createScaledBitmap(gardenBmp, targetW, targetH, true);
+                return BitmapDescriptorFactory.fromBitmap(scaled);
+            }
+        } catch (Exception ignored) {}
+        // Fallback to raw resource if scaling failed
         return BitmapDescriptorFactory.fromResource(com.example.myapplication.R.drawable.gardon);
     }
     

@@ -6,17 +6,16 @@ import java.util.List;
 
 /**
  * Plant DTO specifically designed for map functionality.
- * Optimized for map display with reduced data payload.
- * Excludes image and scientificName fields to improve performance.
+ * Matches backend PlantVO for nearby plants payload.
  */
 public class PlantMapDto implements Serializable {
 
-    // Core identification fields
+    // Core identification fields (match backend PlantVO types)
     @SerializedName("plantId")
-    private int plantId;
+    private Long plantId;
     
     @SerializedName("userId")
-    private int userId;
+    private Long userId;
     
     @SerializedName("name")
     private String name;
@@ -32,13 +31,11 @@ public class PlantMapDto implements Serializable {
     private Double longitude;
     
     @SerializedName("gardenId")
-    private int gardenId;
-    
-    // Status/time fields已移除：isFavourite/createdAt/updatedAt
+    private Long gardenId;
 
-    // Additional info for map display
-    @SerializedName("tags")
-    private List<String> tags;
+    // New field from backend VO
+    @SerializedName("scientificName")
+    private String scientificName;
 
     // Constructors
     public PlantMapDto() {}
@@ -50,8 +47,8 @@ public class PlantMapDto implements Serializable {
         this.longitude = longitude;
     }
 
-    public PlantMapDto(int plantId, int userId, String name, String description, 
-                      Double latitude, Double longitude, int gardenId) {
+    public PlantMapDto(Long plantId, Long userId, String name, String description, 
+                      Double latitude, Double longitude, Long gardenId, String scientificName) {
         this.plantId = plantId;
         this.userId = userId;
         this.name = name;
@@ -59,14 +56,15 @@ public class PlantMapDto implements Serializable {
         this.latitude = latitude;
         this.longitude = longitude;
         this.gardenId = gardenId;
+        this.scientificName = scientificName;
     }
 
     // Getters
-    public int getPlantId() {
+    public Long getPlantId() {
         return plantId;
     }
 
-    public int getUserId() {
+    public Long getUserId() {
         return userId;
     }
 
@@ -86,20 +84,20 @@ public class PlantMapDto implements Serializable {
         return longitude;
     }
 
-    public int getGardenId() {
+    public Long getGardenId() {
         return gardenId;
     }
-
-    public List<String> getTags() {
-        return tags;
+    
+    public String getScientificName() {
+        return scientificName;
     }
 
     // Setters
-    public void setPlantId(int plantId) {
+    public void setPlantId(Long plantId) {
         this.plantId = plantId;
     }
 
-    public void setUserId(int userId) {
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
 
@@ -119,12 +117,12 @@ public class PlantMapDto implements Serializable {
         this.longitude = longitude;
     }
 
-    public void setGardenId(int gardenId) {
+    public void setGardenId(Long gardenId) {
         this.gardenId = gardenId;
     }
-
-    public void setTags(List<String> tags) {
-        this.tags = tags;
+    
+    public void setScientificName(String scientificName) {
+        this.scientificName = scientificName;
     }
 
     /**
@@ -133,15 +131,13 @@ public class PlantMapDto implements Serializable {
      */
     public PlantDto toPlantDto() {
         PlantDto plantDto = new PlantDto();
-        plantDto.setPlantId(this.plantId);
-        plantDto.setUserId(this.userId);
+        plantDto.setPlantId(this.plantId != null ? this.plantId.intValue() : 0);
+        plantDto.setUserId(this.userId != null ? this.userId.intValue() : 0);
         plantDto.setName(this.name);
         plantDto.setDescription(this.description);
         plantDto.setLatitude(this.latitude);
         plantDto.setLongitude(this.longitude);
-        plantDto.setGardenId(this.gardenId);
-        plantDto.setTags(this.tags);
-        // image and scientificName remain null
+        plantDto.setGardenId(this.gardenId != null ? this.gardenId.intValue() : 0);
         return plantDto;
     }
 
@@ -151,14 +147,14 @@ public class PlantMapDto implements Serializable {
      */
     public static PlantMapDto fromPlantDto(PlantDto plantDto) {
         PlantMapDto plantMapDto = new PlantMapDto();
-        plantMapDto.setPlantId(plantDto.getPlantId());
-        plantMapDto.setUserId(plantDto.getUserId());
+        plantMapDto.setPlantId((long) plantDto.getPlantId());
+        plantMapDto.setUserId((long) plantDto.getUserId());
         plantMapDto.setName(plantDto.getName());
         plantMapDto.setDescription(plantDto.getDescription());
         plantMapDto.setLatitude(plantDto.getLatitude());
         plantMapDto.setLongitude(plantDto.getLongitude());
-        plantMapDto.setGardenId(plantDto.getGardenId());
-        plantMapDto.setTags(plantDto.getTags());
+        plantMapDto.setGardenId((long) plantDto.getGardenId());
+        plantMapDto.setScientificName(plantDto.getScientificName());
         return plantMapDto;
     }
 
@@ -179,8 +175,8 @@ public class PlantMapDto implements Serializable {
         if (description != null && !description.isEmpty()) {
             sb.append("\n").append(description);
         }
-        if (tags != null && !tags.isEmpty()) {
-            sb.append("\nTags: ").append(String.join(", ", tags));
+        if (scientificName != null && !scientificName.isEmpty()) {
+            sb.append("\n").append(scientificName);
         }
         return sb.toString();
     }
@@ -192,6 +188,7 @@ public class PlantMapDto implements Serializable {
                 ", name='" + name + '\'' +
                 ", latitude=" + latitude +
                 ", longitude=" + longitude +
+                ", scientificName='" + scientificName + '\'' +
                 '}';
     }
 
@@ -200,11 +197,11 @@ public class PlantMapDto implements Serializable {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         PlantMapDto that = (PlantMapDto) obj;
-        return plantId == that.plantId;
+        return plantId != null && plantId.equals(that.plantId);
     }
 
     @Override
     public int hashCode() {
-        return Integer.hashCode(plantId);
+        return plantId != null ? plantId.hashCode() : 0;
     }
 }

@@ -208,6 +208,15 @@ public class MyGardenFragment extends Fragment {
         updateToggleButtonsVisualState();
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Auto refresh when returning to My Favourite tab
+        if (currentViewIsFavourites) {
+            loadLikedPlantsAndDisplay();
+        }
+    }
+
     /**
      * Fetches user's plant collection from backend API.
      * 
@@ -370,7 +379,11 @@ public class MyGardenFragment extends Fragment {
             Log.d(TAG, "Plant clicked: " + plant.getName() + ". Navigating to details.");
             Bundle args = new Bundle();
             args.putParcelable(PlantDetailFragment.ARG_PLANT, plant);
-            Navigation.findNavController(requireView()).navigate(R.id.plantDetailFragment, args);
+            if (currentViewIsFavourites) {
+                Navigation.findNavController(requireView()).navigate(R.id.likedPlantDetailFragment, args);
+            } else {
+                Navigation.findNavController(requireView()).navigate(R.id.plantDetailFragment, args);
+            }
         });
 
         binding.recyclerViewMyGardenPlants.setAdapter(plantCardAdapter);

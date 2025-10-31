@@ -182,22 +182,22 @@ public class PlantGardenMapManager {
         if (onPlantGardenMapInteractionListener != null) onPlantGardenMapInteractionListener.onLoading(true);
         LogUtil.d(TAG, "Searching for nearby plants with radius: " + radius + " meters");
         
-        plantsController.searchNearbyPlants(latitude, longitude, radius, new MapDataManager.MapDataCallback<List<PlantDto>>() {
+        plantsController.searchNearbyPlants(latitude, longitude, radius, new MapDataManager.MapDataCallback<List<PlantMapDto>>() {
             @Override
-            public void onSuccess(List<PlantDto> plants) {
+            public void onSuccess(List<PlantMapDto> plants) {
                 LogUtil.d(TAG, "=== Search Plants Success Debug ===");
                 LogUtil.d(TAG, "Plants found: " + (plants == null ? "null" : plants.size()));
                 if (plants != null && !plants.isEmpty()) {
                     LogUtil.d(TAG, "First plant details:");
-                    PlantDto firstPlant = plants.get(0);
+                    PlantMapDto firstPlant = plants.get(0);
                     LogUtil.d(TAG, "  - Name: " + firstPlant.getName());
                     LogUtil.d(TAG, "  - Coordinates: (" + firstPlant.getLatitude() + ", " + firstPlant.getLongitude() + ")");
                     LogUtil.d(TAG, "  - PlantId: " + firstPlant.getPlantId());
                 }
                 LogUtil.d(TAG, "=== End Search Plants Success Debug ===");
                 
-                // 先转换数据
-                plantsController.showPlantsFromDtos(plants);
+                // 直接渲染返回的 PlantMapDto 列表
+                plantsController.displayPlants(plants);
                 // 渲染完成后重新按模式绑定，避免监听被覆盖
                 applyModeListeners();
                 LogUtil.d(TAG, "Plants displayed on map successfully");
@@ -205,7 +205,7 @@ public class PlantGardenMapManager {
                 // 通知外部监听器
                 if (onPlantGardenMapInteractionListener != null) {
                     LogUtil.d(TAG, "Listener is not null, calling onPlantsFound (map dtos)");
-                    // 此处回调用 latest rendered list 不易取，保持空实现或可选重查；先简单通知加载结束
+                    onPlantGardenMapInteractionListener.onPlantsFound(plants);
                     LogUtil.d(TAG, "onPlantsFound called successfully");
                     if (plants == null || plants.isEmpty()) {
                         onPlantGardenMapInteractionListener.onEmptyResult("plants");
@@ -304,9 +304,16 @@ public class PlantGardenMapManager {
             @Override
             public void onSuccess(List<PlantDto> plants) {
                 enterPlantsMode();
-                plantsController.showPlantsFromDtos(plants);
+                java.util.ArrayList<PlantMapDto> mapDtos = new java.util.ArrayList<>();
+                if (plants != null) {
+                    for (PlantDto p : plants) {
+                        mapDtos.add(PlantMapDto.fromPlantDto(p));
+                    }
+                }
+                plantsController.displayPlants(mapDtos);
                 applyModeListeners();
                 if (onPlantGardenMapInteractionListener != null) {
+                    onPlantGardenMapInteractionListener.onPlantsFound(mapDtos);
                     onPlantGardenMapInteractionListener.onLoading(false);
                 }
             }

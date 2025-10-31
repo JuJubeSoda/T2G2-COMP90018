@@ -86,7 +86,7 @@ public interface ApiService {
      * The backend uses the authenticated user's location to find plants within a certain radius.
      */
     @GET("/api/plants/nearby")
-    Call<ApiResponse<List<PlantDto>>> getNearbyPlants(@Query("latitude") double latitude, @Query("longitude") double longitude, @Query("radius") Integer radius);
+    Call<ApiResponse<List<PlantMapDto>>> getNearbyPlants(@Query("latitude") double latitude, @Query("longitude") double longitude, @Query("radius") Integer radius);
 
     /**
      * Fetches all gardens without nearby search filtering.
