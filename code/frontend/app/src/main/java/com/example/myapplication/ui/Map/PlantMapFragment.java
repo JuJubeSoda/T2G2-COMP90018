@@ -166,6 +166,8 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
                 Log.d(TAG, "PlantGardenMapManager instance: " + (plantGardenMapManager == null ? "null" : "available"));
                 Log.d(TAG, "=== End onPlantsFound Callback Debug ===");
                 // 植物数据已由MapDisplayManager自动显示在地图上
+                // 更新 BackToGardens 可见性（Garden→View Plants 进入锁定后应显示）
+                updateLockButtonVisibility();
             }
             
             @Override
@@ -186,6 +188,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
                 if (searchBar != null) {
                     searchBar.setVisibility(isShowingPlants ? View.VISIBLE : View.GONE);
                 }
+                updateLockButtonVisibility();
             }
             
             @Override
@@ -225,6 +228,8 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
         
         // Initialize map with location services
         plantGardenMapManager.initializeMap();
+        // 初始时基于当前模式和锁定状态设置按钮可见性
+        updateLockButtonVisibility();
 
         // If a plantId was provided, center and show that plant on the map
         Bundle args = getArguments();
@@ -335,9 +340,12 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
                 public void onClick(View v) {
                     if (plantGardenMapManager != null) {
                         plantGardenMapManager.restoreGardensView();
+                        updateLockButtonVisibility();
                     }
                 }
             });
+            // 初始化一次
+            updateLockButtonVisibility();
         }
     }
     
@@ -365,6 +373,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
             plantGardenMapManager.toggleDataType();
             // 自动触发一次加载，Garden 模式会全量拉取
             plantGardenMapManager.searchNearbyData();
+            updateLockButtonVisibility();
         }
     }
 
@@ -469,6 +478,15 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
         
         // 直接调用现有的搜索方法
         plantGardenMapManager.searchNearbyData();
+        updateLockButtonVisibility();
+    }
+
+    // 根据当前模式与锁定状态，控制“Back to Gardens”按钮可见性
+    private void updateLockButtonVisibility() {
+        if (btnBackToGardens == null || plantGardenMapManager == null) return;
+        boolean show = plantGardenMapManager.isShowingPlants() && plantGardenMapManager.isPlantViewLocked();
+        Log.d(TAG, "updateLockButtonVisibility: show=" + show + ", isPlants=" + plantGardenMapManager.isShowingPlants() + ", locked=" + plantGardenMapManager.isPlantViewLocked());
+        btnBackToGardens.setVisibility(show ? View.VISIBLE : View.GONE);
     }
 
     /**
