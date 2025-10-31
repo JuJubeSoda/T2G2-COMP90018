@@ -234,7 +234,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
         // 初始时基于当前模式和锁定状态设置按钮可见性
         updateLockButtonVisibility();
 
-        // If a plantId was provided, center and show that plant on the map
+        // If a plantId was provided, center and show that plant on the map (focus and open sheet)
         Bundle args = getArguments();
         if (args != null && args.containsKey("plantId")) {
             int plantId = args.getInt("plantId");
@@ -242,21 +242,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
             if (!plantGardenMapManager.isShowingPlants()) {
                 plantGardenMapManager.toggleDataType();
             }
-            MapDataManager dataManager = new MapDataManager(requireContext());
-            dataManager.getPlantById(plantId, new MapDataManager.MapDataCallback<com.example.myapplication.network.PlantDto>() {
-                @Override
-                public void onSuccess(com.example.myapplication.network.PlantDto plantDto) {
-                    com.example.myapplication.network.PlantMapDto mapDto = com.example.myapplication.network.PlantMapDto.fromPlantDto(plantDto);
-                    java.util.ArrayList<com.example.myapplication.network.PlantMapDto> list = new java.util.ArrayList<>();
-                    list.add(mapDto);
-                    plantGardenMapManager.refreshPlants(list);
-                }
-
-                @Override
-                public void onError(String message) {
-                    Toast.makeText(getContext(), "Failed to load plant on map: " + message, Toast.LENGTH_SHORT).show();
-                }
-            });
+            plantGardenMapManager.searchAndShowPlantById(plantId);
         }
     }
 
