@@ -86,12 +86,14 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
 
     @Override
     public List<Plant> listLikedPlantsByUser() {
+
+        Long userId = UserContext.getCurrentUserId();
         List<Long> likedPlantIds = userPlantLikeMapper.selectList(
-                        Wrappers.<UserPlantLike>lambdaQuery()
+                        Wrappers.<UserPlantLike>lambdaQuery().eq(UserPlantLike::getUserId, userId)
                                 .select(UserPlantLike::getPlantId) // 只查 plantId 字段
                 ).stream()
                 .map(UserPlantLike::getPlantId)
-                .distinct() // 去重，避免同一植物被多个用户点赞多次
+                .distinct()
                 .toList();
 
         if (likedPlantIds.isEmpty()) {
