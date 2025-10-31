@@ -110,9 +110,6 @@ public class PlantWikiFeatures extends Fragment {
         final String PENDING_TEXT = "Pending Information";
 
         if (plant != null) {
-            // Display mature height from wiki API
-            String height = plant.getMatureHeight();
-            binding.featureHeightText.setText(height != null && !height.isEmpty() ? height : PENDING_TEXT);
 
             // Check if comprehensive features field exists
             String featuresText = plant.getFeatures();
@@ -134,7 +131,6 @@ public class PlantWikiFeatures extends Fragment {
             }
         } else {
             // Handle null Plant with fallback text
-            binding.featureHeightText.setText(PENDING_TEXT);
             binding.featureLeafTypeText.setText(PENDING_TEXT);
             binding.featureToxicityText.setText(PENDING_TEXT);
             binding.featureAirPurifyingText.setText(PENDING_TEXT);

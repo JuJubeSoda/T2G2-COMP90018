@@ -122,15 +122,18 @@ public class PlantWikiCareGuide extends Fragment {
 
         if (plant != null) {
             // Check if comprehensive care guide exists
-            String careGuideText = plant.getCareGuide();
+            String wateringText = plant.getWaterRequirement();
+            String lightText = plant.getLightRequirement();
+            String soilText = plant.getSoilGuide();
+            String fertilizerText = plant.getFertilizerGuide();
             
-            if (careGuideText != null && !careGuideText.isEmpty()) {
+            if (wateringText != null && lightText != null && soilText != null && fertilizerText != null) {
                 // Use comprehensive care guide for all sections
                 // TODO: Parse careGuide to extract section-specific content
-                binding.careWateringText.setText(careGuideText);
-                binding.careLightText.setText(careGuideText);
-                binding.careSoilText.setText(careGuideText);
-                binding.careFertilizerText.setText(careGuideText);
+                binding.careWateringText.setText(wateringText);
+                binding.careLightText.setText(lightText);
+                binding.careSoilText.setText(soilText);
+                binding.careFertilizerText.setText(fertilizerText);
             } else {
                 // Use individual requirement fields as fallback
                 

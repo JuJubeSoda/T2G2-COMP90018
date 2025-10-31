@@ -157,12 +157,21 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
             Log.d(TAG, "Water Requirement: " + waterReq);
             binding.waterSubtitle.setText(waterReq != null && !waterReq.isEmpty() ? waterReq : "N/A");
 
-            // Temperature and humidity not available in wiki API
+            // Display temperature requirement with the Celsius symbol
             String tempReq = plant.getTemperatureRequirement();
-            binding.temperatureSubtitle.setText(tempReq != null && !tempReq.isEmpty() ? tempReq : "N/A");
+            if (tempReq != null && !tempReq.isEmpty()) {
+                binding.temperatureSubtitle.setText(String.format("%s °C", tempReq));
+            } else {
+                binding.temperatureSubtitle.setText("N/A");
+            }
 
+            // Display humidity requirement with the percentage symbol
             String humidityReq = plant.getHumidityRequirement();
-            binding.humiditySubtitle.setText(humidityReq != null && !humidityReq.isEmpty() ? humidityReq : "N/A");
+            if (humidityReq != null && !humidityReq.isEmpty()) {
+                binding.humiditySubtitle.setText(String.format("%s %%", humidityReq));
+            } else {
+                binding.humiditySubtitle.setText("N/A");
+            }
         } else {
             // Handle null Plant with fallback text
             Log.e(TAG, "Plant object is null!");
