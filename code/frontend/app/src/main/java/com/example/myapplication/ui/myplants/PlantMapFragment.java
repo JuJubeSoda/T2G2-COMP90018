@@ -39,7 +39,7 @@ import androidx.navigation.Navigation;
 
 import java.util.List;
 
-public class PlantMapFragment extends Fragment implements OnMapReadyCallback, com.example.myapplication.ui.map.PlantBottomSheetDialogFragment.OnPlantActionListener {
+public class PlantMapFragment extends Fragment implements OnMapReadyCallback, com.example.myapplication.ui.map.PlantBottomSheetDialogFragment.OnPlantActionListener, com.example.myapplication.ui.map.GardenBottomSheetDialogFragment.OnGardenActionListener {
 
     private static final String TAG = "PlantMapFragment";
     private GoogleMap mMap;
@@ -57,6 +57,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, co
     // Refresh control buttons
     private Button btnRefreshData;
     private Button btnToggleDataType;
+    private Button btnBackToGardens;
     
     // Current coordinates for navigation
     private double currentLat = 0.0;
@@ -262,6 +263,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, co
     private void initializeRefreshControls(View view) {
         btnRefreshData = view.findViewById(R.id.btn_refresh_data);
         btnToggleDataType = view.findViewById(R.id.btn_toggle_data_type);
+        btnBackToGardens = view.findViewById(R.id.btn_back_to_gardens);
         
         if (btnRefreshData != null) {
             btnRefreshData.setOnClickListener(new View.OnClickListener() {
@@ -282,6 +284,17 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, co
                 }
             });
             updateDataTypeButtonText();
+        }
+
+        if (btnBackToGardens != null) {
+            btnBackToGardens.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (plantGardenMapManager != null) {
+                        plantGardenMapManager.restoreGardensView();
+                    }
+                }
+            });
         }
     }
     
@@ -587,6 +600,17 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, co
             likePlant(plantId);
             currentLiked = true;
         }
+    }
+
+    // ==== Garden bottom sheet actions ====
+    @Override
+    public void onViewPlants(long gardenId) {
+        if (plantGardenMapManager == null) {
+            Toast.makeText(getContext(), "Map not ready", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Toast.makeText(getContext(), "Loading plants in garden...", Toast.LENGTH_SHORT).show();
+        plantGardenMapManager.fetchPlantsByGarden(gardenId);
     }
     
     @Override

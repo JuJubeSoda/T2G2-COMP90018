@@ -82,6 +82,26 @@ public class MapDataManager {
             }
         });
     }
+
+    /**
+     * 获取指定花园下的植物列表
+     */
+    public void getPlantsByGarden(long gardenId, MapDataCallback<List<PlantDto>> callback) {
+        LogUtil.d(TAG, "Fetching plants by garden: " + gardenId);
+        Call<ApiResponse<List<PlantDto>>> call = apiService.getPlantsByGarden(gardenId);
+        call.enqueue(new Callback<ApiResponse<List<PlantDto>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<PlantDto>>> call, Response<ApiResponse<List<PlantDto>>> response) {
+                handleApiResponse(response, "plants by garden", callback);
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<PlantDto>>> call, Throwable t) {
+                LogUtil.e(TAG, "Network call failed for plants by garden", t);
+                callback.onError("Network error: " + t.getMessage());
+            }
+        });
+    }
     
     /**
      * 统一的API响应处理方法

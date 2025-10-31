@@ -53,6 +53,20 @@
             android:background="@android:color/holo_orange_light"
             android:textColor="@android:color/white" />
 
+        <!-- Back to Gardens Button -->
+        <Button
+            android:id="@+id/btn_back_to_gardens"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="↩ Back to Gardens"
+            android:textSize="12sp"
+            android:padding="8dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:layout_marginTop="4dp"
+            android:background="@android:color/holo_green_light"
+            android:textColor="@android:color/white" />
+
     </LinearLayout>
 
     <!-- Floating Action Button for Places -->

@@ -16,6 +16,11 @@ import com.example.myapplication.R;
 public class GardenBottomSheetDialogFragment extends BottomSheetDialogFragment {
     private static final String ARG_GARDEN = "garden_arg";
     private GardenDto garden;
+    private OnGardenActionListener actionListener;
+
+    public interface OnGardenActionListener {
+        void onViewPlants(long gardenId);
+    }
 
     public static GardenBottomSheetDialogFragment newInstance(GardenDto gardenDto) {
         GardenBottomSheetDialogFragment fragment = new GardenBottomSheetDialogFragment();
@@ -42,6 +47,7 @@ public class GardenBottomSheetDialogFragment extends BottomSheetDialogFragment {
             View btnNavigate = view.findViewById(R.id.btn_garden_navigate);
             View btnMore = view.findViewById(R.id.btn_garden_more);
             View btnShare = view.findViewById(R.id.btn_garden_share);
+            View btnViewPlants = view.findViewById(R.id.btn_garden_view_plants);
 
             tvTitle.setText("Garden Information");
             tvName.setText(garden.getName());
@@ -84,9 +90,29 @@ public class GardenBottomSheetDialogFragment extends BottomSheetDialogFragment {
                     }
                 });
             }
+
+            if (btnViewPlants != null) {
+                btnViewPlants.setOnClickListener(v -> {
+                    if (actionListener != null && garden.getGardenId() != null) {
+                        actionListener.onViewPlants(garden.getGardenId());
+                        dismiss();
+                    }
+                });
+            }
         }
 
         return view;
+    }
+
+    @Override
+    public void onAttach(@NonNull android.content.Context context) {
+        super.onAttach(context);
+        // Try parent fragment first
+        if (getParentFragment() instanceof OnGardenActionListener) {
+            actionListener = (OnGardenActionListener) getParentFragment();
+        } else if (context instanceof OnGardenActionListener) {
+            actionListener = (OnGardenActionListener) context;
+        }
     }
 }
 

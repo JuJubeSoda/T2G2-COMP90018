@@ -103,19 +103,38 @@ public class PlantGardenMapManager {
             }
         });
         
-        // 由ClusterManager处理Marker点击；由协调层组合CameraIdle事件
-        if (displayManager.getPlantClusterManager() != null) {
-            com.google.maps.android.clustering.ClusterManager<PlantClusterItem> cm = displayManager.getPlantClusterManager();
-            googleMap.setOnMarkerClickListener(cm);
-            googleMap.setOnCameraIdleListener(new com.google.android.gms.maps.GoogleMap.OnCameraIdleListener() {
-                @Override
-                public void onCameraIdle() {
-                    cm.onCameraIdle();
-                    // 触发半径变化的去抖刷新
-                    handleRadiusChangeWithDebounce();
+        // 由ClusterManager处理Marker点击；组合CameraIdle事件（支持两种模式）
+        final com.google.maps.android.clustering.ClusterManager<PlantClusterItem> plantCM = displayManager.getPlantClusterManager();
+        final com.google.maps.android.clustering.ClusterManager<GardenClusterItem> gardenCM = displayManager.getGardenClusterManager();
+
+        googleMap.setOnMarkerClickListener(new com.google.android.gms.maps.GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(com.google.android.gms.maps.model.Marker marker) {
+                boolean handled = false;
+                if (isShowingPlants && plantCM != null) {
+                    handled = plantCM.onMarkerClick(marker);
                 }
-            });
-        }
+                if (!isShowingPlants && gardenCM != null && !handled) {
+                    handled = gardenCM.onMarkerClick(marker);
+                }
+                return handled;
+            }
+        });
+
+        googleMap.setOnCameraIdleListener(new com.google.android.gms.maps.GoogleMap.OnCameraIdleListener() {
+            @Override
+            public void onCameraIdle() {
+                if (plantCM != null) plantCM.onCameraIdle();
+                if (gardenCM != null) gardenCM.onCameraIdle();
+                // Garden 模式下做视野增量+上限1000
+                if (!isShowingPlants) {
+                    com.google.android.gms.maps.model.LatLngBounds bounds = googleMap.getProjection().getVisibleRegion().latLngBounds;
+                    displayManager.refreshGardensForViewport(bounds, 1000);
+                }
+                // 触发半径变化的去抖刷新（用于植物附近搜索）
+                handleRadiusChangeWithDebounce();
+            }
+        });
     }
     
     /**
@@ -151,7 +170,7 @@ public class PlantGardenMapManager {
         if (isShowingPlants) {
             searchNearbyPlants(center.latitude, center.longitude, radius);
         } else {
-            LogUtil.d(TAG, "Garden mode: fetching all gardens (no nearby search)");
+            LogUtil.d(TAG, "Garden mode: fetching all gardens (then viewport filter with cap 1000)");
             fetchAllGardens();
         }
         LogUtil.d(TAG, "=== End Search Nearby Data Debug ===");
@@ -256,6 +275,54 @@ public class PlantGardenMapManager {
             @Override
             public void onError(String message) {
                 LogUtil.e(TAG, "Fetch All Gardens Error: " + message);
+                if (onPlantGardenMapInteractionListener != null) {
+                    onPlantGardenMapInteractionListener.onSearchError(message);
+                    onPlantGardenMapInteractionListener.onLoading(false);
+                }
+            }
+        });
+    }
+
+    /**
+     * 恢复花园聚合显示（从植物模式返回）
+     */
+    public void restoreGardensView() {
+        isShowingPlants = false;
+        // 清空当前显示并重新拉取花园数据（随后由视野过滤渲染）
+        displayManager.clearCurrentDisplay();
+        fetchAllGardens();
+        if (onPlantGardenMapInteractionListener != null) {
+            onPlantGardenMapInteractionListener.onDataTypeChanged(false);
+        }
+    }
+
+    /**
+     * 通过花园ID获取植物并切换到植物图层
+     */
+    public void fetchPlantsByGarden(long gardenId) {
+        if (onPlantGardenMapInteractionListener != null) onPlantGardenMapInteractionListener.onLoading(true);
+        dataManager.getPlantsByGarden(gardenId, new MapDataManager.MapDataCallback<List<PlantDto>>() {
+            @Override
+            public void onSuccess(List<PlantDto> plants) {
+                // 切换到植物模式并渲染
+                isShowingPlants = true;
+                displayManager.clearCurrentDisplay();
+                java.util.ArrayList<PlantMapDto> mapDtos = new java.util.ArrayList<>();
+                if (plants != null) {
+                    for (PlantDto p : plants) {
+                        mapDtos.add(PlantMapDto.fromPlantDto(p));
+                    }
+                }
+                displayManager.displayPlantsOnMap(mapDtos);
+                if (onPlantGardenMapInteractionListener != null) {
+                    onPlantGardenMapInteractionListener.onPlantsFound(mapDtos);
+                    onPlantGardenMapInteractionListener.onDataTypeChanged(true);
+                    onPlantGardenMapInteractionListener.onLoading(false);
+                }
+            }
+
+            @Override
+            public void onError(String message) {
                 if (onPlantGardenMapInteractionListener != null) {
                     onPlantGardenMapInteractionListener.onSearchError(message);
                     onPlantGardenMapInteractionListener.onLoading(false);

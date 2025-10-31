@@ -1,7 +1,6 @@
 package com.example.myapplication.map;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -13,16 +12,9 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.maps.android.data.Feature;
-import com.google.maps.android.data.geojson.GeoJsonFeature;
-import com.google.maps.android.data.geojson.GeoJsonLayer;
-import com.google.maps.android.data.geojson.GeoJsonPointStyle;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,12 +30,14 @@ public class MapDisplayManager {
     
     private final Context context;
     private final GoogleMap googleMap;
-    private GeoJsonLayer currentGeoJsonLayer;
     // Clustering for plants
     private ClusterManager<PlantClusterItem> plantClusterManager;
     private DefaultClusterRenderer<PlantClusterItem> plantClusterRenderer;
     private List<PlantClusterItem> currentPlantItems = new ArrayList<>();
-    private List<Marker> currentGardenMarkers = new ArrayList<>();
+    // Clustering for gardens
+    private ClusterManager<GardenClusterItem> gardenClusterManager;
+    private DefaultClusterRenderer<GardenClusterItem> gardenClusterRenderer;
+    private List<GardenClusterItem> currentGardenItems = new ArrayList<>();
     private List<PlantMapDto> currentPlants = new ArrayList<>();
     private List<GardenDto> currentGardens = new ArrayList<>();
     
@@ -63,6 +57,7 @@ public class MapDisplayManager {
         this.context = context;
         this.googleMap = googleMap;
         setupClusterManagerIfNeeded();
+        setupGardenClusterManagerIfNeeded();
         // 禁用InfoWindow
         if (googleMap != null) {
             googleMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
@@ -248,21 +243,15 @@ public class MapDisplayManager {
      * 在地图上显示花园列表 - 使用GeoJSON方式（适合静态数据）
      */
     public void displayGardensOnMap(List<GardenDto> gardens) {
-        try {
-            clearGardenLayer();
-            currentGardens.clear();
-            
-            JSONObject geoJson = convertGardensToGeoJson(gardens);
-            GeoJsonLayer layer = new GeoJsonLayer(googleMap, geoJson);
-            setupGardenGeoJsonLayer(layer);
-            
-            currentGeoJsonLayer = layer;
+        clearGardenMarkers();
+        currentGardens.clear();
+        if (gardens != null) {
             currentGardens.addAll(gardens);
-            
-            LogUtil.d(TAG, "Successfully displayed " + gardens.size() + " gardens on map");
-            
-        } catch (JSONException e) {
-            LogUtil.e(TAG, "Failed to display gardens on map", e);
+        }
+        // 初次调用时按当前视野渲染，后续由相机事件触发刷新
+        if (googleMap != null) {
+            LatLngBounds bounds = googleMap.getProjection().getVisibleRegion().latLngBounds;
+            refreshGardensForViewport(bounds, 1000);
         }
     }
     
@@ -281,133 +270,64 @@ public class MapDisplayManager {
     /**
      * 清除花园GeoJSON图层
      */
-    public void clearGardenLayer() {
-        if (currentGeoJsonLayer != null) {
-            currentGeoJsonLayer.removeLayerFromMap();
-            currentGeoJsonLayer = null;
+    public void clearGardenMarkers() {
+        if (gardenClusterManager != null) {
+            gardenClusterManager.clearItems();
         }
+        currentGardenItems.clear();
     }
     
     
     /**
      * 将花园列表转换为GeoJSON格式
      */
-    private JSONObject convertGardensToGeoJson(List<GardenDto> gardens) throws JSONException {
-        JSONObject geoJson = new JSONObject();
-        geoJson.put("type", "FeatureCollection");
-        
-        JSONArray features = new JSONArray();
-        
-        for (GardenDto garden : gardens) {
-            if (garden.getLatitude() != null && garden.getLongitude() != null) {
-                JSONObject feature = createGardenFeature(garden);
-                features.put(feature);
+    public void refreshGardensForViewport(LatLngBounds bounds, int limit) {
+        if (bounds == null) return;
+        setupGardenClusterManagerIfNeeded();
+        clearGardenMarkers();
+        int count = 0;
+        for (GardenDto g : currentGardens) {
+            if (g.getLatitude() == null || g.getLongitude() == null) continue;
+            LatLng pos = new LatLng(g.getLatitude(), g.getLongitude());
+            if (bounds.contains(pos)) {
+                gardenClusterManager.addItem(new GardenClusterItem(g));
+                count++;
+                if (count >= limit) break;
             }
         }
-        
-        geoJson.put("features", features);
-        return geoJson;
+        gardenClusterManager.cluster();
+        LogUtil.d(TAG, "Displayed gardens in viewport: " + count);
     }
     
     
     /**
      * 创建花园GeoJSON特征
      */
-    private JSONObject createGardenFeature(GardenDto garden) throws JSONException {
-        JSONObject feature = new JSONObject();
-        feature.put("type", "Feature");
-        
-        // 几何信息
-        JSONObject geometry = new JSONObject();
-        geometry.put("type", "Point");
-        JSONArray coordinates = new JSONArray();
-        coordinates.put(garden.getLongitude()); // GeoJSON使用[经度, 纬度]顺序
-        coordinates.put(garden.getLatitude());
-        geometry.put("coordinates", coordinates);
-        feature.put("geometry", geometry);
-        
-        // 属性信息
-        JSONObject properties = new JSONObject();
-        properties.put("gardenId", garden.getGardenId());
-        properties.put("name", garden.getName());
-        properties.put("description", garden.getDescription());
-        properties.put("latitude", garden.getLatitude());
-        properties.put("longitude", garden.getLongitude());
-        feature.put("properties", properties);
-        
-        return feature;
-    }
+    // GeoJSON-related methods removed since we now use clustering for gardens
     
     
     /**
      * 设置花园GeoJSON图层
      */
-    private void setupGardenGeoJsonLayer(GeoJsonLayer layer) {
-        applyGardenMarkerStyles(layer);
-        layer.addLayerToMap();
-        
-        layer.setOnFeatureClickListener(new GeoJsonLayer.OnFeatureClickListener() {
-            @Override
-            public void onFeatureClick(Feature feature) {
-                LogUtil.d(TAG, "Garden GeoJSON feature clicked!");
-                handleGardenFeatureClick(feature);
-            }
-        });
-    }
+    // GeoJSON layer setup removed
     
     
     /**
      * 处理花园GeoJSON特征点击事件
      */
-    private void handleGardenFeatureClick(Feature feature) {
-        try {
-            GardenDto garden = createGardenFromFeature(feature);
-            if (garden != null && gardenClickListener != null) {
-                gardenClickListener.onGardenClick(garden);
-            }
-        } catch (Exception e) {
-            LogUtil.e(TAG, "Failed to handle garden feature click", e);
-        }
-    }
+    // Feature click handling removed with GeoJSON
     
     
     /**
      * 从GeoJSON特征创建Garden对象
      */
-    private GardenDto createGardenFromFeature(Feature feature) {
-        try {
-            String gardenIdStr = feature.getProperty("gardenId");
-            String name = feature.getProperty("name");
-            String description = feature.getProperty("description");
-            String latitudeStr = feature.getProperty("latitude");
-            String longitudeStr = feature.getProperty("longitude");
-            
-            if (gardenIdStr != null && latitudeStr != null && longitudeStr != null) {
-                GardenDto garden = new GardenDto();
-                garden.setGardenId(Long.parseLong(gardenIdStr));
-                garden.setName(name);
-                garden.setDescription(description);
-                garden.setLatitude(Double.parseDouble(latitudeStr));
-                garden.setLongitude(Double.parseDouble(longitudeStr));
-                return garden;
-            }
-        } catch (Exception e) {
-            LogUtil.e(TAG, "Failed to create garden from feature", e);
-        }
-        return null;
-    }
+    // Conversion from GeoJSON removed
     
     
     /**
      * 应用花园标记样式
      */
-    private void applyGardenMarkerStyles(GeoJsonLayer geoJsonLayer) {
-        for (GeoJsonFeature feature : geoJsonLayer.getFeatures()) {
-            GeoJsonPointStyle pointStyle = new GeoJsonPointStyle();
-            pointStyle.setIcon(createGardenIcon());
-            feature.setPointStyle(pointStyle);
-        }
-    }
+    // Style application for GeoJSON removed
     
     /**
      * 创建植物图标
@@ -427,8 +347,8 @@ public class MapDisplayManager {
      * 清除当前显示
      */
     public void clearCurrentDisplay() {
-        // 清除花园GeoJSON图层
-        clearGardenLayer();
+        // 清除花园聚合
+        clearGardenMarkers();
         
         // 清除植物标记
         clearPlantMarkers();
@@ -489,5 +409,35 @@ public class MapDisplayManager {
 
     public ClusterManager<PlantClusterItem> getPlantClusterManager() {
         return plantClusterManager;
+    }
+
+    /**
+     * 初始化Garden ClusterManager并绑定点击监听
+     */
+    private void setupGardenClusterManagerIfNeeded() {
+        if (googleMap == null || gardenClusterManager != null) return;
+
+        gardenClusterManager = new ClusterManager<>(context, googleMap);
+        gardenClusterRenderer = new DefaultClusterRenderer<>(context, googleMap, gardenClusterManager) {
+            @Override
+            protected void onBeforeClusterItemRendered(GardenClusterItem item, MarkerOptions markerOptions) {
+                markerOptions.title(item.getTitle())
+                        .snippet(item.getSnippet())
+                        .icon(createGardenIcon());
+            }
+        };
+        gardenClusterManager.setRenderer(gardenClusterRenderer);
+
+        gardenClusterManager.setOnClusterItemClickListener(clusterItem -> {
+            if (gardenClickListener != null) {
+                gardenClickListener.onGardenClick(clusterItem.getGarden());
+                return true;
+            }
+            return false;
+        });
+    }
+
+    public ClusterManager<GardenClusterItem> getGardenClusterManager() {
+        return gardenClusterManager;
     }
 }
