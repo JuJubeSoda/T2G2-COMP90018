@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.myplants;
+package com.example.myapplication.ui.map;
 
 import android.Manifest;
 import android.content.Intent;
@@ -33,13 +33,11 @@ import com.example.myapplication.network.PlantDto;
 import com.example.myapplication.network.PlantMapDto;
 import com.example.myapplication.map.PlantGardenMapManager;
 import com.example.myapplication.map.MapDataManager;
-import com.example.myapplication.ui.map.PlantBottomSheetDialogFragment;
-import com.example.myapplication.ui.map.GardenBottomSheetDialogFragment;
 import androidx.navigation.Navigation;
 
 import java.util.List;
 
-public class PlantMapFragment extends Fragment implements OnMapReadyCallback, com.example.myapplication.ui.map.PlantBottomSheetDialogFragment.OnPlantActionListener, com.example.myapplication.ui.map.GardenBottomSheetDialogFragment.OnGardenActionListener {
+public class PlantMapFragment extends Fragment implements OnMapReadyCallback, PlantBottomSheetDialogFragment.OnPlantActionListener, GardenBottomSheetDialogFragment.OnGardenActionListener {
 
     private static final String TAG = "PlantMapFragment";
     private GoogleMap mMap;
@@ -98,6 +96,8 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, co
         
         // Initialize places button
         initializePlacesButton(view);
+        // Initialize plant id search bar
+        initializePlantIdSearch(view);
 
         // Initialize map fragment
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
@@ -180,6 +180,10 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, co
             public void onDataTypeChanged(boolean isShowingPlants) {
                 String message = isShowingPlants ? "Switched to Plants view" : "Switched to Gardens view";
                 Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                View searchBar = getView() != null ? getView().findViewById(R.id.plant_id_search_bar) : null;
+                if (searchBar != null) {
+                    searchBar.setVisibility(isShowingPlants ? View.VISIBLE : View.GONE);
+                }
             }
             
             @Override
@@ -256,6 +260,38 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, co
                     showCurrentPlace();
                 }
             });
+        }
+    }
+
+    /**
+     * Initialize PlantId search bar
+     */
+    private void initializePlantIdSearch(View view) {
+        View searchBar = view.findViewById(R.id.plant_id_search_bar);
+        android.widget.EditText et = view.findViewById(R.id.et_plant_id);
+        View btnSearch = view.findViewById(R.id.btn_search_id);
+
+        if (btnSearch != null && et != null) {
+            btnSearch.setOnClickListener(v -> {
+                String input = et.getText() != null ? et.getText().toString().trim() : "";
+                if (input.isEmpty()) {
+                    Toast.makeText(getContext(), "Please enter Plant ID", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                try {
+                    int plantId = Integer.parseInt(input);
+                    if (plantGardenMapManager != null) {
+                        plantGardenMapManager.searchAndShowPlantById(plantId);
+                    }
+                } catch (NumberFormatException e) {
+                    Toast.makeText(getContext(), "Invalid Plant ID", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        // 初始可见性由当前模式决定
+        if (searchBar != null && plantGardenMapManager != null) {
+            searchBar.setVisibility(plantGardenMapManager.isShowingPlants() ? View.VISIBLE : View.GONE);
         }
     }
     
@@ -456,7 +492,6 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, co
     
     
     
-
     
     /**
      * 获取完整的植物详情并导航到详情页面
@@ -508,82 +543,15 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, co
             
             // Create bundle with plant data
             Bundle args = new Bundle();
-            args.putParcelable(PlantDetailFragment.ARG_PLANT, plant);
+            args.putParcelable(com.example.myapplication.ui.myplants.PlantDetailFragment.ARG_PLANT, plant);
             
             // Navigate to PlantDetailFragment
             Navigation.findNavController(requireView()).navigate(R.id.plantDetailFragment, args);
-            
-            // Hide bottom sheet after navigation
-            // 移除 LinearLayout bottomSheetContainer 及其相关变量和逻辑。
-            // 在 onPlantClick 实现中：
-            // PlantBottomSheetDialogFragment.newInstance(plant).show(getChildFragmentManager(), "plant_sheet");
-            // 在 onGardenClick 实现中：
-            // GardenBottomSheetDialogFragment.newInstance(garden).show(getChildFragmentManager(), "garden_sheet");
             
         } catch (Exception e) {
             Log.e(TAG, "Failed to navigate to plant detail", e);
             Toast.makeText(getContext(), "Failed to open plant details", Toast.LENGTH_SHORT).show();
         }
-    }
-
-    /**
-     * 显示植物信息底部弹窗
-     */
-    // 移除 LinearLayout bottomSheetContainer 及其相关变量和逻辑。
-    // 在 onPlantClick 实现中：
-    // PlantBottomSheetDialogFragment.newInstance(plant).show(getChildFragmentManager(), "plant_sheet");
-    // 在 onGardenClick 实现中：
-    // GardenBottomSheetDialogFragment.newInstance(garden).show(getChildFragmentManager(), "garden_sheet");
-    
-    /**
-     * 显示花园信息底部弹窗
-     */
-    // 移除 LinearLayout bottomSheetContainer 及其相关变量和逻辑。
-    // 在 onPlantClick 实现中：
-    // PlantBottomSheetDialogFragment.newInstance(plant).show(getChildFragmentManager(), "plant_sheet");
-    // 在 onGardenClick 实现中：
-    // GardenBottomSheetDialogFragment.newInstance(garden).show(getChildFragmentManager(), "garden_sheet");
-    
-    /**
-     * Handle like button click
-     */
-    // 移除 LinearLayout bottomSheetContainer 及其相关变量和逻辑。
-    // 在 onPlantClick 实现中：
-    // PlantBottomSheetDialogFragment.newInstance(plant).show(getChildFragmentManager(), "plant_sheet");
-    // 在 onGardenClick 实现中：
-    // GardenBottomSheetDialogFragment.newInstance(garden).show(getChildFragmentManager(), "garden_sheet");
-    
-    /**
-     * Like a plant
-     */
-    private void likePlant(int plantId) {
-        if (plantGardenMapManager != null) {
-            plantGardenMapManager.likePlant(plantId);
-        } else {
-            Toast.makeText(getContext(), "Map manager not available", Toast.LENGTH_SHORT).show();
-        }
-    }
-    
-    /**
-     * Unlike a plant
-     */
-    private void unlikePlant(int plantId) {
-        if (plantGardenMapManager != null) {
-            plantGardenMapManager.unlikePlant(plantId);
-        } else {
-            Toast.makeText(getContext(), "Map manager not available", Toast.LENGTH_SHORT).show();
-        }
-    }
-    
-    /**
-     * Update like button appearance based on current state
-     */
-    private void updateLikeButton() {
-        // 移除 LinearLayout bottomSheetContainer 及其相关变量和逻辑。
-        // 在 onPlantClick 实现中：
-        // PlantBottomSheetDialogFragment.newInstance(plant).show(getChildFragmentManager(), "plant_sheet");
-        // 在 onGardenClick 实现中：
-        // GardenBottomSheetDialogFragment.newInstance(garden).show(getChildFragmentManager(), "garden_sheet");
     }
 
     // ==== BottomSheet actions callbacks ====
@@ -626,4 +594,3 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, co
         }
     }
 }
-

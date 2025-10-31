@@ -4,6 +4,34 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- PlantId Search Bar (visible only in Plant mode) -->
+    <LinearLayout
+        android:id="@+id/plant_id_search_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:background="#CCFFFFFF"
+        android:elevation="4dp">
+
+        <EditText
+            android:id="@+id/et_plant_id"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Enter Plant ID"
+            android:inputType="number"
+            android:maxLines="1" />
+
+        <Button
+            android:id="@+id/btn_search_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Search"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
     <!-- Map Fragment Container -->
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/map_fragment"

@@ -341,7 +341,7 @@ public class MapDisplayManager {
      * 创建花园图标
      */
     private BitmapDescriptor createGardenIcon() {
-        return BitmapDescriptorFactory.fromResource(com.example.myapplication.R.drawable.plantbulb_background);
+        return BitmapDescriptorFactory.fromResource(com.example.myapplication.R.drawable.gardon);
     }
     
     /**
@@ -484,5 +484,24 @@ public class MapDisplayManager {
 
     public ClusterManager<GardenClusterItem> getGardenClusterManager() {
         return gardenClusterManager;
+    }
+
+    /**
+     * 显示单个植物并聚焦相机
+     */
+    public void displayAndFocusSinglePlant(PlantMapDto plant, float zoom) {
+        if (plant == null || plant.getLatitude() == null || plant.getLongitude() == null || googleMap == null) return;
+        // 清理现有植物聚合并仅显示该点
+        clearPlantMarkers();
+        currentPlants.clear();
+        addPlantClusterItem(plant);
+        currentPlants.add(plant);
+        // 聚焦
+        LatLng pos = new LatLng(plant.getLatitude(), plant.getLongitude());
+        googleMap.animateCamera(com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(pos, zoom <= 0 ? 17f : zoom));
+        // 直接触发点击回调以弹出BottomSheet
+        if (plantClickListener != null) {
+            plantClickListener.onPlantClick(plant);
+        }
     }
 }

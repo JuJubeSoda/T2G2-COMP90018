@@ -1,10 +1,6 @@
 package com.example.myapplication.map;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
-import android.widget.Toast;
 
 import com.example.myapplication.network.GardenDto;
 import com.example.myapplication.network.PlantDto;
@@ -39,11 +35,9 @@ public class PlantGardenMapManager {
     private boolean isShowingPlants = true; // true = plants, false = gardens
     
     // 防抖和节流控制
-    private final Handler debounceHandler = new Handler(Looper.getMainLooper());
-    private Runnable pendingSearchRunnable = null;
-    private long lastSearchTime = 0;
     private static final long DEBOUNCE_DELAY_MS = 800; // 防抖延迟800ms
     private static final long THROTTLE_INTERVAL_MS = 2000; // 节流最小间隔2秒
+    private final MapSchedulers schedulers = new MapSchedulers(DEBOUNCE_DELAY_MS, THROTTLE_INTERVAL_MS);
     
     public PlantGardenMapManager(Context context, GoogleMap googleMap) {
         this.context = context;
@@ -184,22 +178,7 @@ public class PlantGardenMapManager {
     /**
      * 搜索附近植物
      */
-    // Request de-dup signature
-    private static class SearchSignature {
-        final double lat; final double lng; final int radius; final boolean showPlants;
-        SearchSignature(double lat, double lng, int radius, boolean showPlants) { this.lat = lat; this.lng = lng; this.radius = radius; this.showPlants = showPlants; }
-        @Override public boolean equals(Object o) { if (!(o instanceof SearchSignature)) return false; SearchSignature s = (SearchSignature) o; return Math.abs(s.lat-lat) < 1e-6 && Math.abs(s.lng-lng) < 1e-6 && s.radius==radius && s.showPlants==showPlants; }
-        @Override public int hashCode() { return (int)(lat*1000) ^ (int)(lng*1000) ^ radius ^ (showPlants?1:0); }
-    }
-    private SearchSignature lastSignature = null;
-
     public void searchNearbyPlants(double latitude, double longitude, int radius) {
-        SearchSignature sig = new SearchSignature(latitude, longitude, radius, true);
-        if (lastSignature != null && lastSignature.equals(sig)) {
-            LogUtil.d(TAG, "Deduped identical plants search; skipping network call");
-            return;
-        }
-        lastSignature = sig;
         if (onPlantGardenMapInteractionListener != null) onPlantGardenMapInteractionListener.onLoading(true);
         LogUtil.d(TAG, "Searching for nearby plants with radius: " + radius + " meters");
         
@@ -285,17 +264,35 @@ public class PlantGardenMapManager {
     }
 
     /**
-     * 恢复花园聚合显示（从植物模式返回）
+     * 进入植物模式
      */
-    public void restoreGardensView() {
-        isShowingPlants = false;
-        // 清空当前显示并重新拉取花园数据（随后由视野过滤渲染）
+    private void enterPlantsMode() {
+        isShowingPlants = true;
         displayManager.clearCurrentDisplay();
-        fetchAllGardens();
+        applyModeListeners();
+        if (onPlantGardenMapInteractionListener != null) {
+            onPlantGardenMapInteractionListener.onDataTypeChanged(true);
+        }
+    }
+
+    /**
+     * 进入花园模式
+     */
+    private void enterGardensMode() {
+        isShowingPlants = false;
+        displayManager.clearCurrentDisplay();
+        applyModeListeners();
         if (onPlantGardenMapInteractionListener != null) {
             onPlantGardenMapInteractionListener.onDataTypeChanged(false);
         }
-        applyModeListeners();
+    }
+
+    /**
+     * 恢复花园聚合显示（从植物模式返回）
+     */
+    public void restoreGardensView() {
+        enterGardensMode();
+        fetchAllGardens();
     }
 
     /**
@@ -306,13 +303,10 @@ public class PlantGardenMapManager {
         dataManager.getPlantsByGarden(gardenId, new MapDataManager.MapDataCallback<List<PlantDto>>() {
             @Override
             public void onSuccess(List<PlantDto> plants) {
-                // 切换到植物模式并渲染
-                isShowingPlants = true;
-                displayManager.clearCurrentDisplay();
+                enterPlantsMode();
                 plantsController.showPlantsFromDtos(plants);
                 applyModeListeners();
                 if (onPlantGardenMapInteractionListener != null) {
-                    onPlantGardenMapInteractionListener.onDataTypeChanged(true);
                     onPlantGardenMapInteractionListener.onLoading(false);
                 }
             }
@@ -331,18 +325,13 @@ public class PlantGardenMapManager {
      * 切换数据显示模式
      */
     public void toggleDataType() {
-        isShowingPlants = !isShowingPlants;
-        
-        // 清除当前显示
-        displayManager.clearCurrentDisplay();
-        
+        if (isShowingPlants) {
+            enterGardensMode();
+        } else {
+            enterPlantsMode();
+        }
         String message = isShowingPlants ? "Switched to Plants view" : "Switched to Gardens view";
         LogUtil.d(TAG, message);
-        
-        if (onPlantGardenMapInteractionListener != null) {
-            onPlantGardenMapInteractionListener.onDataTypeChanged(isShowingPlants);
-        }
-        applyModeListeners();
     }
     
     /**
@@ -433,12 +422,7 @@ public class PlantGardenMapManager {
      * 销毁管理器
      */
     public void destroy() {
-        // 清理防抖待执行任务
-        if (pendingSearchRunnable != null) {
-            debounceHandler.removeCallbacks(pendingSearchRunnable);
-            pendingSearchRunnable = null;
-        }
-        
+        schedulers.destroy();
         displayManager.destroy();
         LogUtil.d(TAG, "PlantGardenMapManager destroyed");
     }
@@ -469,6 +453,43 @@ public class PlantGardenMapManager {
     public void setOnPlantGardenMapInteractionListener(OnPlantGardenMapInteractionListener listener) {
         this.onPlantGardenMapInteractionListener = listener;
     }
+
+    /**
+     * 通过PlantId搜索并在地图上显示与聚焦
+     */
+    public void searchAndShowPlantById(int plantId) {
+        // 确保是植物模式
+        if (!isShowingPlants) {
+            toggleDataType();
+        }
+        if (onPlantGardenMapInteractionListener != null) {
+            onPlantGardenMapInteractionListener.onLoading(true);
+        }
+        dataManager.getPlantById(plantId, new MapDataManager.MapDataCallback<com.example.myapplication.network.PlantDto>() {
+            @Override
+            public void onSuccess(com.example.myapplication.network.PlantDto plantDto) {
+                if (onPlantGardenMapInteractionListener != null) {
+                    onPlantGardenMapInteractionListener.onLoading(false);
+                }
+                if (plantDto == null || plantDto.getLatitude() == null || plantDto.getLongitude() == null) {
+                    if (onPlantGardenMapInteractionListener != null) {
+                        onPlantGardenMapInteractionListener.onSearchError("Plant not found or no coordinates");
+                    }
+                    return;
+                }
+                PlantMapDto mapDto = PlantMapDto.fromPlantDto(plantDto);
+                displayManager.displayAndFocusSinglePlant(mapDto, 17f);
+            }
+
+            @Override
+            public void onError(String message) {
+                if (onPlantGardenMapInteractionListener != null) {
+                    onPlantGardenMapInteractionListener.onLoading(false);
+                    onPlantGardenMapInteractionListener.onSearchError(message);
+                }
+            }
+        });
+    }
     
     /**
      * 设置智能半径变化监听器（带防抖和节流）
@@ -487,35 +508,13 @@ public class PlantGardenMapManager {
      * 处理半径变化的防抖和节流逻辑
      */
     private void handleRadiusChangeWithDebounce() {
-        long currentTime = System.currentTimeMillis();
-        
-        // 节流：如果距离上次搜索太近，忽略本次请求
-        if (currentTime - lastSearchTime < THROTTLE_INTERVAL_MS) {
-            LogUtil.d(TAG, "Throttled: too soon since last search");
-            return;
-        }
-        
-        // 取消之前的待执行搜索
-        if (pendingSearchRunnable != null) {
-            debounceHandler.removeCallbacks(pendingSearchRunnable);
-            pendingSearchRunnable = null;
-        }
-        
-        // 创建新的延迟搜索任务
-        pendingSearchRunnable = new Runnable() {
+        schedulers.schedule(new Runnable() {
             @Override
             public void run() {
-                // 以相机中心为准，不再依赖设备定位权限
                 LogUtil.d(TAG, "Auto-refreshing data with debounced smart radius (camera center)");
-                lastSearchTime = System.currentTimeMillis();
                 searchNearbyData();
-                pendingSearchRunnable = null;
             }
-        };
-        
-        // 防抖：延迟执行搜索
-        debounceHandler.postDelayed(pendingSearchRunnable, DEBOUNCE_DELAY_MS);
-        LogUtil.d(TAG, "Debounce timer started, will search in " + DEBOUNCE_DELAY_MS + "ms");
+        });
     }
     
     /**

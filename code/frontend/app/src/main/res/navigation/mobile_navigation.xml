@@ -166,7 +166,7 @@
     -->
     <fragment
         android:id="@+id/navigation_plant_map"
-        android:name="com.example.myapplication.ui.myplants.PlantMapFragment"
+        android:name="com.example.myapplication.ui.map.PlantMapFragment"
         android:label="Plant Map"
         tools:layout="@layout/fragment_plant_map" /> <!-- Specifies the layout for PlantMapFragment for design preview. -->
 
