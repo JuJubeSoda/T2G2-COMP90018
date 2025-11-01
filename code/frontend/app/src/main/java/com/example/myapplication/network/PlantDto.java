@@ -1,6 +1,6 @@
 package com.example.myapplication.network;
 
-import com.example.myapplication.ui.myplants.Plant;
+import com.example.myapplication.ui.myplants.share.Plant;
 import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 import java.util.List;

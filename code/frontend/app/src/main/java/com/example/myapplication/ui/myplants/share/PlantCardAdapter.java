@@ -1,8 +1,6 @@
-package com.example.myapplication.ui.myplants;
+package com.example.myapplication.ui.myplants.share;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.util.Base64;
 import android.util.Log;
 import android.util.TypedValue;
@@ -22,39 +20,38 @@ import com.example.myapplication.R;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 /**
  * PlantCardAdapter - RecyclerView adapter for displaying plant cards in grid or list view.
- * 
+ *
  * Purpose:
  * - Display plant collections in MyGardenFragment and PlantWikiFragment
  * - Support two view modes: grid (2 columns) and list (with dates)
  * - Handle Base64 encoded images from backend
  * - Manage click events for navigation to plant details
- * 
+ *
  * View Types:
  * 1. Grid View (VIEW_TYPE_GRID):
  *    - 2-column layout
  *    - Large square image (160dp)
  *    - Plant name below image
  *    - No date displayed
- * 
+ *
  * 2. List View (VIEW_TYPE_LIST_WITH_DATE):
  *    - Single column
  *    - Small circular image (60dp) on left
  *    - Plant name and creation date on right
  *    - Displays formatted date
- * 
+ *
  * Key Features:
  * - Dynamic layout switching via ConstraintSet
  * - Base64 image decoding with Glide
  * - Robust date parsing (multiple ISO 8601 formats)
  * - Error handling for malformed data
  * - Placeholder images for missing/invalid images
- * 
+ *
  * Usage:
  * - MyGardenFragment: User's plant collection with grid/list toggle
  * - PlantWikiFragment: Encyclopedia plants in grid view only
@@ -62,22 +59,22 @@ import java.util.Locale;
 public class PlantCardAdapter extends RecyclerView.Adapter<PlantCardAdapter.PlantViewHolder> {
 
     private static final String TAG = "PlantCardAdapter";
-    
+
     /** Grid view constant - 2 columns, large images */
     public static final int VIEW_TYPE_GRID = 0;
-    
+
     /** List view constant - single column with dates */
     public static final int VIEW_TYPE_LIST_WITH_DATE = 1;
 
     /** List of plants to display */
     private List<Plant> plantList;
-    
+
     /** Click listener for plant selection */
     private final OnPlantClickListener onPlantClickListener;
-    
+
     /** Current view mode (grid or list) */
     private int currentViewType = VIEW_TYPE_GRID;
-    
+
     /** Application context for resource access */
     private final Context context;
 
@@ -91,7 +88,7 @@ public class PlantCardAdapter extends RecyclerView.Adapter<PlantCardAdapter.Plan
 
     /**
      * Constructor with context, plant list, and click listener.
-     * 
+     *
      * @param context Application context
      * @param plantList Initial list of plants
      * @param onPlantClickListener Callback for card clicks
@@ -105,7 +102,7 @@ public class PlantCardAdapter extends RecyclerView.Adapter<PlantCardAdapter.Plan
     /**
      * Changes view type and refreshes all items.
      * Called by MyGardenFragment when user toggles grid/list view.
-     * 
+     *
      * @param viewType VIEW_TYPE_GRID or VIEW_TYPE_LIST_WITH_DATE
      */
     public void setViewType(int viewType) {
@@ -137,20 +134,20 @@ public class PlantCardAdapter extends RecyclerView.Adapter<PlantCardAdapter.Plan
 
     /**
      * Binds plant data to ViewHolder and configures layout based on view type.
-     * 
+     *
      * Process:
      * 1. Set plant name
      * 2. Load Base64 image with Glide (with error handling)
      * 3. Set click listener
      * 4. Apply view-specific layout constraints
      * 5. Format and display date (list view only)
-     * 
+     *
      * Image Handling:
      * - Decodes Base64 string to byte array
      * - Uses Glide for efficient loading
      * - Shows placeholder on error
      * - Handles null/empty/malformed Base64
-     * 
+     *
      * Layout Switching:
      * - Uses ConstraintSet to dynamically adjust layout
      * - Grid: Large image on top, name below
@@ -201,16 +198,16 @@ public class PlantCardAdapter extends RecyclerView.Adapter<PlantCardAdapter.Plan
         // List view: Show date and configure horizontal layout
         if (currentViewType == VIEW_TYPE_LIST_WITH_DATE) {
             holder.textViewPlantDate.setVisibility(View.VISIBLE);
-            
+
             // Format creation date with robust parsing
             try {
                 String createdAt = plant.getCreatedAt();
                 String formattedDate = "Date not available";
-                
+
                 if (createdAt != null && !createdAt.isEmpty()) {
                     try {
                         SimpleDateFormat displayFormat = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
-                        
+
                         try {
                             // Try ISO 8601 with milliseconds first
                             SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
@@ -233,7 +230,7 @@ public class PlantCardAdapter extends RecyclerView.Adapter<PlantCardAdapter.Plan
                         formattedDate = "Date not available";
                     }
                 }
-                
+
                 holder.textViewPlantDate.setText(context.getString(R.string.plant_added_on_date_format, formattedDate));
             } catch (Exception e) {
                 holder.textViewPlantDate.setText(context.getString(R.string.plant_added_on_date_format, "Date not available"));
@@ -292,7 +289,7 @@ public class PlantCardAdapter extends RecyclerView.Adapter<PlantCardAdapter.Plan
     /**
      * Updates plant list and refreshes RecyclerView.
      * Called by MyGardenFragment and PlantWikiFragment when data changes.
-     * 
+     *
      * @param newPlants New list of plants to display
      */
     public void setPlants(List<Plant> newPlants) {
@@ -304,7 +301,7 @@ public class PlantCardAdapter extends RecyclerView.Adapter<PlantCardAdapter.Plan
     /**
      * Converts density-independent pixels (dp) to pixels (px).
      * Used for consistent sizing across different screen densities.
-     * 
+     *
      * @param dp Value in dp
      * @return Value in px
      */

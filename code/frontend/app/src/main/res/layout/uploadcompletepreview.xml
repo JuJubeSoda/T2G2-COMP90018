@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    tools:context=".ui.myplants.UploadCompleteFragment">
+    tools:context=".ui.myplants.uploadPlants.UploadCompleteFragment">
 
     <!-- Main ConstraintLayout holding all content within the ScrollView. -->
     <androidx.constraintlayout.widget.ConstraintLayout

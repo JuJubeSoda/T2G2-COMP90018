@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.myplants;
+package com.example.myapplication.ui.myplants.uploadPlants;
 
 import android.Manifest;
 import android.content.ContentValues;

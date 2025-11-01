@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.myplants;
+package com.example.myapplication.ui.myplants.share;
 
 import android.os.Parcel;
 import android.os.Parcelable;

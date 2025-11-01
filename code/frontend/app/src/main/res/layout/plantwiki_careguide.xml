@@ -6,7 +6,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.myplants.PlantWikiCareGuide">
+    tools:context=".ui.myplants.plantWiki.PlantWikiCareGuide">
 
     <!-- 2. Use a LinearLayout to list the care sections vertically -->
     <LinearLayout

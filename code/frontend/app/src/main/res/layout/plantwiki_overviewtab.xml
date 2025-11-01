@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
-        tools:context=".ui.myplants.PlantWikiOverview">
+        tools:context=".ui.myplants.plantWiki.PlantWikiOverview">
 
         <!-- Introduction Text Body -->
         <TextView

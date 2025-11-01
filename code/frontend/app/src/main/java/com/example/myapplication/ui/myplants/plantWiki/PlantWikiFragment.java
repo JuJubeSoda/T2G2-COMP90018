@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.myplants;
+package com.example.myapplication.ui.myplants.plantWiki;
 
 import android.os.Bundle;
 import retrofit2.Call;
@@ -16,10 +16,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.myapplication.R;
 import com.example.myapplication.databinding.PlantwikiBinding;
@@ -27,6 +25,9 @@ import com.example.myapplication.network.ApiClient;
 import com.example.myapplication.network.ApiResponse;
 import com.example.myapplication.network.ApiService;
 import com.example.myapplication.network.PlantWikiDto;
+import com.example.myapplication.ui.myplants.share.Plant;
+import com.example.myapplication.ui.myplants.share.PlantCardAdapter;
+import com.example.myapplication.ui.myplants.myGarden.PlantDetailFragment;
 
 import java.util.ArrayList;
 import java.util.List;

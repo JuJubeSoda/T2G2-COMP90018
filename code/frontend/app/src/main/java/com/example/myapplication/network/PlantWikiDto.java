@@ -1,7 +1,7 @@
 package com.example.myapplication.network;
 
 import android.util.Log;
-import com.example.myapplication.ui.myplants.Plant;
+import com.example.myapplication.ui.myplants.share.Plant;
 import com.google.gson.annotations.SerializedName;
 import java.util.List;
 

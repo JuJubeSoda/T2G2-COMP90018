@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.myplants;
+package com.example.myapplication.ui.myplants.plantWiki;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -8,6 +8,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.example.myapplication.databinding.PlantwikiMaintabBinding;
+import com.example.myapplication.ui.myplants.share.Plant;
+import com.example.myapplication.ui.myplants.myGarden.PlantDetailFragment;
 import com.google.android.material.tabs.TabLayoutMediator;
 
 /**

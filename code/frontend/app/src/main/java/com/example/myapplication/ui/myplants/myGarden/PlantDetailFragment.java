@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.myplants;
+package com.example.myapplication.ui.myplants.myGarden;
 
 import android.os.Bundle;
 import android.util.Base64;
@@ -16,6 +16,7 @@ import androidx.navigation.Navigation;
 import com.bumptech.glide.Glide;
 import com.example.myapplication.R;
 import com.example.myapplication.databinding.PlantdetailBinding;
+import com.example.myapplication.ui.myplants.share.Plant;
 // Removed interactive dependencies; display-only fragment
 
 import java.text.ParseException;

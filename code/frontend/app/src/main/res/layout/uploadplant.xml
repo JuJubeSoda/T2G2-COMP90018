@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.myplants.UploadFragment">
+    tools:context=".ui.myplants.uploadPlants.UploadFragment">
 
     <!-- Back navigation button. -->
     <ImageButton

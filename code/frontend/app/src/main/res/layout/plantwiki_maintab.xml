@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".ui.myplants.PlantDetailFragment">
+    tools:context=".ui.myplants.myGarden.PlantDetailFragment">
 
     <!-- PART 1: STATIC HEADER -->
     <!-- This section will contain the image and name, and will not scroll -->

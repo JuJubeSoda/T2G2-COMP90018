@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.myplants;
+package com.example.myapplication.ui.myplants.plantWiki;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -21,6 +21,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.myapplication.R;
 import com.example.myapplication.databinding.PlantwikiOverviewtabBinding;
+import com.example.myapplication.ui.myplants.share.Plant;
 
 /**
  * PlantWikiOverview - Overview tab showing plant description and live sensor readings.

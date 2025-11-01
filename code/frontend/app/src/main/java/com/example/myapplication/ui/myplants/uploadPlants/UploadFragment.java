@@ -27,7 +27,7 @@
  * - ARG_SCIENTIFIC_NAME: Pre-filled plant name (optional)
  * - ARG_IS_FAVOURITE_FLOW: Whether plant is marked as favourite
  */
-package com.example.myapplication.ui.myplants;
+package com.example.myapplication.ui.myplants.uploadPlants;
 
 // Android framework and utility imports
 import android.Manifest;

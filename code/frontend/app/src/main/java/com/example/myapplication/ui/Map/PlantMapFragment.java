@@ -10,8 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -22,6 +20,8 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.example.myapplication.R;
 
+import com.example.myapplication.ui.myplants.myGarden.PlantDetailFragment;
+import com.example.myapplication.ui.myplants.share.Plant;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -545,7 +545,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
                 Log.d(TAG, "Successfully retrieved plant details: " + plantDto.getName());
                 
                 // Convert PlantDto to Plant object
-                com.example.myapplication.ui.myplants.Plant plant = plantDto.toPlant();
+                Plant plant = plantDto.toPlant();
                 
                 // Navigate to PlantDetailFragment
                 navigateToPlantDetail(plant);
@@ -562,13 +562,13 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
     /**
      * 导航到植物详情页面
      */
-    private void navigateToPlantDetail(com.example.myapplication.ui.myplants.Plant plant) {
+    private void navigateToPlantDetail(Plant plant) {
         try {
             Log.d(TAG, "Navigating to plant detail for: " + plant.getName());
             
             // Create bundle with plant data
             Bundle args = new Bundle();
-            args.putParcelable(com.example.myapplication.ui.myplants.PlantDetailFragment.ARG_PLANT, plant);
+            args.putParcelable(PlantDetailFragment.ARG_PLANT, plant);
             
             // Navigate to PlantDetailFragment
             Navigation.findNavController(requireView()).navigate(R.id.plantDetailFragment, args);

@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.myplants;
+package com.example.myapplication.ui.myplants.myGarden;
 
 import android.os.Bundle;
 import android.text.Editable;
@@ -25,6 +25,8 @@ import com.example.myapplication.network.ApiResponse;
 import com.example.myapplication.network.ApiService;
 import com.example.myapplication.network.PlantDto;
 import com.example.myapplication.myPlantsData.MyGardenDataManager;
+import com.example.myapplication.ui.myplants.share.Plant;
+import com.example.myapplication.ui.myplants.share.PlantCardAdapter;
 
 import java.util.ArrayList;
 import java.util.List;

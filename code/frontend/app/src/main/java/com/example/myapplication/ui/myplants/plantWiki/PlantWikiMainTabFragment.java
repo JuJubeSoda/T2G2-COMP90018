@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.myplants;
+package com.example.myapplication.ui.myplants.plantWiki;
 
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -16,9 +16,8 @@ import androidx.fragment.app.Fragment;
 import com.bumptech.glide.Glide;
 import com.example.myapplication.R;
 import com.example.myapplication.databinding.PlantwikiMaintabBinding;
+import com.example.myapplication.ui.myplants.share.Plant;
 import com.google.android.material.tabs.TabLayoutMediator;
-
-import java.util.Objects;
 
 /**
  * PlantWikiMainTabFragment - Container for Plant Wiki detail tabs with header.

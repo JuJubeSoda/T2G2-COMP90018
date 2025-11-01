@@ -6,7 +6,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.myplants.PlantWikiFeatures">
+    tools:context=".ui.myplants.plantWiki.PlantWikiFeatures">
 
     <!-- 2. Use a LinearLayout to list the features vertically -->
     <LinearLayout

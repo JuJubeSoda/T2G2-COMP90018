@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.myplants;
+package com.example.myapplication.ui.myplants.plantWiki;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,6 +9,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.example.myapplication.databinding.PlantwikiFeaturestabBinding;
+import com.example.myapplication.ui.myplants.share.Plant;
 
 /**
  * PlantWikiFeatures - Features tab showing physical plant characteristics.

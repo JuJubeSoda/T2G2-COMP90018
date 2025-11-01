@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.myplants;
+package com.example.myapplication.ui.myplants.uploadPlants;
 
 import android.net.Uri;
 import android.os.Bundle;

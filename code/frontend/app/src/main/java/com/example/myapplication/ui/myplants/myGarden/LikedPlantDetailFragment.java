@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.myplants;
+package com.example.myapplication.ui.myplants.myGarden;
 
 import android.os.Bundle;
 import android.util.Base64;
@@ -17,6 +17,7 @@ import com.bumptech.glide.Glide;
 import com.example.myapplication.R;
 import com.example.myapplication.databinding.LikedPlantDetailBinding;
 import com.example.myapplication.myPlantsData.MyGardenDataManager;
+import com.example.myapplication.ui.myplants.share.Plant;
 
 import java.util.List;
 import java.util.Locale;

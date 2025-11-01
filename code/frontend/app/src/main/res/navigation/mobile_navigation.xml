@@ -56,7 +56,7 @@
 
     <fragment
         android:id="@+id/plantwiki_maintab"
-        android:name="com.example.myapplication.ui.myplants.PlantWikiMainTabFragment"
+        android:name="com.example.myapplication.ui.myplants.plantWiki.PlantWikiMainTabFragment"
         android:label="Plant Wiki"
         tools:layout="@layout/plantwiki_maintab" />
 
@@ -66,7 +66,7 @@
     -->
     <fragment
         android:id="@+id/navigation_upload"
-        android:name="com.example.myapplication.ui.myplants.CaptureFragment"
+        android:name="com.example.myapplication.ui.myplants.uploadPlants.CaptureFragment"
         android:label="Upload Plant"
         tools:layout="@layout/captureplant" >
         <!-- Action to navigate from CaptureFragment to the next step, ConfirmUploadFragment (navigation_upload_plant). -->
@@ -81,7 +81,7 @@
     -->
     <fragment
         android:id="@+id/navigation_upload_plant"
-        android:name="com.example.myapplication.ui.myplants.UploadFragment"
+        android:name="com.example.myapplication.ui.myplants.uploadPlants.UploadFragment"
         android:label="Upload Plant Details"
         tools:layout="@layout/uploadplant">
         <!--
@@ -108,7 +108,7 @@
     -->
     <fragment
         android:id="@+id/navigation_upload_complete_preview"
-        android:name="com.example.myapplication.ui.myplants.UploadCompleteFragment"
+        android:name="com.example.myapplication.ui.myplants.uploadPlants.UploadCompleteFragment"
         android:label="Upload Complete"
         tools:layout="@layout/uploadcompletepreview">
 
@@ -147,7 +147,7 @@
     -->
     <fragment
         android:id="@+id/navigation_my_garden"
-        android:name="com.example.myapplication.ui.myplants.MyGardenFragment"
+        android:name="com.example.myapplication.ui.myplants.myGarden.MyGardenFragment"
         android:label="My Garden"
         tools:layout="@layout/mygardengrid" /> <!-- Suggests the primary layout for MyGardenFragment. -->
 
@@ -177,29 +177,29 @@
     -->
     <fragment
         android:id="@+id/navigation_plant_wiki"
-        android:name="com.example.myapplication.ui.myplants.PlantWikiFragment"
+        android:name="com.example.myapplication.ui.myplants.plantWiki.PlantWikiFragment"
         android:label="Plant Wiki"
         tools:layout="@layout/plantwiki" /> <!-- Suggests the layout for PlantWikiFragment. -->
 
     <!-- Define the new destination fragment for plant details -->
     <fragment
         android:id="@+id/plantDetailFragment"
-        android:name="com.example.myapplication.ui.myplants.PlantDetailFragment"
+        android:name="com.example.myapplication.ui.myplants.myGarden.PlantDetailFragment"
         android:label="Plant Details"
         tools:layout="@layout/plantdetail">
         <argument
             android:name="plant_object"
-            app:argType="com.example.myapplication.ui.myplants.Plant" />
+            app:argType="com.example.myapplication.ui.myplants.share.Plant" />
     </fragment>
 
     <fragment
         android:id="@+id/likedPlantDetailFragment"
-        android:name="com.example.myapplication.ui.myplants.LikedPlantDetailFragment"
+        android:name="com.example.myapplication.ui.myplants.myGarden.LikedPlantDetailFragment"
         android:label="Liked Plant Details"
         tools:layout="@layout/liked_plant_detail">
         <argument
             android:name="plant_object"
-            app:argType="com.example.myapplication.ui.myplants.Plant" />
+            app:argType="com.example.myapplication.ui.myplants.share.Plant" />
     </fragment>
 
     <!--
@@ -208,7 +208,7 @@
     -->
     <fragment
         android:id="@+id/addPlantFragment"
-        android:name="com.example.myapplication.ui.myplants.AddPlantFragment"
+        android:name="com.example.myapplication.ui.myplants.uploadPlants.AddPlantFragment"
         android:label="Add New Plant"
         tools:layout="@layout/addplant" />
 
