@@ -36,6 +36,9 @@ public class PlantMapDto implements Serializable {
     // New field from backend VO
     @SerializedName("scientificName")
     private String scientificName;
+    
+    @SerializedName("discoveredBy")
+    private String discoveredBy;
 
     // Constructors
     public PlantMapDto() {}
@@ -91,6 +94,10 @@ public class PlantMapDto implements Serializable {
     public String getScientificName() {
         return scientificName;
     }
+    
+    public String getDiscoveredBy() {
+        return discoveredBy;
+    }
 
     // Setters
     public void setPlantId(Long plantId) {
@@ -123,6 +130,10 @@ public class PlantMapDto implements Serializable {
     
     public void setScientificName(String scientificName) {
         this.scientificName = scientificName;
+    }
+    
+    public void setDiscoveredBy(String discoveredBy) {
+        this.discoveredBy = discoveredBy;
     }
 
     /**
