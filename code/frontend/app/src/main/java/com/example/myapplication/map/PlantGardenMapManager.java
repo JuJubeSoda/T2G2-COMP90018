@@ -8,6 +8,7 @@ import com.example.myapplication.network.PlantMapDto;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.maps.android.clustering.ClusterManager;
 
 import java.util.List;
 import com.example.myapplication.util.LogUtil;
@@ -71,8 +72,9 @@ public class PlantGardenMapManager {
         
         // 设置点击监听器
         setupClickListeners();
-        // 初始时按当前模式绑定监听，防止早期点击丢失
-        applyModeListeners();
+        
+        // Set up dual-mode binding for seamless mode switching
+        setupDualModeBinding();
         
         // 获取设备位置
         locationManager.getDeviceLocation(new MapLocationManager.OnLocationResultCallback() {
@@ -86,6 +88,49 @@ public class PlantGardenMapManager {
                 LogUtil.e(TAG, "Failed to get device location: " + error);
             }
         });
+    }
+    
+    /**
+     * Set up dual-mode binding for both Plant and Garden ClusterManagers.
+     * This allows seamless switching between modes without losing event handling.
+     */
+    private void setupDualModeBinding() {
+        final ClusterManager<PlantClusterItem> plantCM = displayManager.getPlantClusterManager();
+        final ClusterManager<GardenClusterItem> gardenCM = displayManager.getGardenClusterManager();
+        
+        // Create callbacks for camera idle events
+        Runnable plantCameraIdleCallback = new Runnable() {
+            @Override
+            public void run() {
+                if (!plantViewLocked) {
+                    handleRadiusChangeWithDebounce();
+                } else {
+                    LogUtil.d(TAG, "Camera idle: plant mode LOCKED, suppressing auto refresh");
+                }
+            }
+        };
+        
+        Runnable gardenCameraIdleCallback = new Runnable() {
+            @Override
+            public void run() {
+                com.google.android.gms.maps.model.LatLngBounds bounds = googleMap.getProjection().getVisibleRegion().latLngBounds;
+                displayManager.refreshGardensForViewport(bounds, 1000);
+                handleRadiusChangeWithDebounce();
+            }
+        };
+        
+        // Set up dual-mode binding
+        clusterBinder.setupDualModeBinding(
+            plantCM, 
+            plantCameraIdleCallback,
+            gardenCM,
+            gardenCameraIdleCallback
+        );
+        
+        // Set initial active mode
+        clusterBinder.setActiveMode(isShowingPlants);
+        
+        LogUtil.d(TAG, "Dual-mode binding initialized, active mode: " + (isShowingPlants ? "Plants" : "Gardens"));
     }
     
     /**
@@ -109,48 +154,6 @@ public class PlantGardenMapManager {
                 }
             }
         });
-        
-        // 改为按模式直接绑定到对应的 ClusterManager
-        applyModeListeners();
-    }
-
-    /**
-     * 根据当前模式绑定点击与相机空闲事件到对应 ClusterManager
-     */
-    private void applyModeListeners() {
-        final com.google.maps.android.clustering.ClusterManager<PlantClusterItem> plantCM = displayManager.getPlantClusterManager();
-        final com.google.maps.android.clustering.ClusterManager<GardenClusterItem> gardenCM = displayManager.getGardenClusterManager();
-
-        if (isShowingPlants && plantCM != null) {
-            if (plantViewLocked) {
-                clusterBinder.bind(plantCM, new Runnable() {
-                    @Override
-                    public void run() {
-                        // 锁定时不触发自动刷新
-                        LogUtil.d(TAG, "applyModeListeners: plant mode LOCKED, suppressing camera idle refresh");
-                    }
-                });
-                LogUtil.d(TAG, "applyModeListeners: bound to plantCM (LOCKED)");
-            } else {
-                clusterBinder.bind(plantCM, new Runnable() {
-                    @Override
-                    public void run() {
-                        handleRadiusChangeWithDebounce();
-                    }
-                });
-                LogUtil.d(TAG, "applyModeListeners: bound to plantCM");
-            }
-        } else if (!isShowingPlants && gardenCM != null) {
-            clusterBinder.bind(gardenCM, new Runnable() {
-                @Override
-                public void run() {
-                    com.google.android.gms.maps.model.LatLngBounds bounds = googleMap.getProjection().getVisibleRegion().latLngBounds;
-                    displayManager.refreshGardensForViewport(bounds, 1000);
-                    handleRadiusChangeWithDebounce();
-                }
-            });
-            LogUtil.d(TAG, "applyModeListeners: bound to gardenCM");
-        }
     }
     
     /**
@@ -222,8 +225,6 @@ public class PlantGardenMapManager {
                 
                 // 直接渲染返回的 PlantMapDto 列表
                 plantsController.displayPlants(plants);
-                // 渲染完成后重新按模式绑定，避免监听被覆盖
-                applyModeListeners();
                 LogUtil.d(TAG, "Plants displayed on map successfully");
                 
                 // 通知外部监听器
@@ -266,7 +267,6 @@ public class PlantGardenMapManager {
             public void onSuccess(List<GardenDto> gardens) {
                 LogUtil.d(TAG, "Displaying gardens on map...");
                 gardensController.displayGardens(gardens);
-                applyModeListeners();
                 if (onPlantGardenMapInteractionListener != null) {
                     onPlantGardenMapInteractionListener.onGardensFound(gardens);
                     if (gardens == null || gardens.isEmpty()) {
@@ -293,7 +293,7 @@ public class PlantGardenMapManager {
     private void enterPlantsMode() {
         isShowingPlants = true;
         displayManager.clearCurrentDisplay();
-        applyModeListeners();
+        clusterBinder.setActiveMode(true);
         if (onPlantGardenMapInteractionListener != null) {
             onPlantGardenMapInteractionListener.onDataTypeChanged(true);
         }
@@ -305,7 +305,7 @@ public class PlantGardenMapManager {
     private void enterGardensMode() {
         isShowingPlants = false;
         displayManager.clearCurrentDisplay();
-        applyModeListeners();
+        clusterBinder.setActiveMode(false);
         if (onPlantGardenMapInteractionListener != null) {
             onPlantGardenMapInteractionListener.onDataTypeChanged(false);
         }
@@ -336,7 +336,6 @@ public class PlantGardenMapManager {
                     }
                 }
                 plantsController.displayPlants(mapDtos);
-                applyModeListeners();
                 if (onPlantGardenMapInteractionListener != null) {
                     onPlantGardenMapInteractionListener.onPlantsFound(mapDtos);
                     onPlantGardenMapInteractionListener.onLoading(false);
@@ -513,7 +512,6 @@ public class PlantGardenMapManager {
                 displayManager.displayAndFocusSinglePlant(mapDto, 17f);
                 // Do NOT lock for search-by-id; allow normal map interactions to resume
                 plantViewLocked = false;
-                applyModeListeners();
             }
 
             @Override
@@ -560,8 +558,7 @@ public class PlantGardenMapManager {
     public void unlockPlantView() {
         if (plantViewLocked) {
             plantViewLocked = false;
-            LogUtil.d(TAG, "unlockPlantView: unlocking and re-binding listeners");
-            applyModeListeners();
+            LogUtil.d(TAG, "unlockPlantView: unlocking");
             searchNearbyData();
         }
     }
@@ -569,7 +566,6 @@ public class PlantGardenMapManager {
     public void lockPlantView() {
         plantViewLocked = true;
         LogUtil.d(TAG, "lockPlantView: locked");
-        applyModeListeners();
     }
 
     public boolean isPlantViewLocked() {
