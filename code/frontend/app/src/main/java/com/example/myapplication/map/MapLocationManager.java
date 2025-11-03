@@ -5,6 +5,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -36,13 +37,19 @@ public class MapLocationManager {
     private static final int DEFAULT_SEARCH_RADIUS = 1000; // meters
     
     private final android.content.Context context;
+    @Nullable
     private final GoogleMap googleMap;
     private final FusedLocationProviderClient fusedLocationProviderClient;
     
     private boolean locationPermissionGranted = false;
     private Location lastKnownLocation;
     
-    public MapLocationManager(android.content.Context context, GoogleMap googleMap) {
+    /**
+     * 构造函数 - 支持可选的GoogleMap（null表示不使用地图功能）
+     * @param context Android上下文
+     * @param googleMap GoogleMap实例，可以为null（用于非地图场景的位置获取）
+     */
+    public MapLocationManager(android.content.Context context, @Nullable GoogleMap googleMap) {
         this.context = context;
         this.googleMap = googleMap;
         this.fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
@@ -106,7 +113,43 @@ public class MapLocationManager {
     }
     
     /**
-     * 获取设备当前位置
+     * 获取设备当前位置（纯位置获取，不操作地图）
+     * 适用于非地图场景（如HomeFragment的附近发现功能）
+     * 
+     * @param callback 位置获取结果回调
+     */
+    public void getLocation(OnLocationResultCallback callback) {
+        try {
+            if (locationPermissionGranted) {
+                Task<Location> locationResult = fusedLocationProviderClient.getLastLocation();
+                locationResult.addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        lastKnownLocation = task.getResult();
+                        if (lastKnownLocation != null) {
+                            callback.onLocationSuccess(lastKnownLocation);
+                        } else {
+                            callback.onLocationError("Current location is null");
+                        }
+                    } else {
+                        LogUtil.d(TAG, "Current location is null. Using defaults.");
+                        LogUtil.e(TAG, "Exception: %s", task.getException());
+                        callback.onLocationError("Failed to get location: " + task.getException());
+                    }
+                });
+            } else {
+                callback.onLocationError("Location permission not granted");
+            }
+        } catch (SecurityException e) {
+            LogUtil.e(TAG, "Exception: " + e.getMessage(), e);
+            callback.onLocationError("Security exception: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 获取设备当前位置并移动地图相机（用于地图场景）
+     * 与getLocation()的区别：此方法会操作地图，移动相机到当前位置
+     * 
+     * @param callback 位置获取结果回调
      */
     public void getDeviceLocation(OnLocationResultCallback callback) {
         try {
@@ -118,26 +161,35 @@ public class MapLocationManager {
                         if (task.isSuccessful()) {
                             lastKnownLocation = task.getResult();
                             if (lastKnownLocation != null) {
-                                LatLng currentLocation = new LatLng(
-                                    lastKnownLocation.getLatitude(),
-                                    lastKnownLocation.getLongitude()
-                                );
-                                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, DEFAULT_ZOOM));
+                                // 只有在有地图时才操作地图
+                                if (googleMap != null) {
+                                    LatLng currentLocation = new LatLng(
+                                        lastKnownLocation.getLatitude(),
+                                        lastKnownLocation.getLongitude()
+                                    );
+                                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, DEFAULT_ZOOM));
+                                }
                                 callback.onLocationSuccess(lastKnownLocation);
                             } else {
-                                moveToDefaultLocation();
+                                if (googleMap != null) {
+                                    moveToDefaultLocation();
+                                }
                                 callback.onLocationError("Current location is null");
                             }
                         } else {
                             LogUtil.d(TAG, "Current location is null. Using defaults.");
                             LogUtil.e(TAG, "Exception: %s", task.getException());
-                            moveToDefaultLocation();
+                            if (googleMap != null) {
+                                moveToDefaultLocation();
+                            }
                             callback.onLocationError("Failed to get location: " + task.getException());
                         }
                     }
                 });
             } else {
-                moveToDefaultLocation();
+                if (googleMap != null) {
+                    moveToDefaultLocation();
+                }
                 callback.onLocationError("Location permission not granted");
             }
         } catch (SecurityException e) {
@@ -147,11 +199,13 @@ public class MapLocationManager {
     }
     
     /**
-     * 移动到默认位置
+     * 移动到默认位置（仅在有地图时操作）
      */
     private void moveToDefaultLocation() {
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, DEFAULT_ZOOM));
-        googleMap.getUiSettings().setMyLocationButtonEnabled(false);
+        if (googleMap != null) {
+            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, DEFAULT_ZOOM));
+            googleMap.getUiSettings().setMyLocationButtonEnabled(false);
+        }
     }
     
     /**

@@ -54,6 +54,11 @@ import com.example.myapplication.network.ApiClient;
 import com.example.myapplication.network.ApiResponse;
 import com.example.myapplication.network.ApiService;
 import com.example.myapplication.network.PlantMapDto;
+import com.example.myapplication.map.MapDataManager;
+import com.example.myapplication.ui.myplants.share.Plant;
+import com.example.myapplication.ui.myplants.myGarden.PlantDetailFragment;
+import com.example.myapplication.network.PlantDto;
+import com.example.myapplication.map.MapLocationManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,9 +67,17 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import android.location.Location;
+import android.content.pm.PackageManager;
+import androidx.core.content.ContextCompat;
+import android.Manifest;
+
 public class HomeFragment extends Fragment {
 
     private static final String TAG = "HomeFragment";
+    
+    // 搜索半径（5公里，适合Home页面的固定范围）
+    private static final int SEARCH_RADIUS_METERS = 5000;
     
     /** View binding for home.xml layout */
     private HomeBinding binding;
@@ -77,6 +90,12 @@ public class HomeFragment extends Fragment {
     
     /** Navigation controller for fragment transitions */
     private NavController navController;
+    
+    /** Location manager for getting user's GPS location */
+    private MapLocationManager locationManager;
+    
+    /** Current user location (for distance calculation) */
+    private Location userLocation;
 
     /**
      * Inflates the layout using View Binding.
@@ -101,10 +120,16 @@ public class HomeFragment extends Fragment {
         // Initialize navigation controller for fragment transitions
         navController = Navigation.findNavController(view);
 
+        // Initialize location manager (no GoogleMap needed for HomeFragment)
+        locationManager = new MapLocationManager(requireContext(), null);
+        locationManager.requestLocationPermission();
+
         // Setup all UI components
         setupTopCardClickListeners();
         setupNearbyDiscoveriesRecyclerView();
-        loadNearbyDiscoveryData();
+        
+        // Request location and load nearby discoveries
+        requestLocationAndLoadData();
     }
 
     /**
@@ -179,11 +204,46 @@ public class HomeFragment extends Fragment {
 
         discoveryItemList = new ArrayList<>();
         // Use requireContext() for a non-null Context once the fragment is attached
-        discoveryAdapter = new DiscoveryAdapter(requireContext(), discoveryItemList);
+        discoveryAdapter = new DiscoveryAdapter(requireContext(), discoveryItemList, plantId -> {
+            // On discovery card click: fetch full plant details then navigate
+            fetchPlantAndNavigate((int) plantId);
+        });
         binding.recyclerViewNearbyDiscoveries.setAdapter(discoveryAdapter);
 
         // Optional: If you need custom item spacing for the horizontal RecyclerView
         // binding.recyclerViewNearbyDiscoveries.addItemDecoration(new HorizontalSpaceItemDecoration(16)); // Example
+    }
+
+    /**
+     * 请求用户位置，然后加载附近发现数据
+     */
+    private void requestLocationAndLoadData() {
+        // 检查权限
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            // 已有权限，获取位置
+            locationManager.getLocation(new MapLocationManager.OnLocationResultCallback() {
+                @Override
+                public void onLocationSuccess(Location location) {
+                    userLocation = location;
+                    Log.d(TAG, "User location obtained: " + location.getLatitude() + ", " + location.getLongitude());
+                    loadNearbyDiscoveryData(location.getLatitude(), location.getLongitude());
+                }
+
+                @Override
+                public void onLocationError(String error) {
+                    Log.w(TAG, "Failed to get user location: " + error);
+                    // 使用默认位置（悉尼）作为fallback
+                    userLocation = null;
+                    loadNearbyDiscoveryData(-33.8523341, 151.2106085);
+                }
+            });
+        } else {
+            // 无权限，使用默认位置
+            Log.w(TAG, "Location permission not granted, using default location");
+            userLocation = null;
+            loadNearbyDiscoveryData(-33.8523341, 151.2106085);
+        }
     }
 
     /**
@@ -209,16 +269,17 @@ public class HomeFragment extends Fragment {
      * - Logs all response codes and error bodies
      * - Provides user-friendly error messages
      * - Falls back to placeholder data on any failure
+     * 
+     * @param latitude User's latitude coordinate
+     * @param longitude User's longitude coordinate
      */
-    private void loadNearbyDiscoveryData() {
+    private void loadNearbyDiscoveryData(double latitude, double longitude) {
         Log.d(TAG, "Fetching nearby plants from server...");
+        Log.d(TAG, "Search center: (" + latitude + ", " + longitude + "), radius: " + SEARCH_RADIUS_METERS + "m");
         
         // Create API service and make request
         ApiService apiService = ApiClient.create(requireContext());
-        double latitude = 0.0; // TODO: replace with actual user latitude
-        double longitude = 0.0; // TODO: replace with actual user longitude
-        Integer radius = 1000; // meters
-        Call<ApiResponse<List<PlantMapDto>>> call = apiService.getNearbyPlants(latitude, longitude, radius);
+        Call<ApiResponse<List<PlantMapDto>>> call = apiService.getNearbyPlants(latitude, longitude, SEARCH_RADIUS_METERS);
         
         call.enqueue(new Callback<ApiResponse<List<PlantMapDto>>>() {
             @Override
@@ -264,6 +325,7 @@ public class HomeFragment extends Fragment {
                             
                             // Create discovery item with Base64 image string
                             discoveryItems.add(new DiscoveryItem(
+                                plant.getPlantId(),
                                 plant.getName(),
                                 distance,
                                 R.drawable.map_foreground, // Placeholder resource ID
@@ -320,15 +382,41 @@ public class HomeFragment extends Fragment {
     
     /**
      * Calculates a display-friendly distance string from plant location data.
-     * If latitude/longitude are null, returns "Unknown distance".
+     * Uses Android's Location.distanceBetween() to calculate real distance.
+     * 
+     * @param plant Plant with latitude/longitude coordinates
+     * @return Formatted distance string (e.g., "250 m away" or "1.2 km away")
      */
     private String calculateDistance(PlantMapDto plant) {
-        if (plant.getLatitude() != null && plant.getLongitude() != null) {
-            // TODO: Calculate actual distance from user's location
-            // For now, return a placeholder
-            return String.format("%.1f km away", Math.random() * 5);
+        if (plant.getLatitude() == null || plant.getLongitude() == null) {
+            return "Unknown distance";
         }
-        return "Unknown distance";
+        
+        // If user location is not available, cannot calculate distance
+        if (userLocation == null) {
+            return "Distance unknown";
+        }
+        
+        try {
+            float[] results = new float[1];
+            Location.distanceBetween(
+                userLocation.getLatitude(), userLocation.getLongitude(),
+                plant.getLatitude(), plant.getLongitude(),
+                results
+            );
+            
+            float distanceInMeters = results[0];
+            
+            // Format distance: use meters for < 1000m, kilometers for >= 1000m
+            if (distanceInMeters < 1000) {
+                return String.format("%.0f m away", distanceInMeters);
+            } else {
+                return String.format("%.1f km away", distanceInMeters / 1000.0);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to calculate distance", e);
+            return "Distance unknown";
+        }
     }
     
     /**
@@ -339,6 +427,7 @@ public class HomeFragment extends Fragment {
         int placeholderImage = R.drawable.map_foreground;
         
         placeholderData.add(new DiscoveryItem(
+            null,
             "No Nearby Plants Yet", 
             "Be the first!", 
             placeholderImage, 
@@ -349,6 +438,35 @@ public class HomeFragment extends Fragment {
             discoveryAdapter.updateData(placeholderData);
             Log.d(TAG, "Loaded placeholder data");
         }
+    }
+
+    /**
+     * Fetches full plant details by ID and navigates to PlantDetailFragment.
+     */
+    private void fetchPlantAndNavigate(int plantId) {
+        MapDataManager dataManager = new MapDataManager(requireContext());
+        dataManager.getPlantById(plantId, new MapDataManager.MapDataCallback<PlantDto>() {
+            @Override
+            public void onSuccess(PlantDto plantDto) {
+                try {
+                    Plant plant = plantDto.toPlant();
+                    Bundle args = new Bundle();
+                    args.putParcelable(PlantDetailFragment.ARG_PLANT, plant);
+                    if (navController != null) {
+                        navController.navigate(R.id.plantDetailFragment, args);
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to convert PlantDto to Plant", e);
+                    Toast.makeText(getContext(), "Failed to open details", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onError(String message) {
+                Log.e(TAG, "Failed to get plant details: " + message);
+                Toast.makeText(getContext(), "Failed to load plant details", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override

@@ -21,10 +21,22 @@ public class DiscoveryAdapter extends RecyclerView.Adapter<DiscoveryAdapter.View
     private static final String TAG = "DiscoveryAdapter";
     private Context context;
     private List<DiscoveryItem> discoveryList;
+    
+    public interface OnDiscoveryClickListener {
+        void onDiscoveryClick(long plantId);
+    }
+    
+    private OnDiscoveryClickListener onDiscoveryClickListener;
 
     public DiscoveryAdapter(Context context, List<DiscoveryItem> discoveryList) {
         this.context = context;
         this.discoveryList = discoveryList;
+    }
+
+    public DiscoveryAdapter(Context context, List<DiscoveryItem> discoveryList, OnDiscoveryClickListener listener) {
+        this.context = context;
+        this.discoveryList = discoveryList;
+        this.onDiscoveryClickListener = listener;
     }
 
     @NonNull
@@ -64,8 +76,11 @@ public class DiscoveryAdapter extends RecyclerView.Adapter<DiscoveryAdapter.View
         }
 
         holder.itemView.setOnClickListener(v -> {
-            Toast.makeText(context, "Clicked: " + item.getName(), Toast.LENGTH_SHORT).show();
-            // TODO: Implement detail view navigation or other action for discovery items
+            if (onDiscoveryClickListener != null && item.getPlantId() != null) {
+                onDiscoveryClickListener.onDiscoveryClick(item.getPlantId());
+            } else {
+                Toast.makeText(context, "Clicked: " + item.getName(), Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
