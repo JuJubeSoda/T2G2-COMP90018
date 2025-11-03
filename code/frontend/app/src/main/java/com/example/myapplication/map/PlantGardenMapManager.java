@@ -73,8 +73,8 @@ public class PlantGardenMapManager {
         // 设置点击监听器
         setupClickListeners();
         
-        // Set up dual-mode binding for seamless mode switching
-        setupDualModeBinding();
+        // Set up initial binding - only Plant ClusterManager exists now
+        rebindListenersForCurrentMode();
         
         // 获取设备位置
         locationManager.getDeviceLocation(new MapLocationManager.OnLocationResultCallback() {
@@ -91,9 +91,46 @@ public class PlantGardenMapManager {
     }
     
     /**
+     * Rebind listeners for the current mode.
+     * This ensures the correct ClusterManager's listeners are active after mode switches.
+     */
+    private void rebindListenersForCurrentMode() {
+        if (isShowingPlants) {
+            final ClusterManager<PlantClusterItem> plantCM = displayManager.getPlantClusterManager();
+            if (plantCM != null) {
+                clusterBinder.bind(plantCM, new Runnable() {
+                    @Override
+                    public void run() {
+                        if (!plantViewLocked) {
+                            handleRadiusChangeWithDebounce();
+                        }
+                    }
+                });
+                LogUtil.d(TAG, "Rebound listeners for Plant mode");
+            }
+        } else {
+            // Ensure Garden ClusterManager exists before binding
+            final ClusterManager<GardenClusterItem> gardenCM = displayManager.getGardenClusterManager();
+            if (gardenCM != null) {
+                clusterBinder.bind(gardenCM, new Runnable() {
+                    @Override
+                    public void run() {
+                        com.google.android.gms.maps.model.LatLngBounds bounds = googleMap.getProjection().getVisibleRegion().latLngBounds;
+                        displayManager.refreshGardensForViewport(bounds, 1000);
+                        handleRadiusChangeWithDebounce();
+                    }
+                });
+                LogUtil.d(TAG, "Rebound listeners for Garden mode");
+            }
+        }
+    }
+    
+    /**
      * Set up dual-mode binding for both Plant and Garden ClusterManagers.
      * This allows seamless switching between modes without losing event handling.
+     * @deprecated Use rebindListenersForCurrentMode() instead
      */
+    @Deprecated
     private void setupDualModeBinding() {
         final ClusterManager<PlantClusterItem> plantCM = displayManager.getPlantClusterManager();
         final ClusterManager<GardenClusterItem> gardenCM = displayManager.getGardenClusterManager();
@@ -293,7 +330,7 @@ public class PlantGardenMapManager {
     private void enterPlantsMode() {
         isShowingPlants = true;
         displayManager.clearCurrentDisplay();
-        clusterBinder.setActiveMode(true);
+        rebindListenersForCurrentMode();
         if (onPlantGardenMapInteractionListener != null) {
             onPlantGardenMapInteractionListener.onDataTypeChanged(true);
         }
@@ -305,7 +342,9 @@ public class PlantGardenMapManager {
     private void enterGardensMode() {
         isShowingPlants = false;
         displayManager.clearCurrentDisplay();
-        clusterBinder.setActiveMode(false);
+        // Ensure Garden ClusterManager is created (lazy initialization)
+        displayManager.getGardenClusterManager();
+        rebindListenersForCurrentMode();
         if (onPlantGardenMapInteractionListener != null) {
             onPlantGardenMapInteractionListener.onDataTypeChanged(false);
         }

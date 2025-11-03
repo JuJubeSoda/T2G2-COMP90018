@@ -60,7 +60,8 @@ public class MapDisplayManager {
         this.googleMap = googleMap;
         LogUtil.d(TAG, "Initializing MapDisplayManager");
         setupClusterManagerIfNeeded();
-        setupGardenClusterManagerIfNeeded();
+        // Delay Garden ClusterManager creation until needed
+        // setupGardenClusterManagerIfNeeded();
         // 禁用InfoWindow
         if (googleMap != null) {
             googleMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
@@ -508,6 +509,7 @@ public class MapDisplayManager {
     }
 
     public ClusterManager<GardenClusterItem> getGardenClusterManager() {
+        setupGardenClusterManagerIfNeeded();
         return gardenClusterManager;
     }
 

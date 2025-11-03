@@ -47,17 +47,15 @@ public class ClusterBinder {
         this.plantCameraIdleCallback = plantCameraIdleCallback;
         this.gardenCameraIdleCallback = gardenCameraIdleCallback;
         
-        // Set up unified listeners that route to the active ClusterManager
+        // Set up unified listeners that route to both ClusterManagers
         googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
                 // Try both managers - the correct one will handle the marker
                 if (ClusterBinder.this.plantCM != null && ClusterBinder.this.plantCM.onMarkerClick(marker)) {
-                    LogUtil.d(TAG, "Marker handled by plant CM");
                     return true;
                 }
                 if (ClusterBinder.this.gardenCM != null && ClusterBinder.this.gardenCM.onMarkerClick(marker)) {
-                    LogUtil.d(TAG, "Marker handled by garden CM");
                     return true;
                 }
                 return false;
