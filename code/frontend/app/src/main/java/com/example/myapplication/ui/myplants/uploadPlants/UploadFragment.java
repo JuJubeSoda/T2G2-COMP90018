@@ -333,7 +333,7 @@ public class UploadFragment extends Fragment {
             public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
                 if (isAdded() && response.isSuccessful()) {
                     Toast.makeText(getContext(), "Plant uploaded successfully!", Toast.LENGTH_SHORT).show();
-                    showSuccessOverlay();
+                    showSuccessOverlay(location);
                 } else if (isAdded()) {
                     Toast.makeText(getContext(), "Upload failed: " + response.message(), Toast.LENGTH_SHORT).show();
                     resetUploadButton();
@@ -365,7 +365,7 @@ public class UploadFragment extends Fragment {
      * Displays success overlay and navigates to UploadCompleteFragment.
      * Passes plant data for preview display.
      */
-    private void showSuccessOverlay() {
+    private void showSuccessOverlay(@Nullable Location location) {
         if (getContext() == null || binding == null) return;
         
         binding.successOverlay.getRoot().setVisibility(View.VISIBLE);
@@ -376,6 +376,18 @@ public class UploadFragment extends Fragment {
             Bundle args = new Bundle();
             args.putString(UploadCompleteFragment.ARG_IMAGE_URI, receivedImageUriString);
             args.putString(UploadCompleteFragment.ARG_SCIENTIFIC_NAME, binding.editTextScientificName.getText().toString().trim());
+            args.putString(UploadCompleteFragment.ARG_INTRODUCTION, binding.editTextIntroduction.getText().toString().trim());
+            String locationString;
+            if (location != null) {
+                // Format the Latitude and Longitude into a readable string
+                locationString = String.format(Locale.getDefault(), "(%.4f, %.4f)",
+                        location.getLatitude(),
+                        location.getLongitude());
+            } else {
+                // If location is null, set a specific string
+                locationString = "Location not available";
+            }
+            args.putString(UploadCompleteFragment.ARG_LOCATION, locationString);
             args.putBoolean("isFavourite", receivedIsFavouriteFlow);
             
             navController.navigate(R.id.navigation_upload_complete_preview, args);

@@ -287,14 +287,6 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Button placed directly after the legend -->
-        <Button
-            android:id="@+id/view_full_care_guide_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Search On Map" />
-
     </LinearLayout>
 
 </androidx.core.widget.NestedScrollView>

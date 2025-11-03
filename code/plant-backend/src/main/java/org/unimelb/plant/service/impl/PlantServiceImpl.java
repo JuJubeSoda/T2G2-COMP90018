@@ -36,6 +36,9 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
     @Autowired
     private UserPlantLikeMapper userPlantLikeMapper;
 
+    @Autowired
+    private UserMapper userMapper;
+
     @Override
     public Page<Plant> pagePlants(PlantQuery query) {
 
@@ -81,6 +84,16 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
         // 拼接 isFavourite 字段
         list.forEach(p -> p.setIsFavourite(likedIds.contains(p.getPlantId())));
 
+        // 拼接 discoveredBy 字段
+        list.forEach(p -> {
+            if (p.getUserId() != null) {
+                User user = userMapper.selectById(p.getUserId());
+                if (user != null && user.getUsername() != null) {
+                    p.setDiscoveredBy(user.getUsername());
+                }
+            }
+        });
+
         return list;
     }
 
@@ -100,11 +113,23 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
             return List.of();
         }
 
-        return this.list(
+        List<Plant> list = this.list(
                 Wrappers.<Plant>lambdaQuery()
                         .in(Plant::getPlantId, likedPlantIds)
                         .orderByDesc(Plant::getCreatedAt)
         );
+
+        // 拼接 discoveredBy 字段
+        list.forEach(p -> {
+            if (p.getUserId() != null) {
+                User user = userMapper.selectById(p.getUserId());
+                if (user != null && user.getUsername() != null) {
+                    p.setDiscoveredBy(user.getUsername());
+                }
+            }
+        });
+
+        return list;
     }
 
     @Override
@@ -135,7 +160,19 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
         if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
             throw new IllegalArgumentException("illegal longitude or latitude");
         }
-        return plantMapper.selectNearBy(latitude, longitude, radius);
+        List<Plant> list = plantMapper.selectNearBy(latitude, longitude, radius);
+        
+        // 拼接 discoveredBy 字段
+        list.forEach(p -> {
+            if (p.getUserId() != null) {
+                User user = userMapper.selectById(p.getUserId());
+                if (user != null && user.getUsername() != null) {
+                    p.setDiscoveredBy(user.getUsername());
+                }
+            }
+        });
+        
+        return list;
     }
 
 

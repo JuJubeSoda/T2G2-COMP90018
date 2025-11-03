@@ -39,5 +39,8 @@ public class Plant implements Serializable {
 
     @TableField(exist = false)
     private Boolean isFavourite;
+    
+    @TableField(exist = false)
+    private String discoveredBy;
 
 }

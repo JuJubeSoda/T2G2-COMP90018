@@ -21,5 +21,7 @@ public class PlantVO implements Serializable {
     private String scientificName;
 
     private Long gardenId;
+    
+    private String discoveredBy;
 
 }

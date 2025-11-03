@@ -199,8 +199,6 @@ public class PlantWikiOverview extends Fragment implements SensorEventListener {
      * Shows toast if sensor is unavailable on device.
      */
     private void setupClickListeners() {
-        // Navigate to Care Guide tab
-        binding.viewFullCareGuideButton.setOnClickListener(v -> switchToCareGuideTab());
 
         // Light sensor card
         binding.lightCard.setOnClickListener(v -> {
