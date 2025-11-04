@@ -1,44 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Root ScrollView for the entire layout, enabling vertical scrolling. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#EAF6EA"
     android:fillViewport="true"
     tools:context=".ui.myplants.uploadPlants.UploadCompleteFragment">
 
-    <!-- Main ConstraintLayout holding all content within the ScrollView. -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:padding="20dp">
 
-        <!-- TextView displaying the main title of the page. -->
         <TextView
             android:id="@+id/textViewPageTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Upload Complete"
-            android:textSize="20sp"
+            android:textColor="#222222"
+            android:textSize="22sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- ImageView for showing a preview of the plant image. -->
         <ImageView
             android:id="@+id/imageViewPlantPreview"
             android:layout_width="0dp"
-            android:layout_height="220dp"
-            android:layout_marginTop="16dp"
-            android:contentDescription="Image of the collected plant"
+            android:layout_height="230dp"
+            android:layout_marginTop="20dp"
+            android:contentDescription="Uploaded plant image"
             android:scaleType="centerCrop"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/textViewPageTitle"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textViewPageTitle"
+            app:layout_constraintEnd_toEndOf="parent"
             tools:src="@tools:sample/backgrounds/scenic" />
 
-        <!-- Guideline to help align labels and their corresponding values vertically. -->
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guidelineLabelEnd"
             android:layout_width="wrap_content"
@@ -46,129 +43,133 @@
             android:orientation="vertical"
             app:layout_constraintGuide_percent="0.35" />
 
-        <!-- Row 1: Scientific Name -->
         <TextView
             android:id="@+id/labelScientificName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="Scientific Name:"
+            android:textColor="#333333"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@+id/guidelineLabelEnd"
+            app:layout_constraintTop_toBottomOf="@id/imageViewPlantPreview"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/imageViewPlantPreview" />
+            app:layout_constraintEnd_toStartOf="@id/guidelineLabelEnd" />
 
         <TextView
             android:id="@+id/textViewScientificName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            app:layout_constraintBaseline_toBaselineOf="@+id/labelScientificName"
+            android:textColor="#555555"
+            app:layout_constraintBaseline_toBaselineOf="@id/labelScientificName"
+            app:layout_constraintStart_toEndOf="@id/guidelineLabelEnd"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
             tools:text="Quercus robur" />
 
-        <!-- Row 2: Introduction -->
         <TextView
             android:id="@+id/labelIntroduction"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="Introduction:"
+            android:textColor="#333333"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@+id/guidelineLabelEnd"
+            app:layout_constraintTop_toBottomOf="@id/textViewScientificName"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textViewScientificName" />
+            app:layout_constraintEnd_toStartOf="@id/guidelineLabelEnd" />
 
         <TextView
             android:id="@+id/textViewIntroduction"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            android:lineSpacingExtra="4sp"
+            android:textColor="#555555"
+            app:layout_constraintTop_toTopOf="@id/labelIntroduction"
+            app:layout_constraintStart_toEndOf="@id/guidelineLabelEnd"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
-            app:layout_constraintTop_toTopOf="@+id/labelIntroduction"
             tools:text="A large deciduous tree, native to most of Europe west of the Caucasus." />
 
-        <!-- Row 3: Location -->
         <TextView
             android:id="@+id/labelLocation"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="Location:"
+            android:textColor="#333333"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@+id/guidelineLabelEnd"
+            app:layout_constraintTop_toBottomOf="@id/textViewIntroduction"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textViewIntroduction" />
+            app:layout_constraintEnd_toStartOf="@id/guidelineLabelEnd" />
 
         <TextView
             android:id="@+id/textViewLocation"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            app:layout_constraintBaseline_toBaselineOf="@+id/labelLocation"
+            android:textColor="#555555"
+            app:layout_constraintBaseline_toBaselineOf="@id/labelLocation"
+            app:layout_constraintStart_toEndOf="@id/guidelineLabelEnd"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
             tools:text="Royal Botanic Gardens" />
 
-        <!-- Row 4: Search Tags (REMOVED) -->
-        <!-- The 'labelSearchTag' and 'textViewSearchTag' views have been deleted. -->
-
-        <!-- Discovered By & Date Row - FIX: Top constraint now connects to labelLocation -->
         <TextView
             android:id="@+id/textViewDiscoveredBy"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:textSize="12sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/labelLocation"
-            tools:text="Discovered by: Jonathan" />
+            android:layout_marginTop="28dp"
+            android:text="Discovered by: Jonathan"
+            android:textColor="#666666"
+            android:textSize="13sp"
+            app:layout_constraintTop_toBottomOf="@id/labelLocation"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <TextView
             android:id="@+id/textViewDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
-            app:layout_constraintBaseline_toBaselineOf="@+id/textViewDiscoveredBy"
-            app:layout_constraintEnd_toEndOf="parent"
-            tools:text="Date: 2025-09-01" />
+            android:text="Date: 2025-09-01"
+            android:textColor="#666666"
+            android:textSize="13sp"
+            app:layout_constraintBaseline_toBaselineOf="@id/textViewDiscoveredBy"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Spacer view to push buttons to the bottom, ensuring they don't overlap content -->
         <Space
             android:id="@+id/spacer"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            app:layout_constraintBottom_toTopOf="@id/buttonUploadMore"
             app:layout_constraintTop_toBottomOf="@id/textViewDiscoveredBy"
+            app:layout_constraintBottom_toTopOf="@id/buttonUploadMore"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintVertical_bias="1.0"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="16dp"/>
+            android:layout_marginTop="20dp" />
 
-        <!-- Button to navigate to an "Upload More" screen or action. -->
         <Button
             android:id="@+id/buttonUploadMore"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
             android:text="Upload More"
-            app:layout_constraintBottom_toTopOf="@+id/buttonGatherMoreInfo"
+            android:textAllCaps="true"
+            android:minHeight="48dp"
+            android:backgroundTint="?attr/colorPrimary"
+            android:textColor="@android:color/white"
+            app:layout_constraintBottom_toTopOf="@id/buttonGatherMoreInfo"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            android:layout_marginBottom="12dp" />
 
-        <!-- Button to trigger an action to gather more information about the plant. -->
         <Button
             android:id="@+id/buttonGatherMoreInfo"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="Gather More Information"
+            android:textAllCaps="true"
+            android:minHeight="48dp"
+            android:backgroundTint="#A5D6A7"
+            android:textColor="#1B5E20"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

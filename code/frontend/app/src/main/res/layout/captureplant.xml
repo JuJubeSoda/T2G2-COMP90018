@@ -66,8 +66,8 @@
          for the button's appearance. -->
     <ImageButton
         android:id="@+id/imageCaptureButton"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
         android:layout_marginBottom="32dp"
         android:background="@drawable/camera_button"
         android:contentDescription="Take Picture"

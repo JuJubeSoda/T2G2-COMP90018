@@ -78,7 +78,7 @@
         app:layout_constraintStart_toEndOf="@+id/imageButton5"
         app:layout_constraintTop_toTopOf="@+id/bottomAppBar"
         app:srcCompat="@drawable/ai_icon_foreground"
-        app:tint="@color/teal_200" />
+        app:tint="@color/brand_teal" />
 
 
     <ImageButton

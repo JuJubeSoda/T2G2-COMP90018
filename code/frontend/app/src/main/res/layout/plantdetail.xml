@@ -1,20 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Root ScrollView enables vertical scrolling for long content. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
+    android:background="#F8F9F8"
     tools:context=".ui.myplants.myGarden.PlantDetailFragment">
 
-    <!-- Main ConstraintLayout holding all content. Padding is moved here. -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:padding="20dp">
 
-        <!-- Progress Bar for loading plant details -->
         <ProgressBar
             android:id="@+id/progressBar"
             style="?android:attr/progressBarStyle"
@@ -26,60 +24,67 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Back Button (Optional but good for UX) -->
+        <!-- 返回按钮 -->
         <ImageButton
             android:id="@+id/backButtonDetail"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Back"
-            android:padding="8dp"
+            android:padding="10dp"
+            android:scaleType="centerInside"
             android:src="@drawable/quantum_ic_arrow_back_grey600_24"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- TextView displaying the main title of the page. -->
+        <!-- 页面标题 -->
         <TextView
             android:id="@+id/textViewPageTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:text="Plant Details"
-            android:textSize="20sp"
+            android:textSize="24sp"
             android:textStyle="bold"
+            android:textColor="@android:color/black"
             app:layout_constraintBottom_toBottomOf="@+id/backButtonDetail"
             app:layout_constraintStart_toEndOf="@+id/backButtonDetail"
             app:layout_constraintTop_toTopOf="@+id/backButtonDetail" />
 
-        <!-- ImageView for showing a preview of the plant image. -->
+        <!-- 植物图片 -->
         <ImageView
             android:id="@+id/imageViewPlantPreview"
             android:layout_width="0dp"
-            android:layout_height="220dp"
-            android:layout_marginTop="16dp"
+            android:layout_height="260dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="8dp"
+            android:background="@android:color/white"
             android:contentDescription="Image of the collected plant"
+            android:elevation="2dp"
             android:scaleType="centerCrop"
+            android:clipToOutline="true"
+            android:padding="2dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/backButtonDetail"
             tools:src="@tools:sample/backgrounds/scenic" />
 
-        <!-- Guideline to vertically align labels and their values. -->
+        <!-- 文字区域对齐线 -->
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guidelineLabelEnd"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:orientation="vertical"
             app:layout_constraintGuide_percent="0.35" />
 
-        <!-- Row 1: Scientific Name -->
+        <!-- 学名 -->
         <TextView
             android:id="@+id/labelScientificName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="Scientific Name:"
+            android:textSize="16sp"
             android:textStyle="bold"
+            android:textColor="@android:color/black"
             app:layout_constraintEnd_toStartOf="@+id/guidelineLabelEnd"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/imageViewPlantPreview" />
@@ -89,19 +94,23 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            android:textColor="#444444"
+            android:textSize="16sp"
             app:layout_constraintBaseline_toBaselineOf="@id/labelScientificName"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
             tools:text="Quercus robur" />
 
-        <!-- Row 2: Introduction -->
+        <!-- 简介 -->
         <TextView
             android:id="@+id/labelIntroduction"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="20dp"
             android:text="Introduction:"
+            android:textSize="16sp"
             android:textStyle="bold"
+            android:textColor="@android:color/black"
             app:layout_constraintEnd_toStartOf="@+id/guidelineLabelEnd"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewScientificName" />
@@ -111,19 +120,24 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            android:lineSpacingExtra="3dp"
+            android:textColor="#444444"
+            android:textSize="15sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
             app:layout_constraintTop_toTopOf="@+id/labelIntroduction"
-            tools:text="A large deciduous tree, native to most of Europe west of the Caucasus. Can grow quite large and live for many centuries." />
+            tools:text="A large deciduous tree native to most of Europe, known for its long lifespan and sturdy structure." />
 
-        <!-- Row 3: Location -->
+        <!-- 位置 -->
         <TextView
             android:id="@+id/labelLocation"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="20dp"
             android:text="Location:"
+            android:textSize="16sp"
             android:textStyle="bold"
+            android:textColor="@android:color/black"
             app:layout_constraintEnd_toStartOf="@+id/guidelineLabelEnd"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewIntroduction" />
@@ -133,23 +147,23 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            android:textColor="#444444"
+            android:textSize="15sp"
             app:layout_constraintBaseline_toBaselineOf="@id/labelLocation"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
             tools:text="Royal Botanic Gardens" />
 
-        <!-- Row 4: Search Tags (REMOVED) -->
-        <!-- TextView android:id="@+id/labelSearchTag" ... -->
-        <!-- TextView android:id="@+id/textViewSearchTag" ... -->
-
-        <!-- Row 5: Discovered By - FIX: Top constraint now connects to labelLocation -->
+        <!-- 发现者 -->
         <TextView
             android:id="@+id/labelDiscoveredBy"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="20dp"
             android:text="Discovered By:"
+            android:textSize="16sp"
             android:textStyle="bold"
+            android:textColor="@android:color/black"
             app:layout_constraintEnd_toStartOf="@+id/guidelineLabelEnd"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewLocation" />
@@ -159,19 +173,23 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            android:textColor="#444444"
+            android:textSize="15sp"
             app:layout_constraintBaseline_toBaselineOf="@id/labelDiscoveredBy"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
             tools:text="User 1" />
 
-        <!-- Row 6: Discovered On - FIX: Top constraint now connects to labelDiscoveredBy -->
+        <!-- 发现时间 -->
         <TextView
             android:id="@+id/labelDiscoveredOn"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="20dp"
             android:text="Discovered On:"
+            android:textSize="16sp"
             android:textStyle="bold"
+            android:textColor="@android:color/black"
             app:layout_constraintEnd_toStartOf="@+id/guidelineLabelEnd"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewDiscoveredBy" />
@@ -181,12 +199,12 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            android:textColor="#444444"
+            android:textSize="15sp"
             app:layout_constraintBaseline_toBaselineOf="@id/labelDiscoveredOn"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
             tools:text="31/12/2024" />
-
-        <!-- Bottom actions removed: PlantDetailFragment is display-only -->
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

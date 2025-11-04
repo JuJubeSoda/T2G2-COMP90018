@@ -1,36 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 1. Use NestedScrollView to make the entire layout scrollable -->
 <androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="16dp"
     tools:context=".ui.myplants.plantWiki.PlantWikiCareGuide">
 
-    <!-- 2. Use a LinearLayout to list the care sections vertically -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="vertical">
 
-        <!-- Care Section 1: Watering -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="top"
-            android:layout_marginBottom="24dp">
+            android:padding="16dp"
+            android:layout_marginBottom="16dp"
+            android:background="@android:color/white"
+            android:elevation="2dp"
+            android:clipToOutline="true"
+            android:layout_marginHorizontal="4dp"
+            android:layout_marginTop="4dp"
+            android:gravity="top">
 
-            <!-- FIX: Corrected ImageView tag and assigned a 'water' icon -->
             <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/plantbulb_foreground"
-                app:tint="?attr/colorPrimary"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_marginEnd="16dp"
                 android:layout_marginTop="4dp"
+                android:src="@drawable/plantbulb_foreground"
+                app:tint="?attr/colorPrimary"
                 tools:ignore="ContentDescription" />
 
             <LinearLayout
@@ -43,36 +45,42 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Watering"
-                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                    android:textColor="@android:color/black"
+                    android:textSize="17sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="4dp"/>
+                    android:layout_marginBottom="6dp" />
 
                 <TextView
                     android:id="@+id/care_watering_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                    android:textColor="#444444"
+                    android:textSize="15sp"
                     android:lineSpacingExtra="4sp"
                     tools:text="Water every 1-2 weeks, allowing soil to dry out between waterings. Increase frequency with more light and decrease in winter." />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Care Section 2: Light -->
+        <!-- 光照需求 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="top"
-            android:layout_marginBottom="24dp">
+            android:padding="16dp"
+            android:layout_marginBottom="16dp"
+            android:background="@android:color/white"
+            android:elevation="2dp"
+            android:clipToOutline="true"
+            android:layout_marginHorizontal="4dp"
+            android:gravity="top">
 
-            <!-- FIX: Assigned a 'light' icon -->
             <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/plantbulb_foreground"
-                app:tint="?attr/colorPrimary"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_marginEnd="16dp"
                 android:layout_marginTop="4dp"
+                android:src="@drawable/plantbulb_foreground"
+                app:tint="?attr/colorPrimary"
                 tools:ignore="ContentDescription" />
 
             <LinearLayout
@@ -85,36 +93,42 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Light Requirements"
-                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                    android:textColor="@android:color/black"
+                    android:textSize="17sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="4dp"/>
+                    android:layout_marginBottom="6dp" />
 
                 <TextView
                     android:id="@+id/care_light_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                    android:textColor="#444444"
+                    android:textSize="15sp"
                     android:lineSpacingExtra="4sp"
                     tools:text="Thrives in bright to medium indirect light. Not suited for intense, direct sun which can burn the leaves." />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Care Section 3: Soil -->
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="top"
-            android:layout_marginBottom="24dp">
+            android:padding="16dp"
+            android:layout_marginBottom="16dp"
+            android:background="@android:color/white"
+            android:elevation="2dp"
+            android:clipToOutline="true"
+            android:layout_marginHorizontal="4dp"
+            android:gravity="top">
 
-            <!-- FIX: Assigned a 'soil' icon -->
             <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/plantbulb_foreground"
-                app:tint="?attr/colorPrimary"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_marginEnd="16dp"
                 android:layout_marginTop="4dp"
+                android:src="@drawable/plantbulb_foreground"
+                app:tint="?attr/colorPrimary"
                 tools:ignore="ContentDescription" />
 
             <LinearLayout
@@ -127,36 +141,41 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Soil"
-                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                    android:textColor="@android:color/black"
+                    android:textSize="17sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="4dp"/>
+                    android:layout_marginBottom="6dp" />
 
                 <TextView
                     android:id="@+id/care_soil_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                    android:textColor="#444444"
+                    android:textSize="15sp"
                     android:lineSpacingExtra="4sp"
                     tools:text="Best in a peat-based potting mix. Use a pot with large drainage holes to prevent root rot." />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Care Section 4: Fertilizing -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="top"
-            android:layout_marginBottom="24dp">
+            android:padding="16dp"
+            android:layout_marginBottom="16dp"
+            android:background="@android:color/white"
+            android:elevation="2dp"
+            android:clipToOutline="true"
+            android:layout_marginHorizontal="4dp"
+            android:gravity="top">
 
-            <!-- FIX: Assigned a 'fertilizer' icon -->
             <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/plantbulb_foreground"
-                app:tint="?attr/colorPrimary"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_marginEnd="16dp"
                 android:layout_marginTop="4dp"
+                android:src="@drawable/plantbulb_foreground"
+                app:tint="?attr/colorPrimary"
                 tools:ignore="ContentDescription" />
 
             <LinearLayout
@@ -169,21 +188,22 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Fertilizing"
-                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                    android:textColor="@android:color/black"
+                    android:textSize="17sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="4dp"/>
+                    android:layout_marginBottom="6dp" />
 
                 <TextView
                     android:id="@+id/care_fertilizer_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                    android:textColor="#444444"
+                    android:textSize="15sp"
                     android:lineSpacingExtra="4sp"
                     tools:text="Feed with a balanced liquid fertilizer every 4 weeks during the growing season (spring and summer)." />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- You can continue adding more care guide sections here -->
-
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>
+
