@@ -5,7 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="#F8F9F8"
     tools:context=".ui.myplants.myGarden.PlantDetailFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -24,7 +23,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- 返回按钮 -->
         <ImageButton
             android:id="@+id/backButtonDetail"
             android:layout_width="52dp"
@@ -37,7 +35,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- 页面标题 -->
         <TextView
             android:id="@+id/textViewPageTitle"
             android:layout_width="wrap_content"
@@ -51,7 +48,6 @@
             app:layout_constraintStart_toEndOf="@+id/backButtonDetail"
             app:layout_constraintTop_toTopOf="@+id/backButtonDetail" />
 
-        <!-- 植物图片 -->
         <ImageView
             android:id="@+id/imageViewPlantPreview"
             android:layout_width="0dp"
@@ -69,13 +65,11 @@
             app:layout_constraintTop_toBottomOf="@+id/backButtonDetail"
             tools:src="@tools:sample/backgrounds/scenic" />
 
-        <!-- 文字区域对齐线 -->
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guidelineLabelEnd"
             android:orientation="vertical"
             app:layout_constraintGuide_percent="0.35" />
 
-        <!-- 学名 -->
         <TextView
             android:id="@+id/labelScientificName"
             android:layout_width="0dp"
@@ -101,7 +95,6 @@
             app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
             tools:text="Quercus robur" />
 
-        <!-- 简介 -->
         <TextView
             android:id="@+id/labelIntroduction"
             android:layout_width="0dp"
@@ -128,7 +121,6 @@
             app:layout_constraintTop_toTopOf="@+id/labelIntroduction"
             tools:text="A large deciduous tree native to most of Europe, known for its long lifespan and sturdy structure." />
 
-        <!-- 位置 -->
         <TextView
             android:id="@+id/labelLocation"
             android:layout_width="0dp"
@@ -154,7 +146,6 @@
             app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
             tools:text="Royal Botanic Gardens" />
 
-        <!-- 发现者 -->
         <TextView
             android:id="@+id/labelDiscoveredBy"
             android:layout_width="0dp"
@@ -180,7 +171,6 @@
             app:layout_constraintStart_toEndOf="@+id/guidelineLabelEnd"
             tools:text="User 1" />
 
-        <!-- 发现时间 -->
         <TextView
             android:id="@+id/labelDiscoveredOn"
             android:layout_width="0dp"
