@@ -238,7 +238,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="☀️ Light\n• Very Bright: >10,000 lx\n• Bright: 1,000–10,000 lx\n• Moderate: 100–1,000 lx\n• Low: <100 lx"
+                    android:text="☀️ Light\n• Very Bright: >10,000 lx\n• Bright: 1,000–10,000 lx\n• Moderate: 100–1,000 lx\n• Low: &lt;100 lx"
                     android:textSize="12sp"
                     android:lineSpacingExtra="3dp"
                     android:textColor="#444444"
@@ -247,7 +247,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="🌡️ Temperature\n• Very Hot: >30°C\n• Warm: 24–30°C\n• Moderate: 18–24°C\n• Cool: 12–18°C\n• Cold: <12°C"
+                    android:text="🌡️ Temperature\n• Very Hot: >30°C\n• Warm: 24–30°C\n• Moderate: 18–24°C\n• Cool: 12–18°C\n• Cold: &lt;12°C"
                     android:textSize="12sp"
                     android:lineSpacingExtra="3dp"
                     android:textColor="#444444"
@@ -256,7 +256,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="💧 Humidity\n• Very High: >70%\n• High: 60–70%\n• Moderate: 40–60%\n• Low: <40%"
+                    android:text="💧 Humidity\n• Very High: >70%\n• High: 60–70%\n• Moderate: 40–60%\n• Low: &lt;40%"
                     android:textSize="12sp"
                     android:lineSpacingExtra="3dp"
                     android:textColor="#444444" />

@@ -53,7 +53,7 @@ public class SignUpActivity extends AppCompatActivity {
 
         btnCreate.setOnClickListener(v -> {
             // 添加调试日志
-            Toast.makeText(SignUpActivity.this, "按钮被点击了", Toast.LENGTH_SHORT).show();
+            // Toast.makeText(SignUpActivity.this, "按钮被点击了", Toast.LENGTH_SHORT).show();
             
             // 读取用户输入
             String username = val(etUsername); // 中文：单独的用户名
@@ -63,22 +63,22 @@ public class SignUpActivity extends AppCompatActivity {
 
             // 表单校验（按需可继续增强）
             if (username.isEmpty()) { 
-                Toast.makeText(SignUpActivity.this, "用户名不能为空", Toast.LENGTH_SHORT).show();
+                // Toast.makeText(SignUpActivity.this, "用户名不能为空", Toast.LENGTH_SHORT).show();
                 etUsername.setError("Username required"); 
                 return; 
             }
             if (email.isEmpty()) { 
-                Toast.makeText(SignUpActivity.this, "邮箱不能为空", Toast.LENGTH_SHORT).show();
+                // Toast.makeText(SignUpActivity.this, "邮箱不能为空", Toast.LENGTH_SHORT).show();
                 etEmail.setError("Email required"); 
                 return; 
             }
             if (pwd.isEmpty()) { 
-                Toast.makeText(SignUpActivity.this, "密码不能为空", Toast.LENGTH_SHORT).show();
+                // Toast.makeText(SignUpActivity.this, "密码不能为空", Toast.LENGTH_SHORT).show();
                 etPassword.setError("Password required"); 
                 return; 
             }
             if (!pwd.equals(confirm)) { 
-                Toast.makeText(SignUpActivity.this, "密码不匹配", Toast.LENGTH_SHORT).show();
+                // Toast.makeText(SignUpActivity.this, "密码不匹配", Toast.LENGTH_SHORT).show();
                 etConfirm.setError("Passwords do not match"); 
                 return; 
             }
@@ -89,7 +89,7 @@ public class SignUpActivity extends AppCompatActivity {
             RegisterRequest req = new RegisterRequest(username, "0000000000", pwd, email);
 
             // 添加调试日志
-            Toast.makeText(SignUpActivity.this, "正在注册...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(SignUpActivity.this, "Registering", Toast.LENGTH_SHORT).show();
             
             // 调用后端注册 API
             api.register(req).enqueue(new Callback<BaseResponse>() {

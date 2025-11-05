@@ -18,6 +18,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.example.myapplication.auth.MyProfileActivity;
 import com.example.myapplication.databinding.ActivityMainBinding;
 
 import java.util.ArrayList;
@@ -127,8 +128,11 @@ public class MainActivity extends AppCompatActivity {
                 navController.navigate(R.id.navigation_plant_map));
 
         // Profile button - navigate to my garden
-        activityBinding.imageButton9.setOnClickListener(v ->
-                navController.navigate(R.id.navigation_my_garden));
+        activityBinding.imageButton9.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, MyProfileActivity.class);
+            startActivity(intent);
+        });
+
 
         // AI Chat button - launch separate activity (not a fragment)
         activityBinding.imageButtonAI.setOnClickListener(v -> {

@@ -66,6 +66,7 @@
         <activity android:name=".auth.WelcomeActivity" />
         <activity android:name=".auth.SignInActivity" />
         <activity android:name=".auth.SignUpActivity" />
+        <activity android:name=".auth.MyProfileActivity" />
         <activity android:name=".auth.SignUpSuccessActivity" />
         <activity android:name=".NewUserSetting1Activity" />
         <activity android:name=".NewUserSetting2Activity" /> <!-- Main screens (no launcher) -->
