@@ -34,6 +34,7 @@ import com.example.myapplication.network.PlantMapDto;
 import com.example.myapplication.map.PlantGardenMapManager;
 import com.example.myapplication.map.MapDataManager;
 import androidx.navigation.Navigation;
+import androidx.navigation.NavController;
 
 import java.util.List;
 
@@ -566,16 +567,47 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
         try {
             Log.d(TAG, "Navigating to plant detail for: " + plant.getName());
             
+            // Check if fragment is still attached and view is available
+            if (!isAdded() || getView() == null) {
+                Log.e(TAG, "Fragment not attached or view is null, cannot navigate");
+                Toast.makeText(getContext(), "Please try again", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
             // Create bundle with plant data
             Bundle args = new Bundle();
             args.putParcelable(PlantDetailFragment.ARG_PLANT, plant);
             
-            // Navigate to PlantDetailFragment
-            Navigation.findNavController(requireView()).navigate(R.id.plantDetailFragment, args);
+            // Use action to navigate (safer than direct fragment ID)
+            // Ensure navigation happens on main thread
+            View view = getView();
+            if (view != null) {
+                android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+                mainHandler.post(() -> {
+                    try {
+                        NavController navController = Navigation.findNavController(view);
+                        // Check if action exists before navigating
+                        if (navController.getCurrentDestination() != null) {
+                            navController.navigate(R.id.action_plantMapFragment_to_plantDetailFragment, args);
+                            Log.d(TAG, "Navigation to plant detail successful");
+                        } else {
+                            Log.e(TAG, "NavController destination is null, cannot navigate");
+                            Toast.makeText(getContext(), "Navigation unavailable, please try again", Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Failed to navigate to plant detail", e);
+                        e.printStackTrace();
+                        Toast.makeText(getContext(), "Failed to open plant details: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
             
         } catch (Exception e) {
             Log.e(TAG, "Failed to navigate to plant detail", e);
-            Toast.makeText(getContext(), "Failed to open plant details", Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+            if (getContext() != null) {
+                Toast.makeText(getContext(), "Failed to open plant details: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
         }
     }
 

@@ -168,7 +168,12 @@
         android:id="@+id/navigation_plant_map"
         android:name="com.example.myapplication.ui.map.PlantMapFragment"
         android:label="Plant Map"
-        tools:layout="@layout/fragment_plant_map" /> <!-- Specifies the layout for PlantMapFragment for design preview. -->
+        tools:layout="@layout/fragment_plant_map"> <!-- Specifies the layout for PlantMapFragment for design preview. -->
+        <!-- Action to navigate from PlantMapFragment to PlantDetailFragment -->
+        <action
+            android:id="@+id/action_plantMapFragment_to_plantDetailFragment"
+            app:destination="@id/plantDetailFragment" />
+    </fragment>
 
     <!--
         Plant Wiki Destination (PlantWikiFragment): Represents a screen for displaying informational
@@ -188,7 +193,7 @@
         android:label="Plant Details"
         tools:layout="@layout/plantdetail">
         <argument
-            android:name="plant_object"
+            android:name="plant_argument"
             app:argType="com.example.myapplication.ui.myplants.share.Plant" />
     </fragment>
 
@@ -198,7 +203,7 @@
         android:label="Liked Plant Details"
         tools:layout="@layout/liked_plant_detail">
         <argument
-            android:name="plant_object"
+            android:name="plant_argument"
             app:argType="com.example.myapplication.ui.myplants.share.Plant" />
     </fragment>
 
