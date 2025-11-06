@@ -111,15 +111,25 @@ public interface ApiService {
     Call<ApiResponse<String>> unlikePlant(@Query("plantId") int plantId);
 
     /**
-     * Fetch all plants under a specific garden
+     * Fetches all plants from a specific garden
      */
     @GET("/api/plants/by-garden")
     Call<ApiResponse<List<PlantDto>>> getPlantsByGarden(@Query("gardenId") long gardenId);
 
     /**
-     * Fetch all plants liked by the current user
+     * Fetches all plants liked by the current user
      */
     @GET("/api/plants/liked-by-user")
     Call<ApiResponse<List<PlantDto>>> getLikedPlantsByUser();
+
+    // --- User Data Endpoints ---
+    
+    /**
+     * Fetches all users from the backend.
+     * Used to map userId to username for displaying plant discoverers.
+     * @return Call containing ApiResponse with list of User objects
+     */
+    @GET("/user")
+    Call<ApiResponse<List<User>>> getAllUsers();
 
 }

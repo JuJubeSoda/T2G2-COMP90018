@@ -5,32 +5,70 @@ import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 
 /**
- * Garden DTO used for network responses and map rendering.
+ * GardenDto - Data Transfer Object for garden locations from backend API.
+ * 
+ * Purpose:
+ * - Represents a community garden or plant collection location
+ * - Used for map clustering and garden-based plant filtering
+ * - Enables users to discover plants grouped by geographic gardens
+ * 
+ * API Endpoints Using This DTO:
+ * - GET /api/gardens/all - All gardens in the system
+ * - GET /api/gardens/nearby - Gardens within radius
+ * - POST /api/gardens/create - Create new garden
+ * 
+ * Map Integration:
+ * - Gardens are clustered on map view
+ * - Clicking garden shows all plants in that garden
+ * - Provides geographic organization of plant discoveries
+ * 
+ * Fields:
+ * - gardenId: Unique database identifier
+ * - name: Garden name (e.g., "Melbourne Botanic Gardens")
+ * - description: Additional garden information
+ * - latitude/longitude: GPS coordinates for map display
+ * - createdAt/updatedAt: Timestamps for tracking
  */
 public class GardenDto implements Serializable {
+    /** Unique database ID for this garden */
     @SerializedName("gardenId")
     private Long gardenId;
 
+    /** GPS latitude of garden location */
     @SerializedName("latitude")
     private Double latitude;
 
+    /** GPS longitude of garden location */
     @SerializedName("longitude")
     private Double longitude;
 
+    /** Garden name or title */
     @SerializedName("name")
     private String name;
 
+    /** Garden description or additional details */
     @SerializedName("description")
     private String description;
 
+    /** Timestamp when garden was created */
     @SerializedName("createdAt")
     private String createdAt;
 
+    /** Timestamp when garden was last updated */
     @SerializedName("updatedAt")
     private String updatedAt;
 
+    /** Default constructor for Gson deserialization */
     public GardenDto() {}
 
+    /**
+     * Constructor for creating new garden instances.
+     * 
+     * @param name Garden name
+     * @param description Garden description
+     * @param latitude GPS latitude
+     * @param longitude GPS longitude
+     */
     public GardenDto(String name, String description, Double latitude, Double longitude) {
         this.name = name;
         this.description = description;

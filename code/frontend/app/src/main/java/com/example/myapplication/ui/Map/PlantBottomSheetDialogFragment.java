@@ -92,7 +92,7 @@ public class PlantBottomSheetDialogFragment extends BottomSheetDialogFragment {
             }
 
             if (btnLike != null) {
-                // Default state: if from "My Likes" list then show "Unlike"
+                // Default state: if from "My Liked" list, show Unlike
                 btnLike.setText(initialLiked ? "Unlike" : "Like");
                 btnLike.setOnClickListener(v -> {
                     if (getParentFragment() instanceof OnPlantActionListener) {

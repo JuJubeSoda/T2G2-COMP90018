@@ -76,7 +76,7 @@ public class HomeFragment extends Fragment {
 
     private static final String TAG = "HomeFragment";
     
-    // Search radius (5 km, suitable fixed range for Home screen)
+    // Search radius (5 kilometers, suitable for Home page fixed range)
     private static final int SEARCH_RADIUS_METERS = 5000;
     
     /** View binding for home.xml layout */
@@ -221,7 +221,7 @@ public class HomeFragment extends Fragment {
         // Check permission
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
-            // Permission granted, get location
+            // Have permission, get location
             locationManager.getLocation(new MapLocationManager.OnLocationResultCallback() {
                 @Override
                 public void onLocationSuccess(Location location) {

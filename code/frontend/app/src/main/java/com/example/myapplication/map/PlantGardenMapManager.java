@@ -14,8 +14,10 @@ import java.util.List;
 import com.example.myapplication.util.LogUtil;
 
 /**
- * Plant & Garden Map Manager - unifies map features for plants and gardens.
- * Integrates location management, data display, and data fetching for the map.
+ * PlantGardenMapManager - Unified manager for plant and garden map functionality
+ * 
+ * Integrates location management, data display, and data retrieval for all map-related features.
+ * Manages the display of both plants and gardens on Google Maps with clustering support.
  */
 public class PlantGardenMapManager {
     
@@ -24,7 +26,7 @@ public class PlantGardenMapManager {
     private final Context context;
     private final GoogleMap googleMap;
     
-    // Sub-managers
+    // Sub-managers for different map responsibilities
     private final MapLocationManager locationManager;
     private final MapDisplayManager displayManager;
     private final MapDataManager dataManager;
@@ -32,16 +34,18 @@ public class PlantGardenMapManager {
     private final GardensMapController gardensController;
     private final ClusterBinder clusterBinder;
     
-    // Current state
+    // Current display state
     private boolean isShowingPlants = true; // true = plants, false = gardens
-    // Lock: when entering Plant list from a Garden or showing a single Plant, prevent camera-driven nearby searches
+    
+    // Lock: Prevents camera-driven nearby search when entering Plant list from Garden or displaying single Plant
     private boolean plantViewLocked = false;
     
-    // Debounce and throttle control
+    // Debounce and throttle control for API requests
     private static final long DEBOUNCE_DELAY_MS = 800; // Debounce delay 800ms
-    private static final long THROTTLE_INTERVAL_MS = 2000; // Throttle minimum interval 2s
+    private static final long THROTTLE_INTERVAL_MS = 2000; // Throttle minimum interval 2 seconds
     private final MapSchedulers schedulers = new MapSchedulers(DEBOUNCE_DELAY_MS, THROTTLE_INTERVAL_MS);
-    // Debug: request sequence (logging only; no behavior change)
+    
+    // Debug: Request sequence number (logging only, doesn't change behavior)
     private long requestSeq = 0L;
     private long lastIssuedPlantsReqId = 0L;
     
@@ -57,7 +61,7 @@ public class PlantGardenMapManager {
         this.gardensController = new GardensMapController(context, googleMap, displayManager, dataManager);
         this.clusterBinder = new ClusterBinder(googleMap);
         
-        // Set smart radius change listener
+        // Set up intelligent radius change listener
         setupSmartRadiusListener();
         
         LogUtil.d(TAG, "PlantGardenMapManager initialized");
@@ -70,13 +74,13 @@ public class PlantGardenMapManager {
         locationManager.requestLocationPermission();
         locationManager.updateLocationUI();
         
-        // Configure click listeners
+        // Set up click listeners for map interactions
         setupClickListeners();
         
         // Set up initial binding - only Plant ClusterManager exists now
         rebindListenersForCurrentMode();
         
-        // Acquire device location
+        // Get device location for initial map positioning
         locationManager.getDeviceLocation(new MapLocationManager.OnLocationResultCallback() {
             @Override
             public void onLocationSuccess(android.location.Location location) {
@@ -171,7 +175,7 @@ public class PlantGardenMapManager {
     }
     
     /**
-     * Set click listeners
+     * Set up click listeners
      */
     private void setupClickListeners() {
         plantsController.setOnPlantClickListener(new MapDisplayManager.OnPlantMapClickListener() {
@@ -194,7 +198,7 @@ public class PlantGardenMapManager {
     }
     
     /**
-     * Search nearby data (plants or gardens based on current mode)
+     * Search nearby data (search plants or gardens based on current mode)
      */
     public void searchNearbyData() {
         LogUtil.d(TAG, "=== Search Nearby Data Debug ===");
@@ -204,7 +208,7 @@ public class PlantGardenMapManager {
             return;
         }
 
-        // Use camera center as the query center
+        // Use camera center as query center
         com.google.android.gms.maps.model.LatLng center = locationManager.getCameraCenter();
         int radius = locationManager.getSmartSearchRadius();
 
@@ -214,7 +218,7 @@ public class PlantGardenMapManager {
         LogUtil.d(TAG, "  - Radius: " + radius + " meters");
         LogUtil.d(TAG, "  - Mode: " + (isShowingPlants ? "Plants" : "Gardens"));
         
-        // Check if default location (Sydney) is being used
+        // Check if using default location (Sydney) - indicates map not ready yet
         com.google.android.gms.maps.model.LatLng sydneyDefault = new com.google.android.gms.maps.model.LatLng(-33.8523341, 151.2106085);
         if (Math.abs(center.latitude - sydneyDefault.latitude) < 0.0001 && 
             Math.abs(center.longitude - sydneyDefault.longitude) < 0.0001) {
@@ -295,7 +299,7 @@ public class PlantGardenMapManager {
     // Removed: searchNearbyGardens in favor of fetchAllGardens
 
     /**
-     * Fetch all gardens and render
+     * Fetch all gardens and render them
      */
     public void fetchAllGardens() {
         if (onPlantGardenMapInteractionListener != null) onPlantGardenMapInteractionListener.onLoading(true);
@@ -351,7 +355,7 @@ public class PlantGardenMapManager {
     }
 
     /**
-     * Restore garden clustering view (when returning from plants mode)
+     * Restore gardens clustering display (return from plants mode)
      */
     public void restoreGardensView() {
         enterGardensMode();
@@ -405,7 +409,7 @@ public class PlantGardenMapManager {
     }
     
     /**
-     * Incrementally update plant display (add new plants)
+     * Incremental update of plant display (add new plants)
      */
     public void addNewPlants(List<PlantMapDto> newPlants) {
         if (isShowingPlants) {
@@ -414,7 +418,7 @@ public class PlantGardenMapManager {
     }
     
     /**
-     * Remove plants from display
+     * Remove plant display
      */
     public void removePlants(List<PlantMapDto> plantsToRemove) {
         if (isShowingPlants) {
@@ -432,7 +436,7 @@ public class PlantGardenMapManager {
     }
     
     /**
-     * Like a plant
+     * Like plant
      */
     public void likePlant(int plantId) {
         dataManager.likePlant(plantId, new MapDataManager.MapDataCallback<String>() {
@@ -453,7 +457,7 @@ public class PlantGardenMapManager {
     }
     
     /**
-     * Unlike a plant
+     * Unlike plant
      */
     public void unlikePlant(int plantId) {
         dataManager.unlikePlant(plantId, new MapDataManager.MapDataCallback<String>() {
@@ -497,7 +501,7 @@ public class PlantGardenMapManager {
         LogUtil.d(TAG, "PlantGardenMapManager destroyed");
     }
     
-    // Getter methods
+    // Getter methods for accessing manager state
     public boolean isShowingPlants() {
         return isShowingPlants;
     }
@@ -511,13 +515,13 @@ public class PlantGardenMapManager {
     }
     
     /**
-     * Get location manager
+     * Gets the location manager instance
      */
     public MapLocationManager getLocationManager() {
         return locationManager;
     }
     
-    // Interaction listener
+    // Interaction listener for map events
     private OnPlantGardenMapInteractionListener onPlantGardenMapInteractionListener;
     
     public void setOnPlantGardenMapInteractionListener(OnPlantGardenMapInteractionListener listener) {
@@ -525,10 +529,10 @@ public class PlantGardenMapManager {
     }
 
     /**
-     * Search by PlantId and display/focus on the map
+     * Searches for and displays a plant on the map by PlantId with focus
      */
     public void searchAndShowPlantById(int plantId) {
-        // Ensure plants mode
+        // Ensure we're in plants mode
         if (!isShowingPlants) {
             toggleDataType();
         }

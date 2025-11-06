@@ -587,7 +587,7 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
     @Override
     public void onSensorDataUpdated(Map<String, Object> sensorData) {
         runOnUiThread(() -> {
-            // Update sensor data in background only; do not auto-display
+            // Only update sensor data in background, don't display automatically
             currentSensorData = sensorData;
             Log.d(TAG, "Sensor data updated: " + sensorData.toString());
         });
@@ -596,7 +596,7 @@ public class AIChatActivity extends AppCompatActivity implements SensorDataColle
     @Override
     public void onLocationUpdated(android.location.Location location) {
         runOnUiThread(() -> {
-            // Update location in background only; do not auto-display
+            // Only update location information in background, don't display automatically
             Log.d(TAG, "Location updated: " + location.getLatitude() + ", " + location.getLongitude());
         });
     }
