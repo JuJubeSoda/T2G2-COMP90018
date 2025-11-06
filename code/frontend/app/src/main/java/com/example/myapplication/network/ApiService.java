@@ -122,4 +122,14 @@ public interface ApiService {
     @GET("/api/plants/liked-by-user")
     Call<ApiResponse<List<PlantDto>>> getLikedPlantsByUser();
 
+    // --- User Data Endpoints ---
+    
+    /**
+     * Fetches all users from the backend.
+     * Used to map userId to username for displaying plant discoverers.
+     * @return Call containing ApiResponse with list of User objects
+     */
+    @GET("/user")
+    Call<ApiResponse<List<User>>> getAllUsers();
+
 }

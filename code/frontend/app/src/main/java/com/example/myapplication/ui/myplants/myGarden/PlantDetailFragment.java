@@ -16,6 +16,10 @@ import androidx.navigation.Navigation;
 import com.bumptech.glide.Glide;
 import com.example.myapplication.R;
 import com.example.myapplication.databinding.PlantdetailBinding;
+import com.example.myapplication.network.ApiClient;
+import com.example.myapplication.network.ApiResponse;
+import com.example.myapplication.network.ApiService;
+import com.example.myapplication.network.User;
 import com.example.myapplication.ui.myplants.share.Plant;
 // Removed interactive dependencies; display-only fragment
 
@@ -26,6 +30,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * PlantDetailFragment - Displays detailed information for user-collected plants.
@@ -175,47 +183,24 @@ public class PlantDetailFragment extends Fragment {
                 tags = plantTags.stream().collect(Collectors.joining(", "));
             }
 
-            // Display discovered by username (fallback to "Unknown" if not provided)
-            String discoveredBy = plant.getDiscoveredBy();
-            if (discoveredBy == null || discoveredBy.isEmpty()) {
-                discoveredBy = "Unknown";
-            }
-            binding.textViewDiscoveredBy.setText(discoveredBy);
+            // Set initial placeholder for "Discovered by" before API call
+            binding.textViewDiscoveredBy.setText("User #" + plant.getUserId());
+            
+            // Fetch username from userId by calling getAllUsers API (async)
+            fetchAndDisplayUsername(plant.getUserId());
         } catch (Exception e) {
             Log.e(TAG, "Error populating UI with plant data", e);
             Toast.makeText(getContext(), "Error displaying plant information", Toast.LENGTH_SHORT).show();
         }
 
-        // Parse and format discovery date
+        // Display discovery date as-is from backend
         try {
             String createdAt = plant.getCreatedAt();
             
             if (createdAt == null || createdAt.isEmpty()) {
                 binding.textViewDiscoveredOn.setText("Date not available");
             } else {
-                SimpleDateFormat displayFormat = new SimpleDateFormat("dd MMMM yyyy", Locale.getDefault());
-                String formattedDate;
-                
-                try {
-                    // Try ISO 8601 with milliseconds
-                    SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
-                    isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-                    Date date = isoFormat.parse(createdAt);
-                    formattedDate = displayFormat.format(date);
-                } catch (ParseException e1) {
-                    try {
-                        // Try ISO 8601 without milliseconds
-                        SimpleDateFormat simpleIsoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
-                        simpleIsoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-                        Date date = simpleIsoFormat.parse(createdAt);
-                        formattedDate = displayFormat.format(date);
-                    } catch (ParseException e2) {
-                        // Fallback to raw string
-                        formattedDate = createdAt;
-                    }
-                }
-                
-                binding.textViewDiscoveredOn.setText(formattedDate);
+                binding.textViewDiscoveredOn.setText(createdAt);
             }
         } catch (Exception e) {
             Log.e(TAG, "Failed to handle discovery date.", e);
@@ -238,6 +223,107 @@ public class PlantDetailFragment extends Fragment {
         } catch (Exception e) {
             Log.e(TAG, "Failed to decode or load image for plant: " + (plant.getName() != null ? plant.getName() : "Unknown"), e);
             binding.imageViewPlantPreview.setImageResource(R.drawable.plantbulb_foreground);
+        }
+    }
+
+    /**
+     * Fetches all users from backend and finds username by userId.
+     * 
+     * WARNING: This endpoint may return large responses with avatar data.
+     * If memory issues occur, consider:
+     * 1. Backend should provide GET /user/{userId} endpoint
+     * 2. Backend should exclude avatarData from list responses
+     * 3. Use caching to avoid repeated calls
+     * 
+     * Process:
+     * 1. Call GET /user to get all users
+     * 2. Find user with matching userId
+     * 3. Display username in "Discovered by" field
+     * 4. Fallback to "User #[userId]" if API fails or user not found
+     * 
+     * @param userId The userId to look up
+     */
+    private void fetchAndDisplayUsername(int userId) {
+        Log.d(TAG, "fetchAndDisplayUsername called with userId: " + userId);
+        
+        // Verify binding is not null
+        if (binding == null || binding.textViewDiscoveredBy == null) {
+            Log.e(TAG, "Binding or textViewDiscoveredBy is null!");
+            return;
+        }
+        
+        // Set loading state
+        binding.textViewDiscoveredBy.setText("Loading...");
+        Log.d(TAG, "Set text to 'Loading...'");
+        
+        try {
+            ApiService apiService = ApiClient.create(getContext());
+            Call<ApiResponse<List<User>>> call = apiService.getAllUsers();
+            
+            call.enqueue(new Callback<ApiResponse<List<User>>>() {
+                @Override
+                public void onResponse(@NonNull Call<ApiResponse<List<User>>> call, @NonNull Response<ApiResponse<List<User>>> response) {
+                    if (!isAdded()) return; // Fragment detached
+                    
+                    try {
+                        if (response.isSuccessful() && response.body() != null) {
+                            List<User> users = response.body().getData();
+                            if (users != null) {
+                                // Find user with matching userId
+                                String username = null;
+                                for (User user : users) {
+                                    if (user.getUserId() != null && user.getUserId() == userId) {
+                                        username = user.getUsername();
+                                        break;
+                                    }
+                                }
+                                
+                                // Display username or fallback
+                                if (username != null && !username.isEmpty()) {
+                                    binding.textViewDiscoveredBy.setText(username);
+                                    Log.d(TAG, "Found username: " + username + " for userId: " + userId);
+                                } else {
+                                    binding.textViewDiscoveredBy.setText("User #" + userId);
+                                    Log.w(TAG, "Username not found for userId: " + userId);
+                                }
+                            } else {
+                                binding.textViewDiscoveredBy.setText("User #" + userId);
+                                Log.w(TAG, "User list is null");
+                            }
+                        } else {
+                            binding.textViewDiscoveredBy.setText("User #" + userId);
+                            Log.e(TAG, "Failed to fetch users: " + response.message());
+                        }
+                    } catch (OutOfMemoryError e) {
+                        // Handle OOM from large response
+                        binding.textViewDiscoveredBy.setText("User #" + userId);
+                        Log.e(TAG, "OutOfMemoryError while parsing user list - response too large", e);
+                    } catch (Exception e) {
+                        binding.textViewDiscoveredBy.setText("User #" + userId);
+                        Log.e(TAG, "Error parsing user response", e);
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<ApiResponse<List<User>>> call, @NonNull Throwable t) {
+                    if (!isAdded()) return; // Fragment detached
+                    
+                    binding.textViewDiscoveredBy.setText("User #" + userId);
+                    
+                    if (t instanceof OutOfMemoryError) {
+                        Log.e(TAG, "OutOfMemoryError fetching users - response too large. Backend should exclude avatarData.", t);
+                    } else {
+                        Log.e(TAG, "Network error fetching users", t);
+                    }
+                }
+            });
+        } catch (OutOfMemoryError e) {
+            // Catch OOM even before API call
+            binding.textViewDiscoveredBy.setText("User #" + userId);
+            Log.e(TAG, "OutOfMemoryError before API call", e);
+        } catch (Exception e) {
+            binding.textViewDiscoveredBy.setText("User #" + userId);
+            Log.e(TAG, "Error setting up API call", e);
         }
     }
 
