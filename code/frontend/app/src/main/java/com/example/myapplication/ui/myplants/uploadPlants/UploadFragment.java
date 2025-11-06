@@ -306,8 +306,8 @@ public class UploadFragment extends Fragment {
         String currentTime = sdf.format(new Date());
 
         // Read public visibility preference from toggle switch
-        boolean isPublic = binding.switchShowPublicly.isChecked();
-        Log.d(TAG, "Plant visibility set to public: " + isPublic);
+        boolean shareable = binding.switchShowPublicly.isChecked();
+        Log.d(TAG, "Plant visibility set to public: " + shareable);
 
         // Build complete plant request object
         PlantRequest plantRequest = new PlantRequest(
@@ -321,7 +321,7 @@ public class UploadFragment extends Fragment {
                 currentTime, // updatedAt
                 null, // gardenId (null for new plants)
                 receivedIsFavouriteFlow, // isFavourite
-                isPublic // isPublic - controls nearby discoveries visibility
+                shareable // isPublic - controls nearby discoveries visibility
         );
 
         // Send API request

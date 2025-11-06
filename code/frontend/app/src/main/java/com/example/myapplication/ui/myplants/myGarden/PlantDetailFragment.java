@@ -175,8 +175,11 @@ public class PlantDetailFragment extends Fragment {
                 tags = plantTags.stream().collect(Collectors.joining(", "));
             }
 
-            // Display discovered by username
-            String discoveredBy = plant.getDiscoveredBy() != null ? plant.getDiscoveredBy() : "Unknown";
+            // Display discovered by username (fallback to "Unknown" if not provided)
+            String discoveredBy = plant.getDiscoveredBy();
+            if (discoveredBy == null || discoveredBy.isEmpty()) {
+                discoveredBy = "Unknown";
+            }
             binding.textViewDiscoveredBy.setText(discoveredBy);
         } catch (Exception e) {
             Log.e(TAG, "Error populating UI with plant data", e);

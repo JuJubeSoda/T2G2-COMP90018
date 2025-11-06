@@ -65,8 +65,8 @@ public class PlantRequest {
     private Boolean isFavourite;
 
     /** Whether plant should be visible to nearby users (public sharing toggle) */
-    @SerializedName("isPublic")
-    private Boolean isPublic;
+    @SerializedName("shareable")
+    private Boolean shareable;
 
     /** Default constructor for Gson deserialization */
     public PlantRequest() {}
@@ -84,11 +84,11 @@ public class PlantRequest {
      * @param updatedAt Update timestamp (ISO 8601 UTC)
      * @param gardenId Garden ID (nullable for new plants)
      * @param isFavourite Favourite status
-     * @param isPublic Public visibility toggle
+     * @param shareable Public visibility toggle
      */
     public PlantRequest(String name, String image, String description, Double latitude,
                         Double longitude, String scientificName, String createdAt, String updatedAt,
-                        Long gardenId, Boolean isFavourite, Boolean isPublic) {
+                        Long gardenId, Boolean isFavourite, Boolean shareable) {
         this.name = name;
         this.image = image;
         this.description = description;
@@ -99,7 +99,7 @@ public class PlantRequest {
         this.updatedAt = updatedAt;
         this.gardenId = gardenId;
         this.isFavourite = isFavourite;
-        this.isPublic = isPublic;
+        this.shareable = shareable;
     }
 
     // ===== Getters and Setters =====
@@ -135,6 +135,6 @@ public class PlantRequest {
     public Boolean getIsFavourite() { return isFavourite; }
     public void setIsFavourite(Boolean isFavourite) { this.isFavourite = isFavourite; }
 
-    public Boolean getIsPublic() { return isPublic; }
-    public void setIsPublic(Boolean isPublic) { this.isPublic = isPublic; }
+    public Boolean getIsPublic() { return shareable; }
+    public void setIsPublic(Boolean isPublic) { this.shareable = isPublic; }
 }
