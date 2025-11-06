@@ -14,8 +14,10 @@ import java.util.List;
 import com.example.myapplication.util.LogUtil;
 
 /**
- * 植物花园地图管理器 - 统一管理植物和花园的地图功能
- * 整合了位置管理、数据显示、数据获取等所有地图相关功能
+ * PlantGardenMapManager - Unified manager for plant and garden map functionality
+ * 
+ * Integrates location management, data display, and data retrieval for all map-related features.
+ * Manages the display of both plants and gardens on Google Maps with clustering support.
  */
 public class PlantGardenMapManager {
     
@@ -24,7 +26,7 @@ public class PlantGardenMapManager {
     private final Context context;
     private final GoogleMap googleMap;
     
-    // 子管理器
+    // Sub-managers for different map responsibilities
     private final MapLocationManager locationManager;
     private final MapDisplayManager displayManager;
     private final MapDataManager dataManager;
@@ -32,16 +34,18 @@ public class PlantGardenMapManager {
     private final GardensMapController gardensController;
     private final ClusterBinder clusterBinder;
     
-    // 当前状态
+    // Current display state
     private boolean isShowingPlants = true; // true = plants, false = gardens
-    // 锁定：当从Garden进入Plant列表或显示单个Plant时，阻止相机驱动的附近搜索
+    
+    // Lock: Prevents camera-driven nearby search when entering Plant list from Garden or displaying single Plant
     private boolean plantViewLocked = false;
     
-    // 防抖和节流控制
-    private static final long DEBOUNCE_DELAY_MS = 800; // 防抖延迟800ms
-    private static final long THROTTLE_INTERVAL_MS = 2000; // 节流最小间隔2秒
+    // Debounce and throttle control for API requests
+    private static final long DEBOUNCE_DELAY_MS = 800; // Debounce delay 800ms
+    private static final long THROTTLE_INTERVAL_MS = 2000; // Throttle minimum interval 2 seconds
     private final MapSchedulers schedulers = new MapSchedulers(DEBOUNCE_DELAY_MS, THROTTLE_INTERVAL_MS);
-    // 调试：请求序号（仅日志，不改变行为）
+    
+    // Debug: Request sequence number (logging only, doesn't change behavior)
     private long requestSeq = 0L;
     private long lastIssuedPlantsReqId = 0L;
     
@@ -49,7 +53,7 @@ public class PlantGardenMapManager {
         this.context = context;
         this.googleMap = googleMap;
         
-        // 初始化子管理器
+        // Initialize sub-managers
         this.locationManager = new MapLocationManager(context, googleMap);
         this.displayManager = new MapDisplayManager(context, googleMap);
         this.dataManager = new MapDataManager(context);
@@ -57,26 +61,26 @@ public class PlantGardenMapManager {
         this.gardensController = new GardensMapController(context, googleMap, displayManager, dataManager);
         this.clusterBinder = new ClusterBinder(googleMap);
         
-        // 设置智能半径变化监听器
+        // Set up intelligent radius change listener
         setupSmartRadiusListener();
         
         LogUtil.d(TAG, "PlantGardenMapManager initialized");
     }
     
     /**
-     * 初始化地图设置
+     * Initialize map settings
      */
     public void initializeMap() {
         locationManager.requestLocationPermission();
         locationManager.updateLocationUI();
         
-        // 设置点击监听器
+        // Set up click listeners for map interactions
         setupClickListeners();
         
         // Set up initial binding - only Plant ClusterManager exists now
         rebindListenersForCurrentMode();
         
-        // 获取设备位置
+        // Get device location for initial map positioning
         locationManager.getDeviceLocation(new MapLocationManager.OnLocationResultCallback() {
             @Override
             public void onLocationSuccess(android.location.Location location) {
@@ -171,7 +175,7 @@ public class PlantGardenMapManager {
     }
     
     /**
-     * 设置点击监听器
+     * Set up click listeners
      */
     private void setupClickListeners() {
         plantsController.setOnPlantClickListener(new MapDisplayManager.OnPlantMapClickListener() {
@@ -194,7 +198,7 @@ public class PlantGardenMapManager {
     }
     
     /**
-     * 搜索附近数据（根据当前模式搜索植物或花园）
+     * Search nearby data (search plants or gardens based on current mode)
      */
     public void searchNearbyData() {
         LogUtil.d(TAG, "=== Search Nearby Data Debug ===");
@@ -204,7 +208,7 @@ public class PlantGardenMapManager {
             return;
         }
 
-        // 以相机中心作为查询中心
+        // Use camera center as query center
         com.google.android.gms.maps.model.LatLng center = locationManager.getCameraCenter();
         int radius = locationManager.getSmartSearchRadius();
 
@@ -214,7 +218,7 @@ public class PlantGardenMapManager {
         LogUtil.d(TAG, "  - Radius: " + radius + " meters");
         LogUtil.d(TAG, "  - Mode: " + (isShowingPlants ? "Plants" : "Gardens"));
         
-        // 检查是否使用了默认位置（悉尼）
+        // Check if using default location (Sydney) - indicates map not ready yet
         com.google.android.gms.maps.model.LatLng sydneyDefault = new com.google.android.gms.maps.model.LatLng(-33.8523341, 151.2106085);
         if (Math.abs(center.latitude - sydneyDefault.latitude) < 0.0001 && 
             Math.abs(center.longitude - sydneyDefault.longitude) < 0.0001) {
@@ -237,7 +241,7 @@ public class PlantGardenMapManager {
     }
     
     /**
-     * 搜索附近植物
+     * Search nearby plants
      */
     public void searchNearbyPlants(double latitude, double longitude, int radius) {
         if (onPlantGardenMapInteractionListener != null) onPlantGardenMapInteractionListener.onLoading(true);
@@ -260,11 +264,11 @@ public class PlantGardenMapManager {
                 }
                 LogUtil.d(TAG, "=== End Search Plants Success Debug (reqId=" + reqId + ") ===");
                 
-                // 直接渲染返回的 PlantMapDto 列表
+                // Directly render the returned PlantMapDto list
                 plantsController.displayPlants(plants);
                 LogUtil.d(TAG, "Plants displayed on map successfully");
                 
-                // 通知外部监听器
+                // Notify external listener
                 if (onPlantGardenMapInteractionListener != null) {
                     LogUtil.d(TAG, "Listener is not null, calling onPlantsFound (map dtos)");
                     onPlantGardenMapInteractionListener.onPlantsFound(plants);
@@ -295,7 +299,7 @@ public class PlantGardenMapManager {
     // Removed: searchNearbyGardens in favor of fetchAllGardens
 
     /**
-     * 拉取全部花园并渲染
+     * Fetch all gardens and render them
      */
     public void fetchAllGardens() {
         if (onPlantGardenMapInteractionListener != null) onPlantGardenMapInteractionListener.onLoading(true);
@@ -325,7 +329,7 @@ public class PlantGardenMapManager {
     }
 
     /**
-     * 进入植物模式
+     * Enter plants mode
      */
     private void enterPlantsMode() {
         isShowingPlants = true;
@@ -337,7 +341,7 @@ public class PlantGardenMapManager {
     }
 
     /**
-     * 进入花园模式
+     * Enter gardens mode
      */
     private void enterGardensMode() {
         isShowingPlants = false;
@@ -351,7 +355,7 @@ public class PlantGardenMapManager {
     }
 
     /**
-     * 恢复花园聚合显示（从植物模式返回）
+     * Restore gardens clustering display (return from plants mode)
      */
     public void restoreGardensView() {
         enterGardensMode();
@@ -359,7 +363,7 @@ public class PlantGardenMapManager {
     }
 
     /**
-     * 通过花园ID获取植物并切换到植物图层
+     * Fetch plants by garden ID and switch to plants layer
      */
     public void fetchPlantsByGarden(long gardenId) {
         if (onPlantGardenMapInteractionListener != null) onPlantGardenMapInteractionListener.onLoading(true);
@@ -392,7 +396,7 @@ public class PlantGardenMapManager {
     }
     
     /**
-     * 切换数据显示模式
+     * Toggle data display mode
      */
     public void toggleDataType() {
         if (isShowingPlants) {
@@ -405,7 +409,7 @@ public class PlantGardenMapManager {
     }
     
     /**
-     * 增量更新植物显示（添加新植物）
+     * Incremental update of plant display (add new plants)
      */
     public void addNewPlants(List<PlantMapDto> newPlants) {
         if (isShowingPlants) {
@@ -414,7 +418,7 @@ public class PlantGardenMapManager {
     }
     
     /**
-     * 移除植物显示
+     * Remove plant display
      */
     public void removePlants(List<PlantMapDto> plantsToRemove) {
         if (isShowingPlants) {
@@ -423,7 +427,7 @@ public class PlantGardenMapManager {
     }
     
     /**
-     * 刷新植物显示（全量更新）
+     * Refresh plant display (full update)
      */
     public void refreshPlants(List<PlantMapDto> plants) {
         if (isShowingPlants) {
@@ -432,7 +436,7 @@ public class PlantGardenMapManager {
     }
     
     /**
-     * 点赞植物
+     * Like plant
      */
     public void likePlant(int plantId) {
         dataManager.likePlant(plantId, new MapDataManager.MapDataCallback<String>() {
@@ -453,7 +457,7 @@ public class PlantGardenMapManager {
     }
     
     /**
-     * 取消点赞植物
+     * Unlike plant
      */
     public void unlikePlant(int plantId) {
         dataManager.unlikePlant(plantId, new MapDataManager.MapDataCallback<String>() {
@@ -474,7 +478,7 @@ public class PlantGardenMapManager {
     }
     
     /**
-     * 处理权限请求结果
+     * Handle permission request result
      */
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         locationManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -497,7 +501,7 @@ public class PlantGardenMapManager {
         LogUtil.d(TAG, "PlantGardenMapManager destroyed");
     }
     
-    // Getter方法
+    // Getter methods for accessing manager state
     public boolean isShowingPlants() {
         return isShowingPlants;
     }
@@ -511,13 +515,13 @@ public class PlantGardenMapManager {
     }
     
     /**
-     * 获取位置管理器
+     * Gets the location manager instance
      */
     public MapLocationManager getLocationManager() {
         return locationManager;
     }
     
-    // 交互监听器
+    // Interaction listener for map events
     private OnPlantGardenMapInteractionListener onPlantGardenMapInteractionListener;
     
     public void setOnPlantGardenMapInteractionListener(OnPlantGardenMapInteractionListener listener) {
@@ -525,10 +529,10 @@ public class PlantGardenMapManager {
     }
 
     /**
-     * 通过PlantId搜索并在地图上显示与聚焦
+     * Searches for and displays a plant on the map by PlantId with focus
      */
     public void searchAndShowPlantById(int plantId) {
-        // 确保是植物模式
+        // Ensure we're in plants mode
         if (!isShowingPlants) {
             toggleDataType();
         }

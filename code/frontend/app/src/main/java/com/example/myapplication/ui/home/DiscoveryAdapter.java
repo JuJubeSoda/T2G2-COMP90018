@@ -16,23 +16,70 @@ import com.example.myapplication.R;
 import com.example.myapplication.ui.home.DiscoveryItem;
 import java.util.List;
 
+/**
+ * DiscoveryAdapter - RecyclerView adapter for displaying nearby plant discoveries.
+ * 
+ * Purpose:
+ * - Displays horizontal carousel of nearby plants on HomeFragment
+ * - Handles Base64 image decoding from backend API
+ * - Manages click events to navigate to plant details
+ * 
+ * Features:
+ * - Displays plant name, distance, and description
+ * - Decodes and shows Base64 encoded images with Glide
+ * - Falls back to placeholder images on error
+ * - Supports optional click listener for navigation
+ * - Handles empty/malformed data gracefully
+ * 
+ * Layout:
+ * - Uses item_discovery_card.xml
+ * - Horizontal scrolling in HomeFragment
+ * - Cards show image, name, distance, description
+ * 
+ * Usage:
+ * - HomeFragment creates adapter with DiscoveryItem list
+ * - Adapter decodes Base64 images from PlantDto
+ * - User clicks card to see full PlantDetailFragment
+ */
 public class DiscoveryAdapter extends RecyclerView.Adapter<DiscoveryAdapter.ViewHolder> {
 
     private static final String TAG = "DiscoveryAdapter";
+    
+    /** Application context for inflation and Glide */
     private Context context;
+    
+    /** List of discovery items to display */
     private List<DiscoveryItem> discoveryList;
     
+    /**
+     * Callback interface for handling discovery card clicks.
+     * Implemented by HomeFragment for navigation.
+     */
     public interface OnDiscoveryClickListener {
         void onDiscoveryClick(long plantId);
     }
     
+    /** Optional click listener for card selection */
     private OnDiscoveryClickListener onDiscoveryClickListener;
 
+    /**
+     * Constructor without click listener.
+     * 
+     * @param context Application context
+     * @param discoveryList List of discoveries to display
+     */
     public DiscoveryAdapter(Context context, List<DiscoveryItem> discoveryList) {
         this.context = context;
         this.discoveryList = discoveryList;
     }
 
+    /**
+     * Constructor with click listener.
+     * 
+     * @param context Application context
+     * @param discoveryList List of discoveries to display
+     * @param listener Click listener for navigation
+     */
     public DiscoveryAdapter(Context context, List<DiscoveryItem> discoveryList, OnDiscoveryClickListener listener) {
         this.context = context;
         this.discoveryList = discoveryList;

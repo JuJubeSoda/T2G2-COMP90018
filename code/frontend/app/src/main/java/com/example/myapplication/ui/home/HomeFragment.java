@@ -76,7 +76,7 @@ public class HomeFragment extends Fragment {
 
     private static final String TAG = "HomeFragment";
     
-    // 搜索半径（5公里，适合Home页面的固定范围）
+    // Search radius (5 kilometers, suitable for Home page fixed range)
     private static final int SEARCH_RADIUS_METERS = 5000;
     
     /** View binding for home.xml layout */
@@ -215,13 +215,13 @@ public class HomeFragment extends Fragment {
     }
 
     /**
-     * 请求用户位置，然后加载附近发现数据
+     * Request user location, then load nearby discovery data
      */
     private void requestLocationAndLoadData() {
-        // 检查权限
+        // Check permission
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
-            // 已有权限，获取位置
+            // Have permission, get location
             locationManager.getLocation(new MapLocationManager.OnLocationResultCallback() {
                 @Override
                 public void onLocationSuccess(Location location) {
@@ -233,13 +233,13 @@ public class HomeFragment extends Fragment {
                 @Override
                 public void onLocationError(String error) {
                     Log.w(TAG, "Failed to get user location: " + error);
-                    // 使用默认位置（悉尼）作为fallback
+                    // Use default location (Sydney) as fallback
                     userLocation = null;
                     loadNearbyDiscoveryData(-33.8523341, 151.2106085);
                 }
             });
         } else {
-            // 无权限，使用默认位置
+            // No permission, use default location
             Log.w(TAG, "Location permission not granted, using default location");
             userLocation = null;
             loadNearbyDiscoveryData(-33.8523341, 151.2106085);

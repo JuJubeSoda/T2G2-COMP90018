@@ -46,10 +46,10 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
     
     
     // Bottom sheet UI components
-    // 移除 LinearLayout bottomSheetContainer 及其相关变量和逻辑。
-    // 在 onPlantClick 实现中：
+    // Removed LinearLayout bottomSheetContainer and its related variables and logic.
+    // In onPlantClick implementation:
     // PlantBottomSheetDialogFragment.newInstance(plant).show(getChildFragmentManager(), "plant_sheet");
-    // 在 onGardenClick 实现中：
+    // In onGardenClick implementation:
     // GardenBottomSheetDialogFragment.newInstance(garden).show(getChildFragmentManager(), "garden_sheet");
     
     // Refresh control buttons
@@ -85,10 +85,10 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
 
 
         // Initialize bottom sheet components
-        // 移除 LinearLayout bottomSheetContainer 及其相关变量和逻辑。
-        // 在 onPlantClick 实现中：
+        // Removed LinearLayout bottomSheetContainer and its related variables and logic.
+        // In onPlantClick implementation:
         // PlantBottomSheetDialogFragment.newInstance(plant).show(getChildFragmentManager(), "plant_sheet");
-        // 在 onGardenClick 实现中：
+        // In onGardenClick implementation:
         // GardenBottomSheetDialogFragment.newInstance(garden).show(getChildFragmentManager(), "garden_sheet");
         
         // Initialize refresh control buttons
@@ -108,17 +108,17 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
     }
 
     private void checkAndRequestLocationPermission() {
-        Log.d(TAG, "检查定位权限...");
+        Log.d(TAG, "Checking location permission...");
         int requestCode = com.example.myapplication.map.MapLocationManager.getLocationPermissionRequestCode();
         boolean hasPermission = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED;
-        Log.d(TAG, "定位权限状态: " + (hasPermission ? "已授予" : "未授予"));
+        Log.d(TAG, "Location permission status: " + (hasPermission ? "Granted" : "Not granted"));
         
         if (!hasPermission) {
-            Log.d(TAG, "显示权限请求对话框");
+            Log.d(TAG, "Showing permission request dialog");
             new AlertDialog.Builder(requireContext())
-                .setTitle("位置权限请求")
-                .setMessage("我们需要您的位置权限以显示当前位置和附近植物。请允许以获得完整体验。")
+                .setTitle("Location Permission Request")
+                .setMessage("We need your location permission to display your current location and nearby plants. Please allow for a complete experience.")
                 .setPositiveButton("继续", (dialog, which) -> {
                     Log.d(TAG, "用户点击继续，请求权限");
                     requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, requestCode);

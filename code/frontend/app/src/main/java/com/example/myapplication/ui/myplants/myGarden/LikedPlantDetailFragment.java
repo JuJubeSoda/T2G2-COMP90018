@@ -190,7 +190,7 @@ public class LikedPlantDetailFragment extends Fragment {
         super.onDestroyView();
         binding = null;
     }
-    
+
     /**
      * Fetches all users from backend and finds username by userId.
      *

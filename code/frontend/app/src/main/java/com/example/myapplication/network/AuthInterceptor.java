@@ -10,8 +10,12 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 /**
- * - 每次发请求时，会自动从 SharedPreferences 里读取 token
- * - 如果 token 存在，就在请求头里加上 Authorization: <token>
+ * AuthInterceptor - OkHttp interceptor for adding authentication tokens to requests
+ * 
+ * Purpose:
+ * - Automatically retrieves token from SharedPreferences on each request
+ * - Adds Authorization header if token exists
+ * - Ensures authenticated API calls without manual header management
  */
 public class AuthInterceptor implements Interceptor {
 
@@ -23,11 +27,11 @@ public class AuthInterceptor implements Interceptor {
 
     @Override
     public Response intercept(Chain chain) throws IOException {
-        // 读取 token
+        // Retrieve token from SharedPreferences
         SharedPreferences sp = appContext.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE);
         String token = sp.getString("jwt_token", "");
 
-        // 在请求头里加 Authorization
+        // Add Authorization header to request
         Request.Builder builder = chain.request().newBuilder();
         if (token != null && !token.isEmpty()) {
             builder.addHeader("Authorization", token);

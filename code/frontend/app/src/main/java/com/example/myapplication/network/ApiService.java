@@ -111,13 +111,13 @@ public interface ApiService {
     Call<ApiResponse<String>> unlikePlant(@Query("plantId") int plantId);
 
     /**
-     * 获取某花园下的所有植物
+     * Fetches all plants from a specific garden
      */
     @GET("/api/plants/by-garden")
     Call<ApiResponse<List<PlantDto>>> getPlantsByGarden(@Query("gardenId") long gardenId);
 
     /**
-     * 获取当前用户点赞的全部植物
+     * Fetches all plants liked by the current user
      */
     @GET("/api/plants/liked-by-user")
     Call<ApiResponse<List<PlantDto>>> getLikedPlantsByUser();
