@@ -47,10 +47,10 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
     
     
     // Bottom sheet UI components
-    // 移除 LinearLayout bottomSheetContainer 及其相关变量和逻辑。
-    // 在 onPlantClick 实现中：
+    // Removed LinearLayout bottomSheetContainer and related variables/logic.
+    // In onPlantClick implementation:
     // PlantBottomSheetDialogFragment.newInstance(plant).show(getChildFragmentManager(), "plant_sheet");
-    // 在 onGardenClick 实现中：
+    // In onGardenClick implementation:
     // GardenBottomSheetDialogFragment.newInstance(garden).show(getChildFragmentManager(), "garden_sheet");
     
     // Refresh control buttons
@@ -86,10 +86,10 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
 
 
         // Initialize bottom sheet components
-        // 移除 LinearLayout bottomSheetContainer 及其相关变量和逻辑。
-        // 在 onPlantClick 实现中：
+        // Removed LinearLayout bottomSheetContainer and related variables/logic.
+        // In onPlantClick implementation:
         // PlantBottomSheetDialogFragment.newInstance(plant).show(getChildFragmentManager(), "plant_sheet");
-        // 在 onGardenClick 实现中：
+        // In onGardenClick implementation:
         // GardenBottomSheetDialogFragment.newInstance(garden).show(getChildFragmentManager(), "garden_sheet");
         
         // Initialize refresh control buttons
@@ -143,7 +143,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
             @Override
             public void onPlantClick(PlantMapDto plant) {
                 Log.d(TAG, "onPlantClick fired for: " + plant.getName() + " (" + plant.getLatitude() + ", " + plant.getLongitude() + ")");
-                // 使用BottomSheetDialogFragment展示植物信息（默认未点赞，MyFavourite页会单独处理）
+                // Show plant info with BottomSheetDialogFragment (default unliked; MyFavourite page handles separately)
                 PlantBottomSheetDialogFragment sheet = PlantBottomSheetDialogFragment.newInstance(plant, false);
                 sheet.show(getChildFragmentManager(), "plant_sheet");
                 currentPlantSheet = sheet;
@@ -152,7 +152,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
             @Override
             public void onGardenClick(GardenDto garden) {
                 Log.d(TAG, "onGardenClick fired for: " + garden.getName());
-                // 使用BottomSheetDialogFragment展示花园信息
+                // Show garden info with BottomSheetDialogFragment
                 GardenBottomSheetDialogFragment.newInstance(garden).show(getChildFragmentManager(), "garden_sheet");
             }
             
@@ -166,20 +166,20 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
                 }
                 Log.d(TAG, "PlantGardenMapManager instance: " + (plantGardenMapManager == null ? "null" : "available"));
                 Log.d(TAG, "=== End onPlantsFound Callback Debug ===");
-                // 植物数据已由MapDisplayManager自动显示在地图上
+                // Plant data is already displayed on the map by MapDisplayManager
                 if (plants == null || plants.isEmpty()) {
                     Toast.makeText(getContext(), "No nearby plants in this area", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(getContext(), "Found " + plants.size() + " plants", Toast.LENGTH_SHORT).show();
                 }
-                // 更新 BackToGardens & 搜索栏可见性
+                // Update BackToGardens & search bar visibility
                 updateLockButtonVisibility();
                 updateSearchBarVisibility();
             }
             
             @Override
             public void onGardensFound(List<GardenDto> gardens) {
-                // 花园数据已由MapDisplayManager自动显示在地图上
+                // Garden data is already displayed on the map by MapDisplayManager
             }
             
             @Override
@@ -223,16 +223,16 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
             }
             
             public void onMapRadiusChanged(int newRadius) {
-                // 可以在这里显示半径变化信息，或者实现自动重新搜索
+                // Optionally display radius change info or auto re-search
                 Log.d(TAG, "Map radius changed to: " + newRadius + " meters");
-                // 可选：显示半径变化提示
+                // Optional: show radius change hint
                 // Toast.makeText(getContext(), "Search radius: " + newRadius + "m", Toast.LENGTH_SHORT).show();
             }
         });
         
         // Initialize map with location services
         plantGardenMapManager.initializeMap();
-        // 初始时基于当前模式和锁定状态设置按钮可见性
+        // Initially set button visibility based on current mode and lock state
         updateLockButtonVisibility();
 
         // If a plantId was provided, center and show that plant on the map (focus and open sheet)
@@ -252,10 +252,10 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
     /**
      * Initialize the bottom sheet components
      */
-    // 移除 LinearLayout bottomSheetContainer 及其相关变量和逻辑。
-    // 在 onPlantClick 实现中：
+    // Removed LinearLayout bottomSheetContainer and related variables/logic.
+    // In onPlantClick implementation:
     // PlantBottomSheetDialogFragment.newInstance(plant).show(getChildFragmentManager(), "plant_sheet");
-    // 在 onGardenClick 实现中：
+    // In onGardenClick implementation:
     // GardenBottomSheetDialogFragment.newInstance(garden).show(getChildFragmentManager(), "garden_sheet");
     
     /**
@@ -299,7 +299,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
             });
         }
 
-        // 初始可见性：仅在 Plant 非锁定状态显示
+        // Initial visibility: only visible when Plants mode is unlocked
         if (searchBar != null && plantGardenMapManager != null) {
             boolean show = plantGardenMapManager.isShowingPlants() && !plantGardenMapManager.isPlantViewLocked();
             searchBar.setVisibility(show ? View.VISIBLE : View.GONE);
@@ -335,7 +335,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
                     }
                 }
             });
-            // 初始化一次
+            // Initialize once
             updateLockButtonVisibility();
         }
     }
@@ -362,7 +362,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
     private void toggleDataType() {
         if (plantGardenMapManager != null) {
             plantGardenMapManager.toggleDataType();
-            // 自动触发一次加载，Garden 模式会全量拉取
+            // Auto-trigger a load; Garden mode fetches all
             plantGardenMapManager.searchNearbyData();
             updateLockButtonVisibility();
             updateSearchBarVisibility();
@@ -373,19 +373,19 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
     /**
      * Hide the bottom sheet
      */
-    // 移除 LinearLayout bottomSheetContainer 及其相关变量和逻辑。
-    // 在 onPlantClick 实现中：
+    // Removed LinearLayout bottomSheetContainer and related variables/logic.
+    // In onPlantClick implementation:
     // PlantBottomSheetDialogFragment.newInstance(plant).show(getChildFragmentManager(), "plant_sheet");
-    // 在 onGardenClick 实现中：
+    // In onGardenClick implementation:
     // GardenBottomSheetDialogFragment.newInstance(garden).show(getChildFragmentManager(), "garden_sheet");
 
     /**
      * Check if bottom sheet is visible
      */
-    // 移除 LinearLayout bottomSheetContainer 及其相关变量和逻辑。
-    // 在 onPlantClick 实现中：
+    // Removed LinearLayout bottomSheetContainer and related variables/logic.
+    // In onPlantClick implementation:
     // PlantBottomSheetDialogFragment.newInstance(plant).show(getChildFragmentManager(), "plant_sheet");
-    // 在 onGardenClick 实现中：
+    // In onGardenClick implementation:
     // GardenBottomSheetDialogFragment.newInstance(garden).show(getChildFragmentManager(), "garden_sheet");
 
     /**
@@ -447,7 +447,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
     
 
     /**
-     * 刷新当前数据 - 直接调用现有方法
+     * Refresh current data - directly call existing methods
      */
     private void refreshCurrentData() {
         if (plantGardenMapManager == null) {
@@ -455,26 +455,26 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
             return;
         }
 
-        // 仅在植物模式检查位置权限；花园模式不需要
+        // Only check location permission in plants mode; gardens mode not needed
         if (plantGardenMapManager.isShowingPlants() && !plantGardenMapManager.hasLocationPermission()) {
             Toast.makeText(getContext(), "Location permission required to refresh plants", Toast.LENGTH_SHORT).show();
             checkAndRequestLocationPermission();
             return;
         }
 
-        // 显示刷新消息
+        // Show refresh message
         String refreshMessage = plantGardenMapManager.isShowingPlants() ? "Refreshing plants data..." : "Refreshing gardens data...";
         Toast.makeText(getContext(), refreshMessage, Toast.LENGTH_SHORT).show();
         
         Log.d(TAG, "Refreshing current data using existing searchNearbyData() method...");
         
-        // 直接调用现有的搜索方法
+        // Directly call existing search method
         plantGardenMapManager.searchNearbyData();
         updateLockButtonVisibility();
         updateSearchBarVisibility();
     }
 
-    // 根据当前模式与锁定状态，控制“Back to Gardens”按钮可见性
+    // Control "Back to Gardens" button visibility based on mode and lock state
     private void updateLockButtonVisibility() {
         if (btnBackToGardens == null || plantGardenMapManager == null) return;
         boolean show = plantGardenMapManager.isShowingPlants() && plantGardenMapManager.isPlantViewLocked();
@@ -483,7 +483,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
     }
 
     /**
-     * 定位到当前位置 - 移动地图到用户位置
+     * Move to current location - move map to user position
      */
     private void showCurrentPlace() {
         if (plantGardenMapManager == null) {
@@ -491,18 +491,18 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
             return;
         }
 
-        // 检查位置权限
+        // Check location permission
         if (!plantGardenMapManager.hasLocationPermission()) {
             Toast.makeText(getContext(), "Location permission required", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // 显示定位消息
+        // Show moving message
         Toast.makeText(getContext(), "Moving to your current location...", Toast.LENGTH_SHORT).show();
         
         Log.d(TAG, "Moving map to current location...");
         
-        // 移动地图到当前位置
+        // Move map to current location
         plantGardenMapManager.getLocationManager().getCurrentLocationAndMove();
     }
     
@@ -520,7 +520,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
     
     
     /**
-     * 获取完整的植物详情并导航到详情页面
+     * Get full plant details and navigate to detail page
      */
     private void getFullPlantDetailsAndNavigate(int plantId) {
         Log.d(TAG, "Getting full plant details for ID: " + plantId);
@@ -561,7 +561,7 @@ public class PlantMapFragment extends Fragment implements OnMapReadyCallback, Pl
     }
     
     /**
-     * 导航到植物详情页面
+     * Navigate to plant detail page
      */
     private void navigateToPlantDetail(Plant plant) {
         try {

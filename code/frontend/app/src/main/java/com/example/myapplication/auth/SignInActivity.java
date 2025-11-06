@@ -29,18 +29,18 @@ import retrofit2.Response;
 
 public class SignInActivity extends AppCompatActivity {
 
-    private static final String PREFS_ONBOARD = "first_login_prefs"; // 首次登录标记用
-    private static final String PREFS_AUTH = "auth_prefs";           // 保存 token 用
-    private static final String KEY_TOKEN = "jwt_token";             // token 存储的 key
+    private static final String PREFS_ONBOARD = "first_login_prefs"; // First-login flag
+    private static final String PREFS_AUTH = "auth_prefs";           // Store token
+    private static final String KEY_TOKEN = "jwt_token";             // Token storage key
 
-    private ApiService api; // Retrofit 的接口对象
+    private ApiService api; // Retrofit API interface
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_in);
 
-        // 初始化 Retrofit
+        // Initialize Retrofit
         api = ApiClient.create(this);
 
 
@@ -52,29 +52,29 @@ public class SignInActivity extends AppCompatActivity {
         TextInputEditText etPassword = findViewById(R.id.etPassword);
         CheckBox cbRemember = findViewById(R.id.cbRemember);
 
-        // 返回按钮 → 关闭当前页
+        // Back button → close current page
         btnBack.setOnClickListener(v -> finish());
 
-        // 点击跳转到注册页
+        // Click to navigate to Sign Up page
         tvGoSignUp.setOnClickListener(v ->
                 startActivity(new Intent(SignInActivity.this, SignUpActivity.class)));
 
-        // 忘记密码按钮（暂时只做提示）
+        // Forgot password button (temporary hint only)
         tvForgotPwd.setOnClickListener(v ->
                 Toast.makeText(this, "Forgot password clicked", Toast.LENGTH_SHORT).show());
 
-        // 登录按钮点击事件
+        // Sign-in button click
         btnSignIn.setOnClickListener(v -> {
             String username = textOf(etUsername);
             String pwd      = textOf(etPassword);
 
-            // 输入校验
+            // Input validation
             if (TextUtils.isEmpty(username)) { etUsername.setError("Username required"); etUsername.requestFocus(); return; }
             if (TextUtils.isEmpty(pwd))      { etPassword.setError("Password required"); etPassword.requestFocus(); return; }
 
             btnSignIn.setEnabled(false);
 
-            // 调用后端 /user/login 接口
+            // Call backend /user/login endpoint
             api.login(new LoginRequest(username, pwd)).enqueue(new Callback<BaseResponse>() {
                 @Override
                 public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
@@ -86,53 +86,53 @@ public class SignInActivity extends AppCompatActivity {
 
                     BaseResponse br = response.body();
                     
-                    // 检查登录是否成功
+                    // Check whether login succeeded
                     if (br.code != null && br.code != 200) {
-                        // 登录失败，显示具体错误信息
+                        // Login failed, show specific error
                         String errorMessage = getLoginErrorMessage(br.code, br.msg);
                         Toast.makeText(SignInActivity.this, errorMessage, Toast.LENGTH_LONG).show();
                         return;
                     }
 
-                    // 提取后端返回的token
+                    // Extract token from backend response
                     String token = null;
                     JsonElement d = br.data;
                     if (d != null) {
                         if (d.isJsonPrimitive()) {
-                            token = d.getAsString(); // 情况1：data 是字符串
+                            token = d.getAsString(); // Case 1: data is a string
                         } else if (d.isJsonObject()) {
                             JsonObject o = d.getAsJsonObject();
                             if (o.has("token")) {
-                                token = o.get("token").getAsString(); // 情况2：data 是对象
+                                token = o.get("token").getAsString(); // Case 2: data is an object
                             }
                         }
                     }
 
-                    // 如果没拿到 token
+                    // If token not received
                     if (token == null || token.isEmpty()) {
                         Toast.makeText(SignInActivity.this, "No token returned", Toast.LENGTH_SHORT).show();
                         return;
                     }
 
-                    // 保存 token 到 SharedPreferences
+                    // Save token to SharedPreferences
                     saveToken(token);
 
-                    // 记住我功能（选做）
+                    // Remember-me feature (optional)
                     if (cbRemember.isChecked()) {
                         // TODO: save username locally if needed
                     }
 
-                    // ===== 首次登录逻辑（本地模拟）=====
-                    // 用"username"作为 key 进行首次登录标记
+                    // ===== First-login flow (local simulation) =====
+                    // Use "username" as the key to flag first login
                     boolean isFirstLogin = isFirstLoginLocal(username);
 
                     if (isFirstLogin) {
-                        // 跳转到首次登录设置页，并传递 username
+                        // Navigate to initial settings and pass username
                         Intent it = new Intent(SignInActivity.this, NewUserSetting1Activity.class);
                         it.putExtra("username", username);
                         startActivity(it);
                     } else {
-                        // 非首次，进入主页面
+                        // Not first time, go to main page
                         startActivity(new Intent(SignInActivity.this, MainActivity.class));
                         finish();
                     }
@@ -151,33 +151,33 @@ public class SignInActivity extends AppCompatActivity {
         return v.getText() != null ? v.getText().toString().trim() : "";
     }
 
-    // ======= 首次登录逻辑（本地模拟）=======
-    // 用 username 作为 key：如果 SharedPreferences 里没有标记过这个 username → 视为首次登录
+    // ======= First-login logic (local simulation) =======
+    // Use username as key: if SharedPreferences has no flag for this username → treat as first login
     private boolean isFirstLoginLocal(String username) {
         SharedPreferences sp = getSharedPreferences(PREFS_ONBOARD, MODE_PRIVATE);
         return !sp.getBoolean(username, false);
     }
 
-    // 设置页完成后调用：标记该 username 已完成首次设置
+    // Called after settings complete: mark this username as onboarded
     public static void markOnboarded(AppCompatActivity activity, String username) {
         SharedPreferences sp = activity.getSharedPreferences(PREFS_ONBOARD, MODE_PRIVATE);
         sp.edit().putBoolean(username, true).apply();
     }
 
-    // ======= token 保存/读取 =======
-    // 保存 token
+    // ======= Token save/load =======
+    // Save token
     private void saveToken(String token) {
         SharedPreferences sp = getSharedPreferences(PREFS_AUTH, MODE_PRIVATE);
         sp.edit().putString(KEY_TOKEN, token).apply();
     }
 
-    // 读取 token
+    // Read token
     private String readToken() {
         SharedPreferences sp = getSharedPreferences(PREFS_AUTH, MODE_PRIVATE);
         return sp.getString(KEY_TOKEN, "");
     }
     
-    // 根据错误码返回用户友好的错误信息
+    // Return user-friendly error message based on error code
     private String getLoginErrorMessage(Integer code, String message) {
         if (code == null) {
             return "Login failed. Please try again.";

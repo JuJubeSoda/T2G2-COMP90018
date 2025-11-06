@@ -22,14 +22,14 @@ public class NewUserSetting2Activity extends AppCompatActivity {
     private TextInputEditText etName, etGender, etLocation;
     private MaterialButton btnNext;
 
-    private String usernameFromFlow; // 从登录页传进来的 username
+    private String usernameFromFlow; // Username passed from SignIn page
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_user_setting2);
 
-        // 取 username（SignInActivity 跳转时 putExtra("username", username)）
+        // Retrieve username (putExtra("username", username) when navigating from SignInActivity)
         usernameFromFlow = getIntent().getStringExtra("username");
 
         ImageButton back = findViewById(R.id.btnBack);
@@ -54,15 +54,15 @@ public class NewUserSetting2Activity extends AppCompatActivity {
             if (validateRequired(tilGender, etGender, "Gender is required")) return;
             if (validateRequired(tilLocation, etLocation, "Location is required")) return;
 
-            // 1) 保存资料（后端就绪后改为调 API）
+            // 1) Save profile (switch to API call when backend ready)
             saveProfileLocal(getTrim(etName), getTrim(etGender), getTrim(etLocation));
 
-            // 2) 标记该用户已完成首次引导（与 SignInActivity 的本地首次登录判断一致）
+            // 2) Mark user as onboarded (consistent with SignInActivity's local first-login check)
             if (!TextUtils.isEmpty(usernameFromFlow)) {
                 SignInActivity.markOnboarded(this, usernameFromFlow);
             }
 
-            // 3) 跳转主页面
+            // 3) Navigate to main page
             startActivity(new Intent(this, MainActivity.class));
 
             finishAffinity();
@@ -108,7 +108,7 @@ public class NewUserSetting2Activity extends AppCompatActivity {
         return et.getText() == null ? "" : et.getText().toString().trim();
     }
 
-    // 本地保存
+    // Save locally
     private void saveProfileLocal(String name, String gender, String location) {
         SharedPreferences sp = getSharedPreferences("profile_local", MODE_PRIVATE);
         sp.edit()

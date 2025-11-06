@@ -23,8 +23,8 @@ import java.util.List;
 import com.example.myapplication.util.LogUtil;
 
 /**
- * 地图显示管理器 - 负责在地图上显示植物和花园数据
- * 统一管理地图显示相关的功能，包括GeoJSON图层和标记
+ * Map Display Manager - responsible for showing plants and gardens on the map.
+ * Centralizes map display features, including clustering and markers.
  */
 public class MapDisplayManager {
     
@@ -43,7 +43,7 @@ public class MapDisplayManager {
     private List<PlantMapDto> currentPlants = new ArrayList<>();
     private List<GardenDto> currentGardens = new ArrayList<>();
     
-    // 回调接口
+    // Callback interfaces
     public interface OnGardenMapClickListener {
         void onGardenClick(GardenDto garden);
     }
@@ -62,7 +62,7 @@ public class MapDisplayManager {
         setupClusterManagerIfNeeded();
         // Delay Garden ClusterManager creation until needed
         // setupGardenClusterManagerIfNeeded();
-        // 禁用InfoWindow
+        // Disable default InfoWindow
         if (googleMap != null) {
             googleMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
                 @Override
@@ -82,7 +82,7 @@ public class MapDisplayManager {
     }
     
     /**
-     * 在地图上显示植物列表 - 使用Marker方式（适合频繁刷新）
+     * Display plants on the map - using markers (suitable for frequent refreshes)
      */
     public void displayPlantsOnMap(List<PlantMapDto> plants) {
         LogUtil.d(TAG, "=== Display Plants Debug ===");
@@ -134,7 +134,7 @@ public class MapDisplayManager {
         LogUtil.d(TAG, "Valid plants: " + validPlants + " out of " + (plants != null ? plants.size() : 0));
         LogUtil.d(TAG, "Current plants list size: " + currentPlants.size());
         
-        // 检查地图状态
+        // Check map readiness/status
         if (googleMap != null) {
             LogUtil.d(TAG, "GoogleMap is ready, camera position: " + googleMap.getCameraPosition());
             LogUtil.d(TAG, "GoogleMap is ready, visible region: " + googleMap.getProjection().getVisibleRegion());
@@ -147,7 +147,7 @@ public class MapDisplayManager {
     }
     
     /**
-     * 增量更新植物显示（添加新植物）
+     * Incrementally update plant display (add new plants)
      */
     public void addNewPlants(List<PlantMapDto> newPlants) {
         for (PlantMapDto plant : newPlants) {
@@ -161,7 +161,7 @@ public class MapDisplayManager {
     }
     
     /**
-     * 移除植物标记
+     * Remove plant markers
      */
     public void removePlants(List<PlantMapDto> plantsToRemove) {
         for (PlantMapDto plant : plantsToRemove) {
@@ -173,7 +173,7 @@ public class MapDisplayManager {
     }
     
     /**
-     * 添加单个植物标记
+     * Add a single plant marker
      */
     private void addPlantMarker(PlantMapDto plant) {
         LogUtil.d(TAG, "=== Add Plant Marker Debug ===");
@@ -204,7 +204,7 @@ public class MapDisplayManager {
             marker.setTag(plant);
             // Legacy path (kept for potential fallback)
             
-            // 设置点击监听器
+            // Set click listener
             setupPlantMarkerClickListener(marker);
             LogUtil.d(TAG, "Marker click listener set");
         } else {
@@ -214,7 +214,7 @@ public class MapDisplayManager {
     }
 
     /**
-     * 添加Cluster item并刷新聚合
+     * Add cluster item and refresh clustering
      */
     private void addPlantClusterItem(PlantMapDto plant) {
         if (plantClusterManager == null) {
@@ -227,7 +227,7 @@ public class MapDisplayManager {
     }
     
     /**
-     * 移除单个植物标记
+     * Remove a single plant marker
      */
     private void removePlantMarker(PlantMapDto plant) {
         if (plantClusterManager == null || currentPlantItems.isEmpty()) return;
@@ -243,14 +243,14 @@ public class MapDisplayManager {
     }
     
     /**
-     * 设置植物标记点击监听器
+     * Configure plant marker click listener
      */
     private void setupPlantMarkerClickListener(Marker marker) {
-        // 点击监听器通过GoogleMap的setOnMarkerClickListener统一处理
+        // Click listener is handled via GoogleMap's setOnMarkerClickListener
     }
     
     /**
-     * 在地图上显示花园列表 - 使用GeoJSON方式（适合静态数据）
+     * Display gardens on the map (using clustering; suitable for static data)
      */
     public void displayGardensOnMap(List<GardenDto> gardens) {
         clearGardenMarkers();
@@ -258,7 +258,7 @@ public class MapDisplayManager {
         if (gardens != null) {
             currentGardens.addAll(gardens);
         }
-        // 初次调用时按当前视野渲染，后续由相机事件触发刷新
+        // Render for current viewport initially; subsequent refresh via camera events
         if (googleMap != null) {
             LatLngBounds bounds = googleMap.getProjection().getVisibleRegion().latLngBounds;
             refreshGardensForViewport(bounds, 1000);
@@ -266,7 +266,7 @@ public class MapDisplayManager {
     }
     
     /**
-     * 清除植物标记
+     * Clear plant markers
      */
     public void clearPlantMarkers() {
         // Clear clustering items
@@ -279,8 +279,8 @@ public class MapDisplayManager {
     }
     
     /**
-     * 清除花园GeoJSON图层
-     */
+    * Clear garden clustering
+    */
     public void clearGardenMarkers() {
         if (gardenClusterManager != null) {
             gardenClusterManager.clearItems();
@@ -291,7 +291,7 @@ public class MapDisplayManager {
     
     
     /**
-     * 将花园列表转换为GeoJSON格式
+     * Refresh gardens within the given viewport (filter and cluster)
      */
     public void refreshGardensForViewport(LatLngBounds bounds, int limit) {
         if (bounds == null) return;
@@ -313,43 +313,43 @@ public class MapDisplayManager {
     
     
     /**
-     * 创建花园GeoJSON特征
+     * Create garden GeoJSON features (removed)
      */
     // GeoJSON-related methods removed since we now use clustering for gardens
     
     
     /**
-     * 设置花园GeoJSON图层
+     * Setup garden GeoJSON layer (removed)
      */
     // GeoJSON layer setup removed
     
     
     /**
-     * 处理花园GeoJSON特征点击事件
+     * Handle garden GeoJSON feature clicks (removed)
      */
     // Feature click handling removed with GeoJSON
     
     
     /**
-     * 从GeoJSON特征创建Garden对象
+     * Create Garden from GeoJSON feature (removed)
      */
     // Conversion from GeoJSON removed
     
     
     /**
-     * 应用花园标记样式
+     * Apply garden marker style (removed)
      */
     // Style application for GeoJSON removed
     
     /**
-     * 创建植物图标
+     * Create plant icon
      */
     private BitmapDescriptor createPlantIcon() {
         return BitmapDescriptorFactory.fromResource(com.example.myapplication.R.drawable.flower);
     }
     
     /**
-     * 创建花园图标
+     * Create garden icon
      */
     private BitmapDescriptor createGardenIcon() {
         // Ensure garden icon matches plant icon visual size
@@ -370,23 +370,23 @@ public class MapDisplayManager {
     }
     
     /**
-     * 清除当前显示
+     * Clear current display
      */
     public void clearCurrentDisplay() {
-        // 清除花园聚合
+        // Clear garden clustering
         clearGardenMarkers();
         
-        // 清除植物标记
+        // Clear plant markers
         clearPlantMarkers();
         
-        // 清除数据缓存
+        // Clear data caches
         currentPlants.clear();
         currentGardens.clear();
         LogUtil.d(TAG, "clearCurrentDisplay: plants and gardens cleared and clusters refreshed");
     }
     
     /**
-     * 处理植物标记点击事件
+     * Handle plant marker click
      */
     public boolean handlePlantMarkerClick(Marker marker) {
         PlantMapDto plant = (PlantMapDto) marker.getTag();
@@ -398,14 +398,14 @@ public class MapDisplayManager {
     }
     
     /**
-     * 销毁管理器
+     * Destroy manager
      */
     public void destroy() {
         clearCurrentDisplay();
     }
 
     /**
-     * 初始化ClusterManager并绑定点击监听
+     * Initialize ClusterManager and bind click listeners
      */
     private void setupClusterManagerIfNeeded() {
         if (googleMap == null || plantClusterManager != null) return;
@@ -414,13 +414,13 @@ public class MapDisplayManager {
         plantClusterRenderer = new DefaultClusterRenderer<>(context, googleMap, plantClusterManager) {
             @Override
             protected void onBeforeClusterItemRendered(PlantClusterItem item, MarkerOptions markerOptions) {
-                // 不设置 title/snippet，以彻底避免默认 InfoWindow 弹出
+                // Do not set title/snippet to avoid default InfoWindow popup entirely
                 markerOptions.icon(createPlantIcon());
             }
 
             @Override
             protected void onClusterItemUpdated(PlantClusterItem item, Marker marker) {
-                // 确保更新时也不带有 title/snippet，防止默认 InfoWindow 出现
+                // Ensure no title/snippet on update to prevent default InfoWindow
                 marker.setTitle(null);
                 marker.setSnippet(null);
                 marker.setIcon(createPlantIcon());
@@ -429,7 +429,7 @@ public class MapDisplayManager {
 
             @Override
             protected void onClusterItemRendered(PlantClusterItem clusterItem, Marker marker) {
-                // 渲染完成后再清一次，防止默认渲染器写回
+                // Clear again after render to prevent default renderer writing back
                 marker.setTitle(null);
                 marker.setSnippet(null);
                 super.onClusterItemRendered(clusterItem, marker);
@@ -437,7 +437,7 @@ public class MapDisplayManager {
         };
         plantClusterManager.setRenderer(plantClusterRenderer);
 
-        // Marker点击：传递到回调，让上层展示BottomSheet
+        // Marker click: pass to callback so the upper layer shows the BottomSheet
         plantClusterManager.setOnClusterItemClickListener(clusterItem -> {
             LogUtil.d(TAG, "Plant cluster ITEM clicked: " + clusterItem.getPosition());
             if (plantClickListener != null) {
@@ -447,13 +447,13 @@ public class MapDisplayManager {
             return false;
         });
 
-        // 仅日志，不改变既有行为
+        // Log only; do not change existing behavior
         plantClusterManager.setOnClusterClickListener(cluster -> {
             LogUtil.d(TAG, "Plant CLUSTER clicked, size=" + cluster.getSize());
-            return false; // 不拦截，保持默认放大行为
+            return false; // Do not intercept; keep default zoom behavior
         });
 
-        // 将地图的各种事件委托给ClusterManager
+        // Delegate various map events to ClusterManager
         // Do not set listeners here; coordinator will attach composite listeners
     }
 
@@ -462,7 +462,7 @@ public class MapDisplayManager {
     }
 
     /**
-     * 初始化Garden ClusterManager并绑定点击监听
+     * Initialize Garden ClusterManager and bind click listeners
      */
     private void setupGardenClusterManagerIfNeeded() {
         if (googleMap == null || gardenClusterManager != null) return;
@@ -471,13 +471,13 @@ public class MapDisplayManager {
         gardenClusterRenderer = new DefaultClusterRenderer<>(context, googleMap, gardenClusterManager) {
             @Override
             protected void onBeforeClusterItemRendered(GardenClusterItem item, MarkerOptions markerOptions) {
-                // 不设置 title/snippet，以彻底避免默认 InfoWindow 弹出
+                // Do not set title/snippet to avoid default InfoWindow popup entirely
                 markerOptions.icon(createGardenIcon());
             }
 
             @Override
             protected void onClusterItemUpdated(GardenClusterItem item, Marker marker) {
-                // 确保更新时也不带有 title/snippet，防止默认 InfoWindow 出现
+                // Ensure no title/snippet on update to prevent default InfoWindow
                 marker.setTitle(null);
                 marker.setSnippet(null);
                 marker.setIcon(createGardenIcon());
@@ -514,19 +514,19 @@ public class MapDisplayManager {
     }
 
     /**
-     * 显示单个植物并聚焦相机
+     * Display a single plant and focus the camera
      */
     public void displayAndFocusSinglePlant(PlantMapDto plant, float zoom) {
         if (plant == null || plant.getLatitude() == null || plant.getLongitude() == null || googleMap == null) return;
-        // 清理现有植物聚合并仅显示该点
+        // Clear existing plant clusters and show only this point
         clearPlantMarkers();
         currentPlants.clear();
         addPlantClusterItem(plant);
         currentPlants.add(plant);
-        // 聚焦
+        // Focus
         LatLng pos = new LatLng(plant.getLatitude(), plant.getLongitude());
         googleMap.animateCamera(com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(pos, zoom <= 0 ? 17f : zoom));
-        // 直接触发点击回调以弹出BottomSheet
+        // Directly trigger click callback to open BottomSheet
         if (plantClickListener != null) {
             plantClickListener.onPlantClick(plant);
         }

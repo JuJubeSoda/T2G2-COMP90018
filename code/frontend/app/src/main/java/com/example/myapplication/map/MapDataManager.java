@@ -18,8 +18,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
- * 地图数据管理器 - 负责处理植物和花园的API调用和数据获取
- * 统一管理地图相关的网络请求和数据流
+ * Map Data Manager - handles API calls and data retrieval for plants and gardens.
+ * Centralizes network requests and data flows related to the map.
  */
 public class MapDataManager {
     
@@ -28,7 +28,7 @@ public class MapDataManager {
     private final Context context;
     private final ApiService apiService;
     
-    // 搜索配置
+    // Search configuration
     private static final int DEFAULT_SEARCH_RADIUS = 1000; // meters
     
     public MapDataManager(Context context) {
@@ -36,12 +36,12 @@ public class MapDataManager {
         this.apiService = ApiClient.create(context);
     }
     
-    // 便捷重载移除：统一由上层协调层处理数据与显示
+    // Convenience overloads removed: handled by upper coordination layer
     
-    // 便捷重载移除：统一由上层协调层处理数据与显示
+    // Convenience overloads removed: handled by upper coordination layer
     
     /**
-     * 搜索附近的植物（带回调）
+     * Search nearby plants (with callback)
      */
     public void searchNearbyPlants(double latitude, double longitude, int radius, MapDataCallback<List<PlantMapDto>> callback) {
         LogUtil.d(TAG, "Searching for nearby plants at: " + latitude + ", " + longitude + " radius: " + radius);
@@ -64,7 +64,7 @@ public class MapDataManager {
     // Removed: searchNearbyGardens in favor of fetchAllGardens
 
     /**
-     * 拉取全部花园列表（不做附近搜索），用于本地转换为GeoJSON整层渲染
+     * Fetch all gardens (no nearby filtering), used for local clustering/rendering
      */
     public void fetchAllGardens(MapDataCallback<List<GardenDto>> callback) {
         LogUtil.d(TAG, "Fetching all gardens");
@@ -84,7 +84,7 @@ public class MapDataManager {
     }
 
     /**
-     * 获取指定花园下的植物列表
+     * Get list of plants under a specified garden
      */
     public void getPlantsByGarden(long gardenId, MapDataCallback<List<PlantDto>> callback) {
         LogUtil.d(TAG, "Fetching plants by garden: " + gardenId);
@@ -104,7 +104,7 @@ public class MapDataManager {
     }
     
     /**
-     * 统一的API响应处理方法
+     * Unified API response handling
      */
     private <T> void handleApiResponse(Response<ApiResponse<T>> response, String dataType, MapDataCallback<T> callback) {
         LogUtil.d(TAG, "=== API Response Debug ===");
@@ -126,8 +126,8 @@ public class MapDataManager {
                 LogUtil.d(TAG, "ApiResponse data content: " + apiResponse.getData().toString());
             }
             
-            // 修复：后端返回的JSON中没有success字段，只依赖code字段判断
-            // 对于like/unlike操作，即使data为空或为字符串"liked"/"unliked"，code=200即视为成功
+            // Fix: backend JSON has no 'success' field; rely on 'code' only
+            // For like/unlike, even if data is empty or "liked"/"unliked", code=200 means success
             if (apiResponse.getCode() == 200) {
                 if (apiResponse.getData() != null) {
                     LogUtil.d(TAG, "Successfully received " + dataType + " data: " + apiResponse.getData());
@@ -156,7 +156,7 @@ public class MapDataManager {
     }
     
     /**
-     * 点赞植物
+     * Like plant
      */
     public void likePlant(int plantId, MapDataCallback<String> callback) {
         Call<ApiResponse<String>> call = apiService.likePlant(plantId);
@@ -175,7 +175,7 @@ public class MapDataManager {
     }
     
     /**
-     * 取消点赞植物
+     * Unlike plant
      */
     public void unlikePlant(int plantId, MapDataCallback<String> callback) {
         Call<ApiResponse<String>> call = apiService.unlikePlant(plantId);
@@ -194,7 +194,7 @@ public class MapDataManager {
     }
     
     /**
-     * 数据回调接口
+     * Data callback interface
      */
     public interface MapDataCallback<T> {
         void onSuccess(T data);
@@ -202,7 +202,7 @@ public class MapDataManager {
     }
     
     /**
-     * 根据植物ID获取完整的植物详情
+     * Get full plant details by plant ID
      */
     public void getPlantById(int plantId, MapDataCallback<PlantDto> callback) {
         LogUtil.d(TAG, "Getting plant details for ID: " + plantId);
@@ -223,7 +223,7 @@ public class MapDataManager {
     }
     
     /**
-     * 获取默认搜索半径
+     * Get default search radius
      */
     public static int getDefaultSearchRadius() {
         return DEFAULT_SEARCH_RADIUS;

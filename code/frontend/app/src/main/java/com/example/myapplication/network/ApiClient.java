@@ -31,7 +31,7 @@ public class ApiClient {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .client(client)
-                .addConverterFactory(GsonConverterFactory.create()) // Gson 解析 JSON
+                .addConverterFactory(GsonConverterFactory.create()) // Gson JSON converter
                 .build();
 
         return retrofit.create(ApiService.class);

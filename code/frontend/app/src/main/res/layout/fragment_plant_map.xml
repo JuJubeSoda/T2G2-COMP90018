@@ -94,9 +94,9 @@
         android:layout_marginTop="16dp"
         android:layout_marginStart="16dp"
         android:src="@drawable/ic_location_24"
-        android:contentDescription="Search nearby natural parks"
-        android:backgroundTint="@color/white"
-        android:tint="@color/brand_teal"
+        android:contentDescription="Move to current location"
+        android:backgroundTint="@color/brand_teal"
+        android:tint="@android:color/white"
         android:elevation="4dp" />
 
     <!-- Bottom sheet container -->

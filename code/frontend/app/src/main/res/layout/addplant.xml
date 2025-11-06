@@ -20,7 +20,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- 页面标题 -->
+    <!-- Page title -->
     <TextView
         android:id="@+id/pageTitleAddPlant"
         android:layout_width="wrap_content"

@@ -21,8 +21,8 @@ import com.google.android.gms.tasks.Task;
 import com.example.myapplication.util.LogUtil;
 
 /**
- * 地图位置管理器 - 负责处理地图位置相关的功能
- * 包括权限管理、位置获取、地图定位等
+ * Map Location Manager - handles map location related features
+ * including permission management, location retrieval, and camera positioning.
  */
 public class MapLocationManager {
     
@@ -30,10 +30,10 @@ public class MapLocationManager {
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private static final int DEFAULT_ZOOM = 15;
     
-    // 默认位置（悉尼）
+    // Default location (Sydney)
     private final LatLng defaultLocation = new LatLng(-33.8523341, 151.2106085);
     
-    // 默认搜索半径
+    // Default search radius
     private static final int DEFAULT_SEARCH_RADIUS = 1000; // meters
     
     private final android.content.Context context;
@@ -45,9 +45,9 @@ public class MapLocationManager {
     private Location lastKnownLocation;
     
     /**
-     * 构造函数 - 支持可选的GoogleMap（null表示不使用地图功能）
-     * @param context Android上下文
-     * @param googleMap GoogleMap实例，可以为null（用于非地图场景的位置获取）
+     * Constructor - supports optional GoogleMap (null means not using map features)
+     * @param context Android context
+     * @param googleMap GoogleMap instance, can be null (for non-map scenarios)
      */
     public MapLocationManager(android.content.Context context, @Nullable GoogleMap googleMap) {
         this.context = context;
@@ -56,20 +56,20 @@ public class MapLocationManager {
     }
     
     /**
-     * 请求位置权限
+     * Request location permission
      */
     public void requestLocationPermission() {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             locationPermissionGranted = true;
         } else {
-            // 权限请求需要由Fragment处理，这里只设置状态
+            // Permission request must be handled by Fragment; set state only here
             locationPermissionGranted = false;
         }
     }
     
     /**
-     * 处理权限请求结果
+     * Handle permission request result
      */
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         locationPermissionGranted = false;
@@ -82,7 +82,7 @@ public class MapLocationManager {
     }
     
     /**
-     * 更新地图位置UI设置
+     * Update map location UI settings
      */
     public void updateLocationUI() {
         if (googleMap == null) {
@@ -113,10 +113,10 @@ public class MapLocationManager {
     }
     
     /**
-     * 获取设备当前位置（纯位置获取，不操作地图）
-     * 适用于非地图场景（如HomeFragment的附近发现功能）
-     * 
-     * @param callback 位置获取结果回调
+     * Get device current location (location-only; does not operate the map)
+     * Suitable for non-map scenarios (e.g., HomeFragment nearby discoveries)
+     *
+     * @param callback location result callback
      */
     public void getLocation(OnLocationResultCallback callback) {
         try {
@@ -146,10 +146,10 @@ public class MapLocationManager {
     }
     
     /**
-     * 获取设备当前位置并移动地图相机（用于地图场景）
-     * 与getLocation()的区别：此方法会操作地图，移动相机到当前位置
-     * 
-     * @param callback 位置获取结果回调
+     * Get device current location and move the map camera (map scenarios)
+     * Differs from getLocation(): this operates the map and moves camera
+     *
+     * @param callback location result callback
      */
     public void getDeviceLocation(OnLocationResultCallback callback) {
         try {
@@ -161,7 +161,7 @@ public class MapLocationManager {
                         if (task.isSuccessful()) {
                             lastKnownLocation = task.getResult();
                             if (lastKnownLocation != null) {
-                                // 只有在有地图时才操作地图
+                                // Operate the map only if map is available
                                 if (googleMap != null) {
                                     LatLng currentLocation = new LatLng(
                                         lastKnownLocation.getLatitude(),
@@ -199,7 +199,7 @@ public class MapLocationManager {
     }
     
     /**
-     * 移动到默认位置（仅在有地图时操作）
+     * Move to default location (only if map is available)
      */
     private void moveToDefaultLocation() {
         if (googleMap != null) {
@@ -209,7 +209,7 @@ public class MapLocationManager {
     }
     
     /**
-     * 获取当前位置并移动地图到该位置（不带回调的便捷方法）
+     * Convenience: get current location and move the map (no callback)
      */
     public void getCurrentLocationAndMove() {
         getDeviceLocation(new OnLocationResultCallback() {
@@ -226,35 +226,35 @@ public class MapLocationManager {
     }
     
     /**
-     * 检查是否有位置权限
+     * Check whether location permission is granted
      */
     public boolean hasLocationPermission() {
         return locationPermissionGranted;
     }
     
     /**
-     * 获取最后已知位置
+     * Get last known location
      */
     public Location getLastKnownLocation() {
         return lastKnownLocation;
     }
     
     /**
-     * 获取默认位置
+     * Get default location
      */
     public LatLng getDefaultLocation() {
         return defaultLocation;
     }
     
     /**
-     * 获取默认缩放级别
+     * Get default zoom level
      */
     public int getDefaultZoom() {
         return DEFAULT_ZOOM;
     }
     
     /**
-     * 位置结果回调接口
+     * Location result callback interface
      */
     public interface OnLocationResultCallback {
         void onLocationSuccess(Location location);
@@ -262,19 +262,19 @@ public class MapLocationManager {
     }
     
     /**
-     * 获取权限请求码
+     * Get permission request code
      */
     public static int getLocationPermissionRequestCode() {
         return PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION;
     }
     
-    // ==================== 地图半径相关功能 ====================
+    // ==================== Map radius related features ====================
     
-    // 地图半径变化监听器
+    // Map radius change listener
     private OnMapRadiusChangeListener radiusChangeListener;
     
     /**
-     * 获取当前地图视图的搜索半径（基于可见区域）
+     * Get current map view search radius (based on visible region)
      */
     public int getCurrentMapRadius() {
         if (googleMap == null) {
@@ -282,15 +282,15 @@ public class MapLocationManager {
         }
         
         try {
-            // 获取地图投影和可见区域
+            // Get map projection and visible region
             VisibleRegion visibleRegion = googleMap.getProjection().getVisibleRegion();
             LatLngBounds bounds = visibleRegion.latLngBounds;
             
-            // 计算中心点
+            // Calculate center point
             LatLng center = bounds.getCenter();
             LatLng northeast = bounds.northeast;
             
-            // 计算对角线距离的一半作为半径
+            // Use half the diagonal distance as radius
             float[] results = new float[1];
             Location.distanceBetween(
                 center.latitude, center.longitude,
@@ -300,7 +300,7 @@ public class MapLocationManager {
             
             int radius = (int) (results[0] / 2);
             
-            // 设置合理的半径范围（最小100米，最大10000米）
+            // Clamp to reasonable range (min 100m, max 10000m)
             radius = Math.max(100, Math.min(radius, 10000));
             
             LogUtil.d(TAG, "Calculated map radius: " + radius + " meters");
@@ -313,20 +313,20 @@ public class MapLocationManager {
     }
     
     /**
-     * 根据缩放级别获取预设半径
+     * Get preset radius by zoom level
      */
     public int getRadiusByZoom(float zoom) {
-        if (zoom >= 18) return 100;      // 街道级别 - 100米
-        if (zoom >= 16) return 200;       // 社区级别 - 200米
-        if (zoom >= 14) return 500;       // 区域级别 - 500米
-        if (zoom >= 12) return 1000;      // 城市级别 - 1公里
-        if (zoom >= 10) return 2000;      // 州级别 - 2公里
-        if (zoom >= 8) return 5000;       // 国家级别 - 5公里
-        return 10000;                     // 大陆级别 - 10公里
+        if (zoom >= 18) return 100;      // Street level - 100m
+        if (zoom >= 16) return 200;      // Neighborhood level - 200m
+        if (zoom >= 14) return 500;      // District level - 500m
+        if (zoom >= 12) return 1000;     // City level - 1km
+        if (zoom >= 10) return 2000;     // State level - 2km
+        if (zoom >= 8) return 5000;      // Country level - 5km
+        return 10000;                     // Continent level - 10km
     }
     
     /**
-     * 获取当前相机位置的搜索半径
+     * Get search radius for current camera position
      */
     public int getCurrentCameraRadius() {
         if (googleMap == null) {
@@ -343,15 +343,15 @@ public class MapLocationManager {
     }
     
     /**
-     * 获取默认搜索半径
+     * Get default search radius
      */
     public int getDefaultSearchRadius() {
         return DEFAULT_SEARCH_RADIUS;
     }
 
     /**
-     * 获取当前相机中心点坐标（用于以相机中心作为查询中心）
-     * 若地图未就绪则返回默认位置
+     * Get current camera center coordinate (used as query center)
+     * Returns default location if map is not ready
      */
     public LatLng getCameraCenter() {
         LogUtil.d(TAG, "=== getCameraCenter Debug ===");
@@ -363,7 +363,7 @@ public class MapLocationManager {
         }
         
         try {
-            // 尝试从可见区域获取中心
+            // Try to get center from visible region
             VisibleRegion visibleRegion = googleMap.getProjection().getVisibleRegion();
             if (visibleRegion != null && visibleRegion.latLngBounds != null) {
                 LatLng center = visibleRegion.latLngBounds.getCenter();
@@ -371,7 +371,7 @@ public class MapLocationManager {
                 return center;
             }
             
-            // 退回到相机位置的target
+            // Fallback to camera position target
             CameraPosition cameraPosition = googleMap.getCameraPosition();
             if (cameraPosition != null && cameraPosition.target != null) {
                 LatLng target = cameraPosition.target;
@@ -389,7 +389,7 @@ public class MapLocationManager {
     }
     
     /**
-     * 设置地图半径变化监听器
+     * Set map radius change listener
      */
     public void setOnMapRadiusChangeListener(OnMapRadiusChangeListener listener) {
         this.radiusChangeListener = listener;
@@ -397,19 +397,19 @@ public class MapLocationManager {
     }
     
     /**
-     * 设置地图半径变化监听器
-     * 只使用setOnCameraIdleListener，避免相机移动过程中的频繁触发
+     * Configure map radius change listeners
+     * Use only setOnCameraIdleListener to avoid frequent triggers during movement
      */
     private void setupMapRadiusListeners() {
         if (googleMap == null) {
             return;
         }
         
-        // 移除相机移动监听器，只保留相机空闲监听器
-        // 这样可以减少不必要的触发，配合上层防抖机制效果更好
+        // Remove camera move listener and keep only idle listener
+        // Reduces unnecessary triggers; works better with upper debounce
         googleMap.setOnCameraMoveListener(null);
         
-        // 监听地图相机移动完成（用户停止操作后触发）
+        // Listen for when camera movement stops (user idle)
         googleMap.setOnCameraIdleListener(() -> {
             if (radiusChangeListener != null) {
                 int newRadius = getCurrentMapRadius();
@@ -419,7 +419,7 @@ public class MapLocationManager {
     }
     
     /**
-     * 获取智能搜索半径（结合可见区域和缩放级别）
+     * Get smart search radius (combines visible region and zoom level)
      */
     public int getSmartSearchRadius() {
         LogUtil.d(TAG, "=== getSmartSearchRadius Debug ===");
@@ -430,14 +430,14 @@ public class MapLocationManager {
         }
         
         try {
-            // 获取基于可见区域的半径
+            // Get radius based on visible region
             int visibleRadius = getCurrentMapRadius();
             LogUtil.d(TAG, "Visible radius: " + visibleRadius + "m");
-            // 直接使用可见区域半径作为最终半径（禁用缩放级别上限）
+            // Use visible region radius directly as final radius (disable zoom cap)
             int smartRadius = visibleRadius;
             LogUtil.d(TAG, "Final smart radius: " + smartRadius + "m (use visible radius only)");
             
-            // 半径范围检查
+            // Range check for radius
             if (smartRadius > 50000) {
                 LogUtil.w(TAG, "WARNING: Smart radius is very large: " + smartRadius + "m (>50km)!");
             }
@@ -452,7 +452,7 @@ public class MapLocationManager {
     }
     
     /**
-     * 地图半径变化监听器接口
+     * Map radius change listener interface
      */
     public interface OnMapRadiusChangeListener {
         void onMapRadiusChanged(int newRadius);
